@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"wowdoc/internal/shared/tools"
 )
 
 func TestBuildTargetsExistAndHelpMentionsAgentFields(t *testing.T) {
@@ -36,13 +38,14 @@ func TestBuildTargetsExistAndHelpMentionsAgentFields(t *testing.T) {
 }
 
 func TestOmittedTypeScriptToolsAreAbsent(t *testing.T) {
-	cmd := exec.Command("go", "test", "./internal/shared/tools", "-run", "TestRegistryContainsExactlySupportedTools", "-v")
-	cmd.Dir = repoRoot(t)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("registry test failed: %v\n%s", err, string(out))
+	registry := tools.DefaultRegistry()
+	if _, ok := registry.Tools["scaffold_addon"]; ok {
+		t.Fatalf("omitted TypeScript tools must stay absent")
 	}
-	if strings.Contains(string(out), "scaffold_addon") {
+	if _, ok := registry.Tools["get_blizzard_addon"]; ok {
+		t.Fatalf("omitted TypeScript tools must stay absent")
+	}
+	if _, ok := registry.Tools["lint_addon_lua"]; ok {
 		t.Fatalf("omitted TypeScript tools must stay absent")
 	}
 }
