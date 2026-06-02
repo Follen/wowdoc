@@ -36,11 +36,14 @@ Source resolution:
 Agent next step:
   If client is unknown, run: wowdoc clients list --include-diagnostics
 
+Minimum valid call:
+  wowdoc api lookup --client retail --name C_AuctionHouse.GetItemSearchResultInfo
+
 MCP arguments:
   {"client":"retail","name":"C_AuctionHouse.GetItemSearchResultInfo"}
 
 Common error codes:
-  client_required client_not_found source_not_found source_invalid ref_not_found capability_unavailable`,
+  client_required client_not_found source_not_found source_invalid ref_not_found git_unavailable_archive_failed capability_unavailable index_unavailable timeout unsupported_ref`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if client == "" {
 				return errors.New("client_required")
@@ -61,7 +64,13 @@ Common error codes:
 
 func clientsCommand() *cobra.Command {
 	clients := &cobra.Command{Use: "clients"}
-	clients.AddCommand(&cobra.Command{Use: "list", RunE: func(cmd *cobra.Command, args []string) error { return nil }})
+	var includeDiagnostics bool
+	list := &cobra.Command{Use: "list", RunE: func(cmd *cobra.Command, args []string) error {
+		_ = includeDiagnostics
+		return nil
+	}}
+	list.Flags().BoolVar(&includeDiagnostics, "include-diagnostics", false, "include invalid source diagnostics")
+	clients.AddCommand(list)
 	return clients
 }
 
