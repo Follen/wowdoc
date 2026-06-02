@@ -25,3 +25,24 @@ func TestUnsupportedArbitraryRefIsRejectedWhenDisabled(t *testing.T) {
 		t.Fatalf("expected unsupported_ref, got %v", err)
 	}
 }
+
+func TestResolveRefRejectsUnsafePathSegments(t *testing.T) {
+	m := NewManager(Options{Root: t.TempDir(), AllowArbitraryRef: true, DefaultRefs: map[string]string{"retail": "main"}})
+	for _, tc := range []struct {
+		name   string
+		client string
+		ref    string
+	}{
+		{name: "client traversal", client: `..\classic`, ref: "main"},
+		{name: "ref traversal", client: "retail", ref: `..\..\outside`},
+		{name: "ref slash", client: "retail", ref: "feature/branch"},
+		{name: "absolute ref", client: "retail", ref: filepath.Join(t.TempDir(), "commit")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := m.ResolveRef(tc.client, tc.ref)
+			if err == nil || ErrorCode(err) != "unsupported_ref" {
+				t.Fatalf("expected unsafe segment to be rejected with unsupported_ref, got %v", err)
+			}
+		})
+	}
+}

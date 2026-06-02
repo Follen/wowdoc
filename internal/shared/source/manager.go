@@ -3,6 +3,7 @@ package source
 import (
 	"errors"
 	"path/filepath"
+	"strings"
 
 	"wowdoc/internal/shared/contracts"
 )
@@ -59,11 +60,17 @@ func (m *Manager) ArchivePath(client, resolvedCommit string) string {
 }
 
 func (m *Manager) ResolveRef(client, requested string) (ResolvedRef, error) {
+	if !safeSegment(client) {
+		return ResolvedRef{}, codedError{code: contracts.ErrUnsupportedRef, msg: "unsafe client segment"}
+	}
 	if requested == "" || requested == "latest" {
 		requested = m.opts.DefaultRefs[client]
 	}
 	if requested == "" {
 		return ResolvedRef{}, codedError{code: contracts.ErrRefNotFound, msg: "default ref not found"}
+	}
+	if !safeSegment(requested) {
+		return ResolvedRef{}, codedError{code: contracts.ErrUnsupportedRef, msg: "unsafe ref segment"}
 	}
 	if !m.opts.AllowArbitraryRef && requested != m.opts.DefaultRefs[client] {
 		return ResolvedRef{}, codedError{code: contracts.ErrUnsupportedRef, msg: "arbitrary ref disabled"}
@@ -75,4 +82,14 @@ func (m *Manager) ResolveRef(client, requested string) (ResolvedRef, error) {
 		Resolved:    resolved,
 		CheckoutDir: m.CheckoutPath(client, resolved),
 	}, nil
+}
+
+func safeSegment(value string) bool {
+	if value == "" || value == "." || value == ".." || filepath.IsAbs(value) {
+		return false
+	}
+	if strings.ContainsAny(value, `/\`) {
+		return false
+	}
+	return filepath.Clean(value) == value
 }
