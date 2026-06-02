@@ -23,6 +23,10 @@ func (a *App) Router() http.Handler {
 }
 
 func (a *App) health(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	writeJSON(w, map[string]any{
 		"sources":            []any{},
 		"clients":            []any{},
@@ -33,6 +37,10 @@ func (a *App) health(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) help(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	writeJSON(w, map[string]string{"mcp": "/mcp", "health": "/health"})
 }
 

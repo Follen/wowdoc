@@ -1,24 +1,38 @@
 package http
 
+import "sync"
+
 type Pools struct {
-	sources map[string]any
-	indexes map[string]any
+	mu      sync.RWMutex
+	sources map[poolKey]any
+	indexes map[poolKey]any
+}
+
+type poolKey struct {
+	client string
+	commit string
 }
 
 func NewPools(maxSources, maxIndexes int) *Pools {
 	_ = maxSources
 	_ = maxIndexes
-	return &Pools{sources: map[string]any{}, indexes: map[string]any{}}
+	return &Pools{sources: map[poolKey]any{}, indexes: map[poolKey]any{}}
 }
 
 func (p *Pools) PutSource(client, commit string, value any) {
-	p.sources[client+"@"+commit] = value
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.sources[poolKey{client: client, commit: commit}] = value
 }
 
 func (p *Pools) Source(client, commit string) any {
-	return p.sources[client+"@"+commit]
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.sources[poolKey{client: client, commit: commit}]
 }
 
 func (p *Pools) Stats() map[string]int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 	return map[string]int{"sources": len(p.sources), "indexes": len(p.indexes)}
 }
