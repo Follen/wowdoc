@@ -1,6 +1,9 @@
 package analyze
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestClassifySafetyMetadata(t *testing.T) {
 	tests := []struct {
@@ -36,4 +39,37 @@ func TestExplainUnitCastScenarioIncludesFieldAdvice(t *testing.T) {
 	if expl.EffectiveLevel != RiskConditionalSecret || len(expl.Why) < 2 || len(expl.AddonAdvice) == 0 {
 		t.Fatalf("bad explanation: %#v", expl)
 	}
+	if !containsText(expl.AddonAdvice, "target") {
+		t.Fatalf("field-level advice should mention conditional field target: %#v", expl.AddonAdvice)
+	}
+	if !containsText(expl.AddonAdvice, "castBarID") {
+		t.Fatalf("field-level advice should mention never-secret field castBarID: %#v", expl.AddonAdvice)
+	}
+}
+
+func TestRestrictedTokenMetadataIsPreservedAndClassified(t *testing.T) {
+	meta := SafetyMetadata{
+		IsPreventingSecretValues: true,
+		RestrictedTypes: []string{
+			"UnitTokenRestrictedForAddOns",
+			"UnitTokenPvPRestrictedForAddOns",
+		},
+	}
+	classified := ClassifySafety(meta)
+	if classified.Level != RiskConditionalSecret {
+		t.Fatalf("restricted token metadata level = %q, want %q", classified.Level, RiskConditionalSecret)
+	}
+	expl := ExplainSafety(meta, "pvp")
+	if !containsText(expl.Why, "UnitTokenPvPRestrictedForAddOns") {
+		t.Fatalf("restricted type not preserved in explanation: %#v", expl.Why)
+	}
+}
+
+func containsText(values []string, needle string) bool {
+	for _, value := range values {
+		if strings.Contains(value, needle) {
+			return true
+		}
+	}
+	return false
 }

@@ -29,7 +29,9 @@ type SafetyMetadata struct {
 	ConditionalSecret                         bool
 	IsForbidden                               bool
 	SetForbidden                              bool
+	IsPreventingSecretValues                  bool
 	SecretWrapperConstant                     string
+	RestrictedTypes                           []string
 	Fields                                    []SafetyField
 }
 
@@ -64,7 +66,8 @@ func ClassifySafety(meta SafetyMetadata) SafetyClassification {
 		level = RiskTaintSensitive
 	case meta.ConditionalSecret || meta.SecretWhenCooldownsRestricted || meta.SecretWhenUnitSpellCastRestricted ||
 		meta.SecretInChatMessagingLockdown || meta.RequiresNonSecretAura || meta.SecretWrapperConstant == "ContextuallySecret" ||
-		len(meta.SecretArgumentsAddAspect) > 0 || len(meta.SecretReturnsForAspect) > 0:
+		meta.IsPreventingSecretValues || len(meta.SecretArgumentsAddAspect) > 0 || len(meta.SecretReturnsForAspect) > 0 ||
+		len(meta.RestrictedTypes) > 0:
 		level = RiskConditionalSecret
 	case meta.NeverSecret || meta.ReturnsNeverSecret || meta.SecretWrapperConstant == "NeverSecret":
 		level = RiskNeverSecret
@@ -77,6 +80,12 @@ func ExplainSafety(meta SafetyMetadata, scenario string) SafetyExplanation {
 	expl := SafetyExplanation{Scenario: scenario, EffectiveLevel: classified.Level}
 	if meta.SecretWhenUnitSpellCastRestricted {
 		expl.Why = append(expl.Why, "SecretWhenUnitSpellCastRestricted is true")
+	}
+	if meta.IsPreventingSecretValues {
+		expl.Why = append(expl.Why, "IsPreventingSecretValues is true")
+	}
+	for _, restricted := range meta.RestrictedTypes {
+		expl.Why = append(expl.Why, "restricted type "+restricted+" is present")
 	}
 	for _, field := range meta.Fields {
 		if field.ConditionalSecret {
@@ -93,6 +102,14 @@ func ExplainSafety(meta SafetyMetadata, scenario string) SafetyExplanation {
 		"Treat secret or conditional fields as possibly unavailable.",
 		"Do not use secret values to mutate secure UI during combat.",
 		"Check nil and use secret-safe fallbacks.",
+	}
+	for _, field := range meta.Fields {
+		if field.ConditionalSecret {
+			expl.AddonAdvice = append(expl.AddonAdvice, "Treat "+field.Name+" as possibly unavailable or secret.")
+		}
+		if field.NeverSecret {
+			expl.AddonAdvice = append(expl.AddonAdvice, field.Name+" is marked never secret and can be used as a safer fallback.")
+		}
 	}
 	return expl
 }
