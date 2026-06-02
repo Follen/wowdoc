@@ -58,7 +58,7 @@ func DetectRepository(path, alias string) Repository {
 	apiDocs := filepath.Join(addons, "Blizzard_APIDocumentationGenerated")
 	repo.Capabilities.APIDocumentation = exists(apiDocs)
 	repo.Capabilities.WidgetDocs = hasFileWithExt(apiDocs, ".lua")
-	repo.Capabilities.Constants = repo.Capabilities.WidgetDocs
+	repo.Capabilities.Constants = hasContentSignal(apiDocs, "Enumeration", "Enum.", "Constants", "ConstantsDocumentation")
 	repo.Capabilities.FrameXML, repo.Capabilities.Mixins, repo.Capabilities.CVars = scanAddOnCapabilities(addons)
 	return repo
 }
@@ -112,8 +112,10 @@ func scanAddOnCapabilities(root string) (frameXML, mixins, cvars bool) {
 		if ext != ".lua" && ext != ".xml" {
 			return nil
 		}
-		frameXML = true
-		if mixins && cvars {
+		if isFrameXMLSignal(path) {
+			frameXML = true
+		}
+		if frameXML && mixins && cvars {
 			return filepath.SkipAll
 		}
 		b, err := os.ReadFile(path)
@@ -126,10 +128,42 @@ func scanAddOnCapabilities(root string) (frameXML, mixins, cvars bool) {
 		if bytes.Contains(b, []byte("C_CVar")) || bytes.Contains(b, []byte("CVar")) {
 			cvars = true
 		}
-		if mixins && cvars {
+		if frameXML && mixins && cvars {
 			return filepath.SkipAll
 		}
 		return nil
 	})
 	return frameXML, mixins, cvars
+}
+
+func isFrameXMLSignal(path string) bool {
+	normalized := filepath.ToSlash(path)
+	return strings.Contains(normalized, "Blizzard_FrameXML/") ||
+		strings.Contains(normalized, "FrameXML") ||
+		strings.Contains(filepath.Base(path), "FrameXML")
+}
+
+func hasContentSignal(root string, needles ...string) bool {
+	found := false
+	_ = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() || found {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext != ".lua" && ext != ".xml" {
+			return nil
+		}
+		b, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return nil
+		}
+		for _, needle := range needles {
+			if bytes.Contains(b, []byte(needle)) || strings.Contains(filepath.Base(path), needle) {
+				found = true
+				return filepath.SkipAll
+			}
+		}
+		return nil
+	})
+	return found
 }

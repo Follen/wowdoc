@@ -10,9 +10,9 @@ func TestDetectRepositoryClassifiesValidPartialAndInvalidSources(t *testing.T) {
 	valid := DetectRepository(filepath.Join(root, "valid-retail"), "retail")
 	if !valid.Valid || valid.Alias != "retail" ||
 		!valid.Capabilities.APIDocumentation ||
-		!valid.Capabilities.FrameXML ||
+		valid.Capabilities.FrameXML ||
 		!valid.Capabilities.WidgetDocs ||
-		!valid.Capabilities.Constants ||
+		valid.Capabilities.Constants ||
 		valid.Capabilities.Mixins ||
 		valid.Capabilities.CVars {
 		t.Fatalf("valid retail detection wrong: %#v", valid)
@@ -30,6 +30,23 @@ func TestDetectRepositoryClassifiesValidPartialAndInvalidSources(t *testing.T) {
 	invalid := DetectRepository(filepath.Join(root, "invalid-random"), "random")
 	if invalid.Valid || len(invalid.Diagnostics) == 0 {
 		t.Fatalf("invalid directory must produce diagnostics: %#v", invalid)
+	}
+}
+
+func TestDetectRepositoryDetectsConstantsOnlyFromConstantSignals(t *testing.T) {
+	root := filepath.Join("..", "..", "..", "testdata", "sources")
+	apiOnly := DetectRepository(filepath.Join(root, "valid-retail"), "retail")
+	if apiOnly.Capabilities.Constants {
+		t.Fatalf("API documentation alone must not imply constants: %#v", apiOnly.Capabilities)
+	}
+	withConstants := DetectRepository(filepath.Join(root, "valid-retail-constants"), "retail-constants")
+	if !withConstants.Valid || !withConstants.Capabilities.APIDocumentation ||
+		!withConstants.Capabilities.WidgetDocs ||
+		!withConstants.Capabilities.Constants {
+		t.Fatalf("constant signal was not detected: %#v", withConstants)
+	}
+	if withConstants.Capabilities.FrameXML {
+		t.Fatalf("generated API docs must not imply FrameXML: %#v", withConstants.Capabilities)
 	}
 }
 
