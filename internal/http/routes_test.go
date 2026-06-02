@@ -41,3 +41,22 @@ func TestReadOnlyRoutesRejectNonGETMethods(t *testing.T) {
 		}
 	}
 }
+
+func TestMCPRouteReportsStreamableHTTPReadiness(t *testing.T) {
+	app := NewApp(DefaultConfig())
+	for _, method := range []string{http.MethodGet, http.MethodPost} {
+		req := httptest.NewRequest(method, "/mcp", nil)
+		rec := httptest.NewRecorder()
+		app.Router().ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s /mcp status = %d, want %d", method, rec.Code, http.StatusOK)
+		}
+		var body map[string]string
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Fatalf("%s /mcp invalid json: %v", method, err)
+		}
+		if body["transport"] != "streamable-http" || body["status"] != "ready" {
+			t.Fatalf("%s /mcp body = %#v", method, body)
+		}
+	}
+}

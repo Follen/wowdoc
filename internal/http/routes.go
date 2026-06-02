@@ -45,7 +45,7 @@ func (a *App) help(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) mcp(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
+	writeJSON(w, map[string]string{"transport": "streamable-http", "status": "ready"})
 }
 
 func writeJSON(w http.ResponseWriter, v any) {
