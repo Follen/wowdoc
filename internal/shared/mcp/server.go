@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"context"
 	"sort"
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -12,8 +13,9 @@ type ServerOptions struct {
 }
 
 type Server struct {
-	sdkServer *sdkmcp.Server
-	tools     map[string]JSONSchema
+	sdkServer          *sdkmcp.Server
+	tools              map[string]JSONSchema
+	sdkRegisteredTools int
 }
 
 func NewServer(options ServerOptions) *Server {
@@ -22,10 +24,24 @@ func NewServer(options ServerOptions) *Server {
 		name = "wowdoc"
 	}
 
-	return &Server{
+	server := &Server{
 		sdkServer: sdkmcp.NewServer(&sdkmcp.Implementation{Name: name, Version: options.Version}, nil),
 		tools:     ToolInputSchemas(),
 	}
+	for toolName, schema := range server.tools {
+		server.sdkServer.AddTool(&sdkmcp.Tool{
+			Name:        toolName,
+			Description: "wowdoc tool " + toolName,
+			InputSchema: schema,
+		}, func(context.Context, *sdkmcp.CallToolRequest) (*sdkmcp.CallToolResult, error) {
+			return &sdkmcp.CallToolResult{
+				StructuredContent: map[string]any{"ok": false},
+				IsError:           true,
+			}, nil
+		})
+		server.sdkRegisteredTools++
+	}
+	return server
 }
 
 func (s *Server) RegisteredToolNames() []string {
@@ -40,4 +56,8 @@ func (s *Server) RegisteredToolNames() []string {
 func (s *Server) HasTool(name string) bool {
 	_, ok := s.tools[name]
 	return ok
+}
+
+func (s *Server) SDKRegisteredToolCount() int {
+	return s.sdkRegisteredTools
 }

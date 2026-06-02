@@ -60,3 +60,13 @@ func TestMCPRouteReportsStreamableHTTPReadiness(t *testing.T) {
 		}
 	}
 }
+
+func TestMCPRouteRejectsUnsupportedMethods(t *testing.T) {
+	app := NewApp(DefaultConfig())
+	req := httptest.NewRequest(http.MethodDelete, "/mcp", nil)
+	rec := httptest.NewRecorder()
+	app.Router().ServeHTTP(rec, req)
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("DELETE /mcp status = %d, want %d", rec.Code, http.StatusMethodNotAllowed)
+	}
+}

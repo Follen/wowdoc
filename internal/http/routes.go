@@ -45,6 +45,10 @@ func (a *App) help(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) mcp(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	writeJSON(w, map[string]string{"transport": "streamable-http", "status": "ready"})
 }
 

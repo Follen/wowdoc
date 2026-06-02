@@ -13,6 +13,9 @@ func TestNewServerRegistersAllToolSchemas(t *testing.T) {
 	if len(names) != len(schemas) {
 		t.Fatalf("registered tool count = %d, schema count = %d", len(names), len(schemas))
 	}
+	if server.SDKRegisteredToolCount() != len(schemas) {
+		t.Fatalf("sdk registered tool count = %d, schema count = %d", server.SDKRegisteredToolCount(), len(schemas))
+	}
 	for name := range schemas {
 		if !server.HasTool(name) {
 			t.Fatalf("server missing schema-backed tool %q", name)
