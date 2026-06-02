@@ -1,8 +1,10 @@
 package analyze
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"wowdoc/internal/shared/contracts"
 )
@@ -53,12 +55,11 @@ func DetectRepository(path, alias string) Repository {
 	}
 	repo.Valid = true
 	addons := filepath.Join(path, "Interface", "AddOns")
-	repo.Capabilities.APIDocumentation = exists(filepath.Join(addons, "Blizzard_APIDocumentationGenerated"))
-	repo.Capabilities.FrameXML = exists(addons)
-	repo.Capabilities.WidgetDocs = exists(filepath.Join(addons, "Blizzard_APIDocumentationGenerated"))
-	repo.Capabilities.Constants = exists(filepath.Join(addons, "Blizzard_APIDocumentationGenerated"))
-	repo.Capabilities.Mixins = exists(addons)
-	repo.Capabilities.CVars = exists(addons)
+	apiDocs := filepath.Join(addons, "Blizzard_APIDocumentationGenerated")
+	repo.Capabilities.APIDocumentation = exists(apiDocs)
+	repo.Capabilities.WidgetDocs = hasFileWithExt(apiDocs, ".lua")
+	repo.Capabilities.Constants = repo.Capabilities.WidgetDocs
+	repo.Capabilities.FrameXML, repo.Capabilities.Mixins, repo.Capabilities.CVars = scanAddOnCapabilities(addons)
 	return repo
 }
 
@@ -86,4 +87,49 @@ func stringTrim(b []byte) string {
 		s = s[:len(s)-1]
 	}
 	return s
+}
+
+func hasFileWithExt(root, ext string) bool {
+	found := false
+	_ = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() || found {
+			return nil
+		}
+		if strings.EqualFold(filepath.Ext(path), ext) {
+			found = true
+		}
+		return nil
+	})
+	return found
+}
+
+func scanAddOnCapabilities(root string) (frameXML, mixins, cvars bool) {
+	_ = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext != ".lua" && ext != ".xml" {
+			return nil
+		}
+		frameXML = true
+		if mixins && cvars {
+			return filepath.SkipAll
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+		if bytes.Contains(b, []byte("Mixin")) || bytes.Contains(b, []byte("Template")) {
+			mixins = true
+		}
+		if bytes.Contains(b, []byte("C_CVar")) || bytes.Contains(b, []byte("CVar")) {
+			cvars = true
+		}
+		if mixins && cvars {
+			return filepath.SkipAll
+		}
+		return nil
+	})
+	return frameXML, mixins, cvars
 }
