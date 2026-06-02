@@ -59,3 +59,20 @@ func TestClientsListAcceptsDiagnosticsFlag(t *testing.T) {
 		t.Fatalf("clients list diagnostics flag should execute, got %v output %s", err, out.String())
 	}
 }
+
+func TestLookupAcceptsDocumentedSourceFlags(t *testing.T) {
+	cmd := NewRootCommand()
+	cmd.SetArgs([]string{
+		"api", "lookup",
+		"--client", "retail",
+		"--name", "C_Test.Foo",
+		"--source-root", "sources",
+		"--source-path", "sources/retail",
+	})
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("documented source flags should execute, got %v output %s", err, out.String())
+	}
+}

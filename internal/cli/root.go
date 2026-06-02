@@ -16,7 +16,7 @@ func NewRootCommand() *cobra.Command {
 
 func apiCommand() *cobra.Command {
 	api := &cobra.Command{Use: "api"}
-	var client, ref, name string
+	var client, ref, name, sourceRoot, sourcePath string
 	lookup := &cobra.Command{
 		Use:   "lookup",
 		Short: "Lookup a Blizzard API symbol.",
@@ -52,12 +52,16 @@ Common error codes:
 				return errors.New("name_required")
 			}
 			_ = ref
+			_ = sourceRoot
+			_ = sourcePath
 			return nil
 		},
 	}
 	lookup.Flags().StringVar(&client, "client", "", "source client alias")
 	lookup.Flags().StringVar(&ref, "ref", "", "branch, tag, or commit")
 	lookup.Flags().StringVar(&name, "name", "", "API name")
+	lookup.Flags().StringVar(&sourceRoot, "source-root", "", "source cache root")
+	lookup.Flags().StringVar(&sourcePath, "source-path", "", "explicit source checkout path")
 	api.AddCommand(lookup)
 	return api
 }
