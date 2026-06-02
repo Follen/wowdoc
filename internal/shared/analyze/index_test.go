@@ -39,4 +39,11 @@ func TestBuildIndexFindsSecureActionButtonTemplateFrameXMLInPartialClassic(t *te
 	if frame.Name != "SecureActionButtonTemplate" || filepath.Base(frame.Path) != "SecureTemplates.lua" {
 		t.Fatalf("unexpected FrameXML entry: %#v", frame)
 	}
+	results := idx.SearchFrameXML("SecureActionButtonTemplate", 5)
+	if len(results) != 1 {
+		t.Fatalf("expected one FrameXML search result, got %#v", results)
+	}
+	if filepath.Base(results[0].File) != "SecureTemplates.lua" || results[0].Line != 1 || results[0].Text == "" {
+		t.Fatalf("search result must include file, line, and text: %#v", results[0])
+	}
 }
