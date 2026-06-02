@@ -66,9 +66,34 @@ docs/
 - `internal/server`: HTTP runtime policy, config, health, source/index pools,
   singleflight, and concurrency limits.
 - `internal/shared/mcpserver`: lightweight MCP JSON-RPC server supporting stdio
-  frames and Streamable HTTP, modeled after `wowdata`.
+  frames and Streamable HTTP, modeled after `wowdata`. Prefer the official Go
+  MCP SDK when it fits the required stdio and Streamable HTTP behavior.
 - `internal/config`: server YAML config. Local runtime uses flags/env and keeps
   configuration minimal.
+
+## MCP SDK Choice
+
+The implementation should use the official Go MCP SDK where practical:
+
+```text
+github.com/modelcontextprotocol/go-sdk/mcp
+github.com/modelcontextprotocol/go-sdk/jsonrpc
+```
+
+The SDK is preferred for protocol correctness, schema handling, transport
+compatibility, and future MCP protocol updates. The custom `mcpserver` package
+remains allowed only as a thin compatibility wrapper or fallback if the SDK
+cannot satisfy a required behavior, such as a specific Streamable HTTP edge case
+or local compatibility test.
+
+The implementation plan must verify:
+
+- stdio tool serving works with Codex/Claude-style clients,
+- Streamable HTTP works for `/mcp`,
+- notifications such as initialized notifications do not produce user-visible
+  errors,
+- structured tool results preserve both text content and structured content,
+- tool schemas can express the shared `client` and `ref` arguments cleanly.
 
 ## Supported Tools
 
