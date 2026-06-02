@@ -22,21 +22,21 @@ func (s JSONSchema) Requires(name string) bool {
 
 func ToolInputSchemas() map[string]JSONSchema {
 	schemas := map[string]JSONSchema{}
-	for name := range map[string]bool{
-		"lookup_blizzard_api":   true,
-		"search_blizzard_api":   true,
-		"get_api_namespace":     true,
-		"get_api_events":        true,
-		"search_framexml":       true,
-		"check_api_deprecation": true,
-		"suggest_api_migration": true,
-		"get_wow_constants":     true,
-		"get_widget_api":        true,
-		"find_mixin_template":   true,
-		"lookup_cvar":           true,
-		"explain_api_safety":    true,
+	for name, primary := range map[string]string{
+		"lookup_blizzard_api":   "name",
+		"search_blizzard_api":   "query",
+		"get_api_namespace":     "namespace",
+		"get_api_events":        "event",
+		"search_framexml":       "query",
+		"check_api_deprecation": "luaCode",
+		"suggest_api_migration": "oldFunction",
+		"get_wow_constants":     "name",
+		"get_widget_api":        "widgetType",
+		"find_mixin_template":   "name",
+		"lookup_cvar":           "name",
+		"explain_api_safety":    "symbol",
 	} {
-		schemas[name] = sourceSchema("name")
+		schemas[name] = sourceSchema(primary)
 	}
 	schemas["list_clients"] = JSONSchema{Type: "object", Properties: map[string]SchemaProperty{
 		"includeDiagnostics": {Type: "boolean"},
