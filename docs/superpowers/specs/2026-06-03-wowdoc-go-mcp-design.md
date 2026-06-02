@@ -45,31 +45,40 @@ cmd/
   wowdoc/
   wowdoc-server/
 internal/
-  analyze/
-  source/
-  tools/
-  local/
-  server/
-  shared/mcpserver/
-  config/
+  shared/
+    analyze/
+    source/
+    tools/
+    mcp/
+    config/
+  cli/
+  stdio/
+  http/
 docs/
 ```
 
-- `internal/analyze`: validates source repositories, identifies clients,
-  builds indexes, and answers query-level requests.
-- `internal/source`: manages default repo seeds, explicit local paths, git
-  clone/fetch, archive fallback, ref resolution, checkout cache, and disk
+- `internal/shared/analyze`: validates source repositories, identifies clients,
+  builds indexes, and answers query-level requests. It has no CLI, stdio, or
+  HTTP policy.
+- `internal/shared/source`: manages default repo seeds, explicit local paths,
+  git clone/fetch, archive fallback, ref resolution, checkout cache, and disk
   layout.
-- `internal/tools`: implements tool behavior over Go structs. It does not know
-  about CLI, stdio, or HTTP.
-- `internal/local`: local runtime policy for CLI and stdio.
-- `internal/server`: HTTP runtime policy, config, health, source/index pools,
-  singleflight, and concurrency limits.
-- `internal/shared/mcpserver`: lightweight MCP JSON-RPC server supporting stdio
-  frames and Streamable HTTP, modeled after `wowdata`. Prefer the official Go
-  MCP SDK when it fits the required stdio and Streamable HTTP behavior.
-- `internal/config`: server YAML config. Local runtime uses flags/env and keeps
-  configuration minimal.
+- `internal/shared/tools`: implements tool behavior over Go structs. It does
+  not know about CLI, stdio, or HTTP.
+- `internal/shared/mcp`: shared MCP registration, schemas, envelopes, and the
+  official Go MCP SDK integration used by both stdio and HTTP.
+- `internal/shared/config`: shared config structs and defaults that are needed
+  by more than one runtime. HTTP-only config lives under `internal/http`.
+- `internal/cli`: CLI-only Cobra commands, command help, flag parsing, stdout
+  formatting, and CLI runtime policy.
+- `internal/stdio`: stdio-only MCP transport startup and stdio runtime policy.
+- `internal/http`: HTTP-only config loading, HTTP runtime policy, health/help
+  routes, source/index pools, singleflight, concurrency limits, and server MCP
+  transport startup.
+
+The boundary rule is strict: if code is used by CLI, stdio, and HTTP, it belongs
+under `internal/shared`. If code is private to one surface, it belongs under
+`internal/cli`, `internal/stdio`, or `internal/http`.
 
 ## MCP SDK Choice
 
@@ -81,10 +90,9 @@ github.com/modelcontextprotocol/go-sdk/jsonrpc
 ```
 
 The SDK is preferred for protocol correctness, schema handling, transport
-compatibility, and future MCP protocol updates. The custom `mcpserver` package
-remains allowed only as a thin compatibility wrapper or fallback if the SDK
-cannot satisfy a required behavior, such as a specific Streamable HTTP edge case
-or local compatibility test.
+compatibility, and future MCP protocol updates. Any custom MCP wrapper must live
+under `internal/shared/mcp` and remain a thin compatibility layer around the SDK
+unless a documented SDK limitation requires otherwise.
 
 The implementation plan must verify:
 
@@ -270,13 +278,13 @@ Configurable limits include maximum source contexts, maximum index contexts,
 maximum concurrent source fetches, maximum concurrent index builds, request
 timeouts, and optional cache pruning.
 
-## Local Runtime
+## CLI Runtime
 
-`wowdoc` exposes CLI commands and MCP stdio.
+`wowdoc` exposes CLI commands.
 
-Local behavior:
+CLI behavior:
 
-- CLI and stdio require explicit `client` for source-backed tools.
+- CLI requires explicit `client` for source-backed tools.
 - `ref` is optional and defaults to latest/default.
 - If no `--source-root` or `--source-path` is specified, the runtime uses
   `<exe-dir>/sources`.
@@ -284,8 +292,8 @@ Local behavior:
   seeds.
 - If `git` is missing, archive fallback is used.
 - CLI lazily loads the minimum needed index and exits.
-- stdio is long-lived and reuses loaded indexes across calls.
-- Local runtime does not read server YAML, expose HTTP, or start health routes.
+- CLI does not read HTTP server YAML, expose HTTP, start health routes, or own
+  stdio transport policy.
 
 Representative commands:
 
@@ -299,7 +307,23 @@ wowdoc toc validate --toc-path .\MyAddon.toc
 wowdoc mcp stdio
 ```
 
-## Server Runtime
+## Stdio Runtime
+
+`wowdoc mcp stdio` exposes local MCP over stdio.
+
+Stdio behavior:
+
+- Stdio uses shared MCP tool schemas from `internal/shared/mcp`.
+- Stdio requires explicit `client` for source-backed tools.
+- `ref` is optional and defaults to latest/default.
+- If no source root is configured by flags/env, stdio uses `<exe-dir>/sources`.
+- If default sources are missing, stdio uses the shared source manager to clone
+  or download the default seeds.
+- Stdio is long-lived and reuses loaded source and index contexts across calls.
+- Stdio does not read HTTP server YAML, expose HTTP routes, or use HTTP health
+  policy.
+
+## HTTP Runtime
 
 `wowdoc-server` exposes only MCP HTTP:
 
@@ -693,7 +717,7 @@ Unit and integration tests cover:
 
 - No database materialization.
 - No DuckDB, SQLite metadata store, or Parquet cache.
-- No local/server runtime blending.
+- No CLI/stdio/HTTP runtime blending.
 - No mutable global checkout per client.
 - No addon scaffolding.
 - No Lua linter.
