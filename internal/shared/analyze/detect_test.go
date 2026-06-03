@@ -1,6 +1,7 @@
 package analyze
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -10,11 +11,11 @@ func TestDetectRepositoryClassifiesValidPartialAndInvalidSources(t *testing.T) {
 	valid := DetectRepository(filepath.Join(root, "valid-retail"), "retail")
 	if !valid.Valid || valid.Alias != "retail" ||
 		!valid.Capabilities.APIDocumentation ||
-		valid.Capabilities.FrameXML ||
+		!valid.Capabilities.FrameXML ||
 		!valid.Capabilities.WidgetDocs ||
 		valid.Capabilities.Constants ||
 		valid.Capabilities.Mixins ||
-		valid.Capabilities.CVars {
+		!valid.Capabilities.CVars {
 		t.Fatalf("valid retail detection wrong: %#v", valid)
 	}
 	partial := DetectRepository(filepath.Join(root, "partial-classic"), "classic")
@@ -63,5 +64,20 @@ func TestDetectRepositoryDoesNotInferCapabilitiesFromAddOnsAlone(t *testing.T) {
 		repo.Capabilities.Mixins ||
 		repo.Capabilities.CVars {
 		t.Fatalf("empty AddOns repository should not report capabilities: %#v", repo.Capabilities)
+	}
+}
+
+func TestDetectRepositoryInfersVersionFromRepositoryMetadata(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "Interface", "AddOns"), 0o755); err != nil {
+		t.Fatalf("create source structure: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "build.info"), []byte("version=12.1.0.61000\n"), 0o600); err != nil {
+		t.Fatalf("write metadata: %v", err)
+	}
+
+	repo := DetectRepository(root, "metadata-retail")
+	if !repo.Valid || repo.Version != "12.1.0.61000" {
+		t.Fatalf("repository metadata version should make source valid: %#v", repo)
 	}
 }

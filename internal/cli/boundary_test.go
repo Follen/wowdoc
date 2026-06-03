@@ -1,4 +1,4 @@
-package http
+package cli
 
 import (
 	"go/parser"
@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-func TestHTTPDoesNotImportCLIOrStdio(t *testing.T) {
+func TestCLIDoesNotImportHTTP(t *testing.T) {
 	root := filepath.Join("..", "..")
-	err := filepath.WalkDir(filepath.Join(root, "internal", "http"), func(path string, d os.DirEntry, err error) error {
+	err := filepath.WalkDir(filepath.Join(root, "internal", "cli"), func(path string, d os.DirEntry, err error) error {
 		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") {
 			return err
 		}
@@ -20,10 +20,8 @@ func TestHTTPDoesNotImportCLIOrStdio(t *testing.T) {
 			return parseErr
 		}
 		for _, imp := range file.Imports {
-			for _, forbidden := range []string{`"wowdoc/internal/cli"`, `"wowdoc/internal/stdio"`} {
-				if imp.Path.Value == forbidden {
-					t.Fatalf("HTTP must not import runtime package %s: %s", forbidden, path)
-				}
+			if imp.Path.Value == `"wowdoc/internal/http"` {
+				t.Fatalf("CLI must not import HTTP server package: %s", path)
 			}
 		}
 		return nil

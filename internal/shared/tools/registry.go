@@ -16,6 +16,7 @@ func DefaultRegistry() Registry {
 		"find_mixin_template",
 		"lookup_cvar",
 		"explain_api_safety",
+		"inspect_remote_refs",
 	}
 	reg := Registry{Tools: map[string]ToolDefinition{}}
 	for _, name := range names {

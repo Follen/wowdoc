@@ -105,7 +105,7 @@ The implementation plan must verify:
 
 ## Supported Tools
 
-The MCP service exposes 14 tools:
+The MCP service exposes 15 tools:
 
 - `list_clients`
 - `lookup_blizzard_api`
@@ -121,6 +121,7 @@ The MCP service exposes 14 tools:
 - `find_mixin_template`
 - `lookup_cvar`
 - `explain_api_safety`
+- `inspect_remote_refs`
 
 The Go implementation intentionally omits these TypeScript tools:
 
@@ -133,10 +134,10 @@ The Go implementation intentionally omits these TypeScript tools:
 The default source seeds are:
 
 - `wow-ui-source`
-- `wow-ui-source-classic`
-- `wow-ui-source-classic-ptr`
-- `wow-ui-source-classic-titan`
-- `wow-ui-source-ptr2`
+- `wow-ui-source@classic`
+- `wow-ui-source@classic_ptr`
+- `wow-ui-source@classic_titan`
+- `wow-ui-source@ptr2`
 
 These seeds are bootstrap defaults, not the complete universe of supported
 clients. Any additional directory under the source root, or any configured
@@ -361,19 +362,22 @@ sources:
   defaults:
     - alias: retail
       repo: https://github.com/Gethe/wow-ui-source.git
-      ref: main
+      ref: live
     - alias: classic
-      repo: https://github.com/Gethe/wow-ui-source-classic.git
-      ref: main
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: classic
     - alias: classic-ptr
-      repo: https://github.com/Gethe/wow-ui-source-classic-ptr.git
-      ref: main
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: classic_ptr
     - alias: classic-titan
-      repo: https://github.com/Gethe/wow-ui-source-classic-titan.git
-      ref: main
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: classic_titan
+    - alias: ptr
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: ptr2
     - alias: ptr2
-      repo: https://github.com/Gethe/wow-ui-source-ptr2.git
-      ref: main
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: ptr2
   extra:
     - alias: old-classic
       repo: https://github.com/Gethe/wow-ui-source-classic.git
@@ -420,7 +424,7 @@ Example help sections:
 
 ```text
 Required:
-  --client retail|classic|classic-ptr|classic-titan|ptr2|<discovered alias>
+  --client retail|classic|classic-ptr|classic-titan|ptr|ptr2|<discovered alias>
   --name API_NAME
 
 Optional:
@@ -529,6 +533,14 @@ All source-backed tools accept `client` and optional `ref`.
 - Input: `client`, `ref?`, `symbol`, `scenario?`
 - Output: raw safety metadata, effective risk level, field-level secret status,
   scenario-specific explanation, and addon advice.
+
+`inspect_remote_refs`:
+
+- Input: `client?`, `includeVersion?`
+- Output: configured source aliases, repository URLs, configured branch refs,
+  remote commits when `git ls-remote` is available, fallback status when git is
+  unavailable and archive/source acquisition is used, and detected source
+  versions when requested.
 
 ## Safety And Secret Value Analysis
 

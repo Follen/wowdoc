@@ -7,11 +7,13 @@ type SourceSeed struct {
 }
 
 func DefaultSourceSeeds() []SourceSeed {
+	repo := "https://github.com/Gethe/wow-ui-source.git"
 	return []SourceSeed{
-		{Alias: "retail", Repo: "https://github.com/Gethe/wow-ui-source.git", Ref: "main"},
-		{Alias: "classic", Repo: "https://github.com/Gethe/wow-ui-source-classic.git", Ref: "main"},
-		{Alias: "classic-ptr", Repo: "https://github.com/Gethe/wow-ui-source-classic-ptr.git", Ref: "main"},
-		{Alias: "classic-titan", Repo: "https://github.com/Gethe/wow-ui-source-classic-titan.git", Ref: "main"},
-		{Alias: "ptr2", Repo: "https://github.com/Gethe/wow-ui-source-ptr2.git", Ref: "main"},
+		{Alias: "retail", Repo: repo, Ref: "live"},
+		{Alias: "classic", Repo: repo, Ref: "classic"},
+		{Alias: "classic-ptr", Repo: repo, Ref: "classic_ptr"},
+		{Alias: "classic-titan", Repo: repo, Ref: "classic_titan"},
+		{Alias: "ptr", Repo: repo, Ref: "ptr2"},
+		{Alias: "ptr2", Repo: repo, Ref: "ptr2"},
 	}
 }

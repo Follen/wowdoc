@@ -78,8 +78,23 @@ func ClassifySafety(meta SafetyMetadata) SafetyClassification {
 func ExplainSafety(meta SafetyMetadata, scenario string) SafetyExplanation {
 	classified := ClassifySafety(meta)
 	expl := SafetyExplanation{Scenario: scenario, EffectiveLevel: classified.Level}
+	if meta.SecretArguments == "AllowedWhenUntainted" {
+		expl.Why = append(expl.Why, "SecretArguments is AllowedWhenUntainted")
+	}
+	if meta.SecretArguments == "NotAllowed" {
+		expl.Why = append(expl.Why, "SecretArguments is NotAllowed")
+	}
 	if meta.SecretWhenUnitSpellCastRestricted {
 		expl.Why = append(expl.Why, "SecretWhenUnitSpellCastRestricted is true")
+	}
+	if meta.SecretWhenCooldownsRestricted {
+		expl.Why = append(expl.Why, "SecretWhenCooldownsRestricted is true")
+	}
+	if meta.SecretInChatMessagingLockdown {
+		expl.Why = append(expl.Why, "SecretInChatMessagingLockdown is true")
+	}
+	if meta.RequiresNonSecretAura {
+		expl.Why = append(expl.Why, "RequiresNonSecretAura is true")
 	}
 	if meta.IsPreventingSecretValues {
 		expl.Why = append(expl.Why, "IsPreventingSecretValues is true")
@@ -102,6 +117,21 @@ func ExplainSafety(meta SafetyMetadata, scenario string) SafetyExplanation {
 		"Treat secret or conditional fields as possibly unavailable.",
 		"Do not use secret values to mutate secure UI during combat.",
 		"Check nil and use secret-safe fallbacks.",
+	}
+	if meta.SecretArguments == "AllowedWhenUntainted" {
+		expl.AddonAdvice = append(expl.AddonAdvice, "Call this API only from an untainted execution path.")
+	}
+	if meta.SecretArguments == "NotAllowed" {
+		expl.AddonAdvice = append(expl.AddonAdvice, "Do not pass secret arguments from addon-controlled code.")
+	}
+	if meta.SecretInChatMessagingLockdown {
+		expl.AddonAdvice = append(expl.AddonAdvice, "Avoid relying on this value while chat lockdown is active.")
+	}
+	if meta.SecretWhenCooldownsRestricted {
+		expl.AddonAdvice = append(expl.AddonAdvice, "Treat cooldown-related values as unavailable when cooldown restrictions apply.")
+	}
+	if meta.RequiresNonSecretAura {
+		expl.AddonAdvice = append(expl.AddonAdvice, "Use non-secret aura data paths or nil-safe fallbacks.")
 	}
 	for _, field := range meta.Fields {
 		if field.ConditionalSecret {

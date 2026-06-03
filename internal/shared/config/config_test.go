@@ -9,13 +9,27 @@ import (
 
 func TestDefaultSeedsAreBootstrapDefaults(t *testing.T) {
 	seeds := DefaultSourceSeeds()
-	wantAliases := []string{"retail", "classic", "classic-ptr", "classic-titan", "ptr2"}
+	wantAliases := []string{"retail", "classic", "classic-ptr", "classic-titan", "ptr", "ptr2"}
 	if len(seeds) != len(wantAliases) {
 		t.Fatalf("seed count = %d, want %d", len(seeds), len(wantAliases))
+	}
+	wantRefs := map[string]string{
+		"retail":        "live",
+		"classic":       "classic",
+		"classic-ptr":   "classic_ptr",
+		"classic-titan": "classic_titan",
+		"ptr":           "ptr2",
+		"ptr2":          "ptr2",
 	}
 	for i, alias := range wantAliases {
 		if seeds[i].Alias != alias {
 			t.Fatalf("seed %d alias = %q, want %q", i, seeds[i].Alias, alias)
+		}
+		if seeds[i].Repo != "https://github.com/Gethe/wow-ui-source.git" {
+			t.Fatalf("seed %q repo = %q, want Gethe/wow-ui-source.git", alias, seeds[i].Repo)
+		}
+		if seeds[i].Ref != wantRefs[alias] {
+			t.Fatalf("seed %q ref = %q, want %q", alias, seeds[i].Ref, wantRefs[alias])
 		}
 		if seeds[i].Repo == "" || seeds[i].Ref == "" {
 			t.Fatalf("seed %q must include repo and ref: %#v", alias, seeds[i])

@@ -19,6 +19,7 @@ func TestRegistryContainsExactlySupportedTools(t *testing.T) {
 		"find_mixin_template",
 		"lookup_cvar",
 		"explain_api_safety",
+		"inspect_remote_refs",
 	}
 	if len(reg.Tools) != len(want) {
 		t.Fatalf("tool count = %d, want %d", len(reg.Tools), len(want))

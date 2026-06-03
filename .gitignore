@@ -1,3 +1,5 @@
 dist/
 /wowdoc.exe
 /wowdoc-server.exe
+/sources/
+.local/

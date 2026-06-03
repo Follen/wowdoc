@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"wowdoc/internal/shared/contracts"
 )
+
+var versionPattern = regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)
 
 type Capabilities struct {
 	APIDocumentation bool `json:"apiDocumentation"`
@@ -22,6 +25,8 @@ type Repository struct {
 	Alias        string                 `json:"alias"`
 	Path         string                 `json:"path"`
 	Version      string                 `json:"version"`
+	RequestedRef string                 `json:"requestedRef,omitempty"`
+	ResolvedRef  string                 `json:"resolvedRef,omitempty"`
 	Valid        bool                   `json:"valid"`
 	Capabilities Capabilities           `json:"capabilities"`
 	Diagnostics  []contracts.Diagnostic `json:"diagnostics"`
@@ -43,7 +48,10 @@ func DetectRepository(path, alias string) Repository {
 	}
 	versionPath := filepath.Join(path, "version.txt")
 	if !exists(versionPath) {
-		missing = append(missing, "version.txt")
+		repo.Version = inferRepositoryVersion(path)
+		if repo.Version == "" {
+			missing = append(missing, "version.txt")
+		}
 	} else if b, err := os.ReadFile(versionPath); err == nil {
 		repo.Version = stringTrim(b)
 	}
@@ -61,6 +69,19 @@ func DetectRepository(path, alias string) Repository {
 	repo.Capabilities.Constants = hasContentSignal(apiDocs, "Enumeration", "Enum.", "Constants", "ConstantsDocumentation")
 	repo.Capabilities.FrameXML, repo.Capabilities.Mixins, repo.Capabilities.CVars = scanAddOnCapabilities(addons)
 	return repo
+}
+
+func inferRepositoryVersion(path string) string {
+	for _, name := range []string{"build.info", ".build.info", "build.txt", "metadata.txt", ".metadata"} {
+		b, err := os.ReadFile(filepath.Join(path, name))
+		if err != nil {
+			continue
+		}
+		if match := versionPattern.Find(b); len(match) > 0 {
+			return string(match)
+		}
+	}
+	return ""
 }
 
 func hasAny(root string, rels ...string) bool {

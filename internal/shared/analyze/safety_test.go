@@ -47,6 +47,36 @@ func TestExplainUnitCastScenarioIncludesFieldAdvice(t *testing.T) {
 	}
 }
 
+func TestExplainTaintedScenarioDescribesUntaintedCallerRequirement(t *testing.T) {
+	meta := SafetyMetadata{SecretArguments: "AllowedWhenUntainted"}
+
+	expl := ExplainSafety(meta, "tainted")
+	if expl.EffectiveLevel != RiskTaintSensitive {
+		t.Fatalf("effective level = %q, want %q", expl.EffectiveLevel, RiskTaintSensitive)
+	}
+	if !containsText(expl.Why, "AllowedWhenUntainted") {
+		t.Fatalf("tainted explanation should mention AllowedWhenUntainted: %#v", expl.Why)
+	}
+	if !containsText(expl.AddonAdvice, "untainted") {
+		t.Fatalf("tainted advice should mention untainted callers: %#v", expl.AddonAdvice)
+	}
+}
+
+func TestExplainChatLockdownScenarioMentionsChatRestriction(t *testing.T) {
+	meta := SafetyMetadata{SecretInChatMessagingLockdown: true}
+
+	expl := ExplainSafety(meta, "chat_lockdown")
+	if expl.EffectiveLevel != RiskConditionalSecret {
+		t.Fatalf("effective level = %q, want %q", expl.EffectiveLevel, RiskConditionalSecret)
+	}
+	if !containsText(expl.Why, "SecretInChatMessagingLockdown") {
+		t.Fatalf("chat lockdown explanation should mention metadata: %#v", expl.Why)
+	}
+	if !containsText(expl.AddonAdvice, "chat lockdown") {
+		t.Fatalf("chat lockdown advice should mention chat lockdown: %#v", expl.AddonAdvice)
+	}
+}
+
 func TestRestrictedTokenMetadataIsPreservedAndClassified(t *testing.T) {
 	meta := SafetyMetadata{
 		IsPreventingSecretValues: true,
