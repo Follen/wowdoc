@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -189,6 +190,14 @@ sources:
 
 	baseURL := fmt.Sprintf("http://127.0.0.1:%d", port)
 	waitForHealth(t, baseURL+"/health")
+	rootResp, err := http.Get(baseURL + "/")
+	if err != nil {
+		t.Fatalf("GET /: %v", err)
+	}
+	defer rootResp.Body.Close()
+	if rootResp.Request.URL.Path != "/help" {
+		t.Fatalf("GET / final path = %q, want /help", rootResp.Request.URL.Path)
+	}
 	helpResp, err := http.Get(baseURL + "/help")
 	if err != nil {
 		t.Fatalf("GET /help: %v", err)
@@ -197,15 +206,21 @@ sources:
 	if helpResp.StatusCode != http.StatusOK {
 		t.Fatalf("GET /help status = %d, want %d", helpResp.StatusCode, http.StatusOK)
 	}
-	var help map[string]string
-	if err := json.NewDecoder(helpResp.Body).Decode(&help); err != nil {
-		t.Fatalf("decode /help: %v", err)
+	if got := helpResp.Header.Get("Content-Type"); !strings.HasPrefix(got, "text/html") {
+		t.Fatalf("GET /help Content-Type = %q, want text/html", got)
 	}
-	if help["mcp"] != "/mcp" || help["health"] != "/health" {
-		t.Fatalf("/help body = %#v, want mcp and health routes", help)
+	helpBody, err := io.ReadAll(helpResp.Body)
+	if err != nil {
+		t.Fatalf("read /help: %v", err)
 	}
-	if _, ok := help["cli"]; ok {
-		t.Fatalf("/help must not expose CLI routes: %#v", help)
+	help := string(helpBody)
+	for _, want := range []string{"wowdoc MCP 帮助", "/mcp", "/health", "list_clients", "lookup_blizzard_api", "search_framexml"} {
+		if !strings.Contains(help, want) {
+			t.Fatalf("/help missing %q:\n%s", want, help)
+		}
+	}
+	if strings.Contains(help, "cache gc") || strings.Contains(help, "deploy") {
+		t.Fatalf("/help must not expose management details:\n%s", help)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

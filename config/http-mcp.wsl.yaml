@@ -1,0 +1,44 @@
+server:
+  host: 0.0.0.0
+  port: 9789
+  base_url: http://127.0.0.1:11223/wowdoc
+
+sources:
+  root: /opt/wowdoc/sources
+  allow_arbitrary_ref: false
+  default_ref: latest
+  defaults:
+    - alias: retail
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: live
+    - alias: classic
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: classic
+    - alias: classic-ptr
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: classic_ptr
+    - alias: classic-titan
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: classic_titan
+    - alias: ptr
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: ptr2
+    - alias: ptr2
+      repo: https://github.com/Gethe/wow-ui-source.git
+      ref: ptr2
+
+contexts:
+  max_source_contexts: 8
+  max_index_contexts: 4
+  pinned:
+    - retail
+    - classic
+
+limits:
+  max_concurrent_source_fetches: 2
+  max_concurrent_index_builds: 2
+  request_timeout_seconds: 60
+
+prepare:
+  prewarm_on_start: false
+  prewarm_clients: []

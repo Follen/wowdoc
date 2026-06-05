@@ -212,7 +212,7 @@ func TestHealthReportsPrewarmErrors(t *testing.T) {
 
 func TestReadOnlyRoutesRejectNonGETMethods(t *testing.T) {
 	app := NewApp(DefaultConfig())
-	for _, path := range []string{"/health", "/help"} {
+	for _, path := range []string{"/", "/health", "/help"} {
 		req := httptest.NewRequest(http.MethodPost, path, nil)
 		rec := httptest.NewRecorder()
 		app.Router().ServeHTTP(rec, req)
@@ -222,23 +222,73 @@ func TestReadOnlyRoutesRejectNonGETMethods(t *testing.T) {
 	}
 }
 
-func TestHelpReportsOnlyPublicHTTPRoutes(t *testing.T) {
+func TestRootRedirectsToHelp(t *testing.T) {
 	app := NewApp(DefaultConfig())
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	app.Router().ServeHTTP(rec, req)
+	if rec.Code != http.StatusFound {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusFound)
+	}
+	if got := rec.Header().Get("Location"); got != "/help" {
+		t.Fatalf("Location = %q, want /help", got)
+	}
+}
+
+func TestHelpReturnsHTMLWithEndpointsToolsAndSources(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.Server.BaseURL = "http://example.test/wowdoc"
+	app := NewApp(cfg)
 	req := httptest.NewRequest(http.MethodGet, "/help", nil)
 	rec := httptest.NewRecorder()
 	app.Router().ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d", rec.Code)
 	}
-	var body map[string]string
-	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
-		t.Fatalf("invalid json: %v\n%s", err, rec.Body.String())
+	if got := rec.Header().Get("Content-Type"); !strings.HasPrefix(got, "text/html") {
+		t.Fatalf("Content-Type = %q, want text/html", got)
 	}
-	if body["mcp"] != "/mcp" || body["health"] != "/health" {
-		t.Fatalf("help route map wrong: %#v", body)
+	body := rec.Body.String()
+	for _, want := range []string{
+		"wowdoc MCP 帮助",
+		"服务入口",
+		"公开 MCP Tools",
+		"常用参数",
+		"当前配置 Sources",
+		"JSON-RPC 示例",
+		"http://example.test/wowdoc/mcp",
+		"http://example.test/wowdoc/health",
+		"list_clients",
+		"lookup_blizzard_api",
+		"search_framexml",
+		"validate_toc",
+		"retail",
+		"classic-titan",
+		"ptr2",
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("/help missing %q:\n%s", want, body)
+		}
 	}
-	if _, ok := body["cli"]; ok {
-		t.Fatalf("HTTP help must not expose CLI routes: %#v", body)
+	for _, hidden := range []string{"cache gc", "deploy", "deployment"} {
+		if strings.Contains(body, hidden) {
+			t.Fatalf("/help should not expose management details %q:\n%s", hidden, body)
+		}
+	}
+}
+
+func TestReadOnlyRoutesSupportHEAD(t *testing.T) {
+	app := NewApp(DefaultConfig())
+	for _, path := range []string{"/health", "/help"} {
+		req := httptest.NewRequest(http.MethodHead, path, nil)
+		rec := httptest.NewRecorder()
+		app.Router().ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s HEAD status = %d, want %d", path, rec.Code, http.StatusOK)
+		}
+		if rec.Body.Len() != 0 {
+			t.Fatalf("%s HEAD wrote body: %q", path, rec.Body.String())
+		}
 	}
 }
 
