@@ -30,5 +30,7 @@ func runWithArgs(args []string, listenAndServe func(string, http.Handler) error)
 		return err
 	}
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	return listenAndServe(addr, wowhttp.NewApp(cfg).Router())
+	app := wowhttp.NewApp(cfg)
+	defer app.Close()
+	return listenAndServe(addr, app.Router())
 }

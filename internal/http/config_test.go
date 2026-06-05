@@ -70,6 +70,7 @@ limits:
   request_timeout_seconds: 12
 prepare:
   prewarm_on_start: true
+  refresh_interval_minutes: 30
   prewarm_clients:
     - retail
 `), 0o600); err != nil {
@@ -98,7 +99,7 @@ prepare:
 	if cfg.Limits.MaxConcurrentSourceFetches != 2 {
 		t.Fatalf("default limit should be preserved: %#v", cfg.Limits)
 	}
-	if !cfg.Prepare.PrewarmOnStart || len(cfg.Prepare.PrewarmClients) != 1 || cfg.Prepare.PrewarmClients[0] != "retail" {
+	if !cfg.Prepare.PrewarmOnStart || cfg.Prepare.RefreshIntervalMinutes != 30 || len(cfg.Prepare.PrewarmClients) != 1 || cfg.Prepare.PrewarmClients[0] != "retail" {
 		t.Fatalf("prepare config not loaded: %#v", cfg.Prepare)
 	}
 }

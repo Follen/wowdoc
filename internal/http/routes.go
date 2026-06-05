@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -30,6 +31,9 @@ type App struct {
 	archive          source.ArchiveFetcher
 	sourceFetchSlots chan struct{}
 	indexBuildSlots  chan struct{}
+	refreshStop      context.CancelFunc
+	refreshWG        sync.WaitGroup
+	recentErrorsMu   sync.Mutex
 	recentErrors     []map[string]string
 }
 
@@ -66,6 +70,9 @@ func newAppWithFetchers(cfg Config, git source.GitRunner, archive source.Archive
 	}, &sdkmcp.StreamableHTTPOptions{JSONResponse: true})
 	app.mcpHandler = handler
 	app.prewarm()
+	if cfg.Prepare.RefreshIntervalMinutes > 0 {
+		app.refreshStop = app.startRefreshLoop(time.Duration(cfg.Prepare.RefreshIntervalMinutes)*time.Minute, cfg.Prepare.PrewarmClients)
+	}
 	return app
 }
 
@@ -106,7 +113,7 @@ func (a *App) health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	repos, err := a.detectSources()
-	recentErrors := append([]map[string]string{}, a.recentErrors...)
+	recentErrors := a.recentErrorSnapshot()
 	if err != nil {
 		recentErrors = append(recentErrors, map[string]string{"message": err.Error()})
 	}
@@ -163,13 +170,89 @@ func (a *App) prewarm() {
 		}
 		repo, _, err := a.loadRepoIndex(context.Background(), client, "")
 		if err != nil {
-			a.recentErrors = append(a.recentErrors, map[string]string{"client": client, "message": err.Error()})
+			a.recordRecentError(client, err)
 			continue
 		}
 		if !repo.Valid {
-			a.recentErrors = append(a.recentErrors, map[string]string{"client": client, "message": "source_invalid"})
+			a.recordRecentError(client, fmt.Errorf("source_invalid"))
 		}
 	}
+}
+
+func (a *App) startRefreshLoop(interval time.Duration, clients []string) func() {
+	if interval <= 0 || len(clients) == 0 {
+		return func() {}
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	a.refreshWG.Add(1)
+	go func() {
+		defer a.refreshWG.Done()
+		a.refreshClients(ctx, clients)
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				a.refreshClients(ctx, clients)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return func() {
+		cancel()
+		a.refreshWG.Wait()
+	}
+}
+
+func (a *App) refreshClients(ctx context.Context, clients []string) {
+	for _, client := range clients {
+		if client == "" {
+			continue
+		}
+		if err := ctx.Err(); err != nil {
+			return
+		}
+		repo, _, err := a.loadRepoIndex(ctx, client, "")
+		if err != nil {
+			a.recordRecentError(client, err)
+			continue
+		}
+		if !repo.Valid {
+			a.recordRecentError(client, fmt.Errorf("source_invalid"))
+		}
+	}
+}
+
+func (a *App) Close() error {
+	if a.refreshStop != nil {
+		a.refreshStop()
+	}
+	return nil
+}
+
+func (a *App) recordRecentError(client string, err error) {
+	entry := map[string]string{"message": err.Error()}
+	if client != "" {
+		entry["client"] = client
+	}
+	a.recentErrorsMu.Lock()
+	defer a.recentErrorsMu.Unlock()
+	a.recentErrors = append(a.recentErrors, entry)
+}
+
+func (a *App) recentErrorSnapshot() []map[string]string {
+	a.recentErrorsMu.Lock()
+	defer a.recentErrorsMu.Unlock()
+	out := make([]map[string]string, 0, len(a.recentErrors))
+	for _, entry := range a.recentErrors {
+		copied := map[string]string{}
+		for k, v := range entry {
+			copied[k] = v
+		}
+		out = append(out, copied)
+	}
+	return out
 }
 
 func (a *App) detectSources() ([]analyze.Repository, error) {

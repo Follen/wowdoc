@@ -40,5 +40,12 @@ limits:
   request_timeout_seconds: 60
 
 prepare:
-  prewarm_on_start: false
-  prewarm_clients: []
+  prewarm_on_start: true
+  refresh_interval_minutes: 30
+  prewarm_clients:
+    - retail
+    - classic
+    - classic-ptr
+    - classic-titan
+    - ptr
+    - ptr2

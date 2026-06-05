@@ -50,8 +50,9 @@ type LimitConfig struct {
 }
 
 type PrepareConfig struct {
-	PrewarmOnStart bool     `yaml:"prewarm_on_start"`
-	PrewarmClients []string `yaml:"prewarm_clients"`
+	PrewarmOnStart         bool     `yaml:"prewarm_on_start"`
+	PrewarmClients         []string `yaml:"prewarm_clients"`
+	RefreshIntervalMinutes int      `yaml:"refresh_interval_minutes"`
 }
 
 func DefaultConfig() Config {

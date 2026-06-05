@@ -210,6 +210,54 @@ func TestHealthReportsPrewarmErrors(t *testing.T) {
 	}
 }
 
+func TestBackgroundRefreshesConfiguredClients(t *testing.T) {
+	root := t.TempDir()
+	fixture := filepath.Join("..", "..", "testdata", "sources", "valid-retail")
+	git := &countingGit{fixture: fixture, commits: map[string]string{"retail": "abc123def456"}}
+	cfg := DefaultConfig()
+	cfg.Sources.Root = root
+	cfg.Sources.Defaults = nil
+	cfg.Sources.Extra = []SourceEntry{{Alias: "retail", Repo: "https://example.test/wow-ui-source.git", Ref: "main"}}
+	app := newAppWithGit(cfg, git)
+	stop := app.startRefreshLoop(10*time.Millisecond, []string{"retail"})
+	defer stop()
+
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		if git.fetchCount() > 0 && app.pools.Stats()["indexes"] > 0 {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("background refresh did not load retail: fetches=%d pools=%#v", git.fetchCount(), app.pools.Stats())
+}
+
+func TestBackgroundRefreshErrorsAppearInHealth(t *testing.T) {
+	app := NewApp(DefaultConfig())
+	stop := app.startRefreshLoop(10*time.Millisecond, []string{"missing-client"})
+	defer stop()
+
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		req := httptest.NewRequest("GET", "/health", nil)
+		rec := httptest.NewRecorder()
+		app.Router().ServeHTTP(rec, req)
+		var body struct {
+			RecentErrors []map[string]string `json:"recentErrors"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Fatalf("invalid json: %v", err)
+		}
+		for _, entry := range body.RecentErrors {
+			if entry["client"] == "missing-client" {
+				return
+			}
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("refresh error missing from health")
+}
+
 func TestReadOnlyRoutesRejectNonGETMethods(t *testing.T) {
 	app := NewApp(DefaultConfig())
 	for _, path := range []string{"/", "/health", "/help"} {
@@ -1111,6 +1159,13 @@ type fixtureGit struct {
 	commands       [][]string
 }
 
+type countingGit struct {
+	fixture string
+	commits map[string]string
+	mu      sync.Mutex
+	fetches int
+}
+
 type failingHTTPGit struct{}
 
 func (failingHTTPGit) Run(args ...string) error { return os.ErrNotExist }
@@ -1176,6 +1231,39 @@ func (g *fixtureGit) Output(args ...string) ([]byte, error) {
 		return []byte(g.resolvedCommit + "\n"), nil
 	}
 	return []byte("main\n"), nil
+}
+
+func (g *countingGit) Run(args ...string) error {
+	if len(args) == 4 && args[0] == "clone" && args[1] == "--mirror" {
+		return os.MkdirAll(args[3], 0o755)
+	}
+	if len(args) == 3 && args[2] == "fetch" {
+		g.mu.Lock()
+		g.fetches++
+		g.mu.Unlock()
+		return nil
+	}
+	if len(args) == 7 && args[2] == "worktree" && args[3] == "add" {
+		return copyDirErr(g.fixture, args[5])
+	}
+	return nil
+}
+
+func (g *countingGit) Output(args ...string) ([]byte, error) {
+	ref := ""
+	if len(args) >= 4 && args[len(args)-2] == "rev-parse" {
+		ref = strings.TrimSuffix(args[len(args)-1], "^{commit}")
+	}
+	if commit := g.commits[ref]; commit != "" {
+		return []byte(commit + "\n"), nil
+	}
+	return []byte("abc123def456\n"), nil
+}
+
+func (g *countingGit) fetchCount() int {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.fetches
 }
 
 func copyDirErr(src, dst string) error {
