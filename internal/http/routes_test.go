@@ -180,9 +180,32 @@ func TestNewAppPrewarmsConfiguredClients(t *testing.T) {
 	cfg.Prepare.PrewarmClients = []string{"valid-retail"}
 
 	app := NewApp(cfg)
-	stats := app.pools.Stats()
-	if stats["sources"] != 1 || stats["indexes"] != 1 {
-		t.Fatalf("pool stats after prewarm = %#v, want one source and one index", stats)
+	defer app.Close()
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		stats := app.pools.Stats()
+		if stats["sources"] == 1 && stats["indexes"] == 1 {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("pool stats after prewarm = %#v, want one source and one index", app.pools.Stats())
+}
+
+func TestNewAppDoesNotBlockOnPrewarm(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.Sources.Root = t.TempDir()
+	cfg.Sources.Defaults = nil
+	cfg.Sources.Extra = []SourceEntry{{Alias: "retail", Repo: "https://example.test/wow-ui-source.git", Ref: "main"}}
+	cfg.Prepare.PrewarmOnStart = true
+	cfg.Prepare.PrewarmClients = []string{"retail"}
+	git := &slowGit{delay: 250 * time.Millisecond}
+
+	start := time.Now()
+	app := newAppWithGit(cfg, git)
+	defer app.Close()
+	if elapsed := time.Since(start); elapsed > 100*time.Millisecond {
+		t.Fatalf("NewApp blocked on prewarm for %s", elapsed)
 	}
 }
 
@@ -192,22 +215,28 @@ func TestHealthReportsPrewarmErrors(t *testing.T) {
 	cfg.Prepare.PrewarmOnStart = true
 	cfg.Prepare.PrewarmClients = []string{"missing-client"}
 	app := NewApp(cfg)
+	defer app.Close()
 
-	req := httptest.NewRequest("GET", "/health", nil)
-	rec := httptest.NewRecorder()
-	app.Router().ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d", rec.Code)
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		req := httptest.NewRequest("GET", "/health", nil)
+		rec := httptest.NewRecorder()
+		app.Router().ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d", rec.Code)
+		}
+		var body struct {
+			RecentErrors []map[string]string `json:"recentErrors"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Fatalf("invalid json: %v", err)
+		}
+		if len(body.RecentErrors) > 0 && body.RecentErrors[0]["client"] == "missing-client" {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
-	var body struct {
-		RecentErrors []map[string]string `json:"recentErrors"`
-	}
-	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
-		t.Fatalf("invalid json: %v", err)
-	}
-	if len(body.RecentErrors) == 0 || body.RecentErrors[0]["client"] != "missing-client" {
-		t.Fatalf("prewarm error missing from health: %#v", body.RecentErrors)
-	}
+	t.Fatalf("prewarm error missing from health")
 }
 
 func TestBackgroundRefreshesConfiguredClients(t *testing.T) {
@@ -219,7 +248,7 @@ func TestBackgroundRefreshesConfiguredClients(t *testing.T) {
 	cfg.Sources.Defaults = nil
 	cfg.Sources.Extra = []SourceEntry{{Alias: "retail", Repo: "https://example.test/wow-ui-source.git", Ref: "main"}}
 	app := newAppWithGit(cfg, git)
-	stop := app.startRefreshLoop(10*time.Millisecond, []string{"retail"})
+	stop := app.startRefreshLoop(10*time.Millisecond, []string{"retail"}, true)
 	defer stop()
 
 	deadline := time.Now().Add(time.Second)
@@ -234,7 +263,7 @@ func TestBackgroundRefreshesConfiguredClients(t *testing.T) {
 
 func TestBackgroundRefreshErrorsAppearInHealth(t *testing.T) {
 	app := NewApp(DefaultConfig())
-	stop := app.startRefreshLoop(10*time.Millisecond, []string{"missing-client"})
+	stop := app.startRefreshLoop(10*time.Millisecond, []string{"missing-client"}, true)
 	defer stop()
 
 	deadline := time.Now().Add(time.Second)
@@ -1166,6 +1195,10 @@ type countingGit struct {
 	fetches int
 }
 
+type slowGit struct {
+	delay time.Duration
+}
+
 type failingHTTPGit struct{}
 
 func (failingHTTPGit) Run(args ...string) error { return os.ErrNotExist }
@@ -1264,6 +1297,16 @@ func (g *countingGit) fetchCount() int {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	return g.fetches
+}
+
+func (g *slowGit) Run(args ...string) error {
+	time.Sleep(g.delay)
+	return os.ErrNotExist
+}
+
+func (g *slowGit) Output(args ...string) ([]byte, error) {
+	time.Sleep(g.delay)
+	return nil, os.ErrNotExist
 }
 
 func copyDirErr(src, dst string) error {

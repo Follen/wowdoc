@@ -69,10 +69,7 @@ func newAppWithFetchers(cfg Config, git source.GitRunner, archive source.Archive
 		return server.SDKServer()
 	}, &sdkmcp.StreamableHTTPOptions{JSONResponse: true})
 	app.mcpHandler = handler
-	app.prewarm()
-	if cfg.Prepare.RefreshIntervalMinutes > 0 {
-		app.refreshStop = app.startRefreshLoop(time.Duration(cfg.Prepare.RefreshIntervalMinutes)*time.Minute, cfg.Prepare.PrewarmClients)
-	}
+	app.startPrepare()
 	return app
 }
 
@@ -160,34 +157,31 @@ func (a *App) healthSources(repos []analyze.Repository) []any {
 	return out
 }
 
-func (a *App) prewarm() {
-	if !a.cfg.Prepare.PrewarmOnStart {
+func (a *App) startPrepare() {
+	clients := a.cfg.Prepare.PrewarmClients
+	if len(clients) == 0 {
 		return
 	}
-	for _, client := range a.cfg.Prepare.PrewarmClients {
-		if client == "" {
-			continue
-		}
-		repo, _, err := a.loadRepoIndex(context.Background(), client, "")
-		if err != nil {
-			a.recordRecentError(client, err)
-			continue
-		}
-		if !repo.Valid {
-			a.recordRecentError(client, fmt.Errorf("source_invalid"))
-		}
+	interval := time.Duration(a.cfg.Prepare.RefreshIntervalMinutes) * time.Minute
+	if a.cfg.Prepare.PrewarmOnStart || interval > 0 {
+		a.refreshStop = a.startRefreshLoop(interval, clients, a.cfg.Prepare.PrewarmOnStart)
 	}
 }
 
-func (a *App) startRefreshLoop(interval time.Duration, clients []string) func() {
-	if interval <= 0 || len(clients) == 0 {
+func (a *App) startRefreshLoop(interval time.Duration, clients []string, runImmediately bool) func() {
+	if len(clients) == 0 || (!runImmediately && interval <= 0) {
 		return func() {}
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	a.refreshWG.Add(1)
 	go func() {
 		defer a.refreshWG.Done()
-		a.refreshClients(ctx, clients)
+		if runImmediately {
+			a.refreshClients(ctx, clients)
+		}
+		if interval <= 0 {
+			return
+		}
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 		for {
