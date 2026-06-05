@@ -38,7 +38,7 @@ type App struct {
 }
 
 func NewApp(cfg Config) *App {
-	return newAppWithFetchers(cfg, execGit{}, source.NewHTTPArchiveFetcher(http.DefaultClient))
+	return newAppWithFetchers(cfg, execGit{timeout: requestTimeout(cfg)}, source.NewHTTPArchiveFetcher(http.DefaultClient))
 }
 
 func newAppWithGit(cfg Config, git source.GitRunner) *App {
@@ -344,10 +344,18 @@ func (a *App) loadRepoIndex(ctx context.Context, client, ref string) (analyze.Re
 }
 
 func (a *App) withRequestTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
-	if a.cfg.Limits.RequestTimeoutSeconds <= 0 {
+	timeout := requestTimeout(a.cfg)
+	if timeout <= 0 {
 		return ctx, func() {}
 	}
-	return context.WithTimeout(ctx, time.Duration(a.cfg.Limits.RequestTimeoutSeconds)*time.Second)
+	return context.WithTimeout(ctx, timeout)
+}
+
+func requestTimeout(cfg Config) time.Duration {
+	if cfg.Limits.RequestTimeoutSeconds <= 0 {
+		return 0
+	}
+	return time.Duration(cfg.Limits.RequestTimeoutSeconds) * time.Second
 }
 
 func limitSlots(limit int) chan struct{} {
@@ -566,14 +574,42 @@ func publicURL(baseURL, path string) string {
 	return strings.TrimRight(baseURL, "/") + path
 }
 
-type execGit struct{}
-
-func (execGit) Run(args ...string) error {
-	return exec.Command("git", args...).Run()
+type execGit struct {
+	timeout time.Duration
 }
 
-func (execGit) Output(args ...string) ([]byte, error) {
-	return exec.Command("git", args...).Output()
+func (g execGit) Run(args ...string) error {
+	ctx, cancel := g.commandContext()
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "git", args...)
+	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("git command timed out after %s: %w", g.timeout, ctx.Err())
+		}
+		return err
+	}
+	return nil
+}
+
+func (g execGit) Output(args ...string) ([]byte, error) {
+	ctx, cancel := g.commandContext()
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "git", args...)
+	out, err := cmd.Output()
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return out, fmt.Errorf("git command timed out after %s: %w", g.timeout, ctx.Err())
+		}
+		return out, err
+	}
+	return out, nil
+}
+
+func (g execGit) commandContext() (context.Context, context.CancelFunc) {
+	if g.timeout <= 0 {
+		return context.Background(), func() {}
+	}
+	return context.WithTimeout(context.Background(), g.timeout)
 }
 
 func writeJSON(w http.ResponseWriter, v any) {
