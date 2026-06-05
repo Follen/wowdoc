@@ -168,8 +168,9 @@ func TestResolveSourceAcquiresMissingCheckoutWithGit(t *testing.T) {
 		t.Fatalf("checkout dir = %q", resolved.CheckoutDir)
 	}
 	want := [][]string{
-		{"clone", "--mirror", "https://example.test/wow-ui-source.git", filepath.Join(root, "repos", "retail.git")},
-		{"--git-dir", filepath.Join(root, "repos", "retail.git"), "fetch"},
+		{"--git-dir", filepath.Join(root, "repos", "retail.git"), "init", "--bare"},
+		{"--git-dir", filepath.Join(root, "repos", "retail.git"), "remote", "add", "origin", "https://example.test/wow-ui-source.git"},
+		{"--git-dir", filepath.Join(root, "repos", "retail.git"), "fetch", "--depth=1", "origin", "main:refs/heads/main"},
 		{"--git-dir", filepath.Join(root, "repos", "retail.git"), "rev-parse", "main^{commit}"},
 		{"--git-dir", filepath.Join(root, "repos", "retail.git"), "worktree", "add", "--detach", filepath.Join(root, "checkouts", "retail", "main"), "main"},
 	}
@@ -204,9 +205,9 @@ func TestResolveSourceReclonesMirrorWhenOriginDiffers(t *testing.T) {
 	if !containsCommand(git.commands, wantRemove) {
 		t.Fatalf("git commands = %#v, missing origin check %#v", git.commands, wantRemove)
 	}
-	wantClone := []string{"clone", "--mirror", "https://example.test/wow-ui-source.git", mirror}
-	if !containsCommand(git.commands, wantClone) {
-		t.Fatalf("git commands = %#v, missing reclone %#v", git.commands, wantClone)
+	wantRemote := []string{"--git-dir", mirror, "remote", "add", "origin", "https://example.test/wow-ui-source.git"}
+	if !containsCommand(git.commands, wantRemote) {
+		t.Fatalf("git commands = %#v, missing remote add %#v", git.commands, wantRemote)
 	}
 }
 
@@ -359,8 +360,8 @@ func (a *recordingArchive) FetchArchive(repoURL, ref, destination string) error 
 
 func (g *recordingGit) Run(args ...string) error {
 	g.commands = append(g.commands, append([]string(nil), args...))
-	if len(args) == 4 && args[0] == "clone" && args[1] == "--mirror" {
-		return os.MkdirAll(args[3], 0o755)
+	if len(args) == 4 && args[2] == "init" && args[3] == "--bare" {
+		return os.MkdirAll(args[1], 0o755)
 	}
 	if len(args) == 7 && args[2] == "worktree" && args[3] == "add" {
 		return os.MkdirAll(args[5], 0o755)
@@ -378,8 +379,8 @@ func (g *recordingGit) Output(args ...string) ([]byte, error) {
 
 func (g *originGit) Run(args ...string) error {
 	g.commands = append(g.commands, append([]string(nil), args...))
-	if len(args) == 4 && args[0] == "clone" && args[1] == "--mirror" {
-		return os.MkdirAll(args[3], 0o755)
+	if len(args) == 4 && args[2] == "init" && args[3] == "--bare" {
+		return os.MkdirAll(args[1], 0o755)
 	}
 	if len(args) == 7 && args[2] == "worktree" && args[3] == "add" {
 		return os.MkdirAll(args[5], 0o755)

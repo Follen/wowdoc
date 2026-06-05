@@ -682,8 +682,9 @@ func TestMCPRouteAcquiresConfiguredExtraRepoRefWithGit(t *testing.T) {
 		t.Fatalf("checkout was not acquired: %v", err)
 	}
 	want := [][]string{
-		{"clone", "--mirror", "https://example.test/wow-ui-source.git", filepath.Join(root, "repos", "git-retail.git")},
-		{"--git-dir", filepath.Join(root, "repos", "git-retail.git"), "fetch"},
+		{"--git-dir", filepath.Join(root, "repos", "git-retail.git"), "init", "--bare"},
+		{"--git-dir", filepath.Join(root, "repos", "git-retail.git"), "remote", "add", "origin", "https://example.test/wow-ui-source.git"},
+		{"--git-dir", filepath.Join(root, "repos", "git-retail.git"), "fetch", "--depth=1", "origin", "main:refs/heads/main"},
 		{"--git-dir", filepath.Join(root, "repos", "git-retail.git"), "rev-parse", "main^{commit}"},
 		{"--git-dir", filepath.Join(root, "repos", "git-retail.git"), "worktree", "add", "--detach", filepath.Join(root, "checkouts", "git-retail", "abc123def456"), "abc123def456"},
 	}
@@ -1220,8 +1221,8 @@ type blockingWorktreeGit struct {
 }
 
 func (g *blockingWorktreeGit) Run(args ...string) error {
-	if len(args) == 4 && args[0] == "clone" && args[1] == "--mirror" {
-		return os.MkdirAll(args[3], 0o755)
+	if len(args) == 4 && args[2] == "init" && args[3] == "--bare" {
+		return os.MkdirAll(args[1], 0o755)
 	}
 	if len(args) == 7 && args[2] == "worktree" && args[3] == "add" {
 		g.mu.Lock()
@@ -1249,8 +1250,8 @@ func (g *blockingWorktreeGit) Output(args ...string) ([]byte, error) {
 
 func (g *fixtureGit) Run(args ...string) error {
 	g.commands = append(g.commands, append([]string(nil), args...))
-	if len(args) == 4 && args[0] == "clone" && args[1] == "--mirror" {
-		return os.MkdirAll(args[3], 0o755)
+	if len(args) == 4 && args[2] == "init" && args[3] == "--bare" {
+		return os.MkdirAll(args[1], 0o755)
 	}
 	if len(args) == 7 && args[2] == "worktree" && args[3] == "add" {
 		return copyDirErr(g.fixture, args[5])
@@ -1267,10 +1268,10 @@ func (g *fixtureGit) Output(args ...string) ([]byte, error) {
 }
 
 func (g *countingGit) Run(args ...string) error {
-	if len(args) == 4 && args[0] == "clone" && args[1] == "--mirror" {
-		return os.MkdirAll(args[3], 0o755)
+	if len(args) == 4 && args[2] == "init" && args[3] == "--bare" {
+		return os.MkdirAll(args[1], 0o755)
 	}
-	if len(args) == 3 && args[2] == "fetch" {
+	if len(args) >= 3 && args[2] == "fetch" {
 		g.mu.Lock()
 		g.fetches++
 		g.mu.Unlock()

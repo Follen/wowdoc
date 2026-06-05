@@ -137,7 +137,7 @@ func (m *Manager) resolveGitRef(repoURL string, resolved ResolvedRef) (ResolvedR
 		return ResolvedRef{}, err
 	}
 	if _, err := os.Stat(mirror); os.IsNotExist(err) {
-		if err := m.opts.Git.Run("clone", "--mirror", repoURL, mirror); err != nil {
+		if err := m.initBareRepo(mirror, repoURL); err != nil {
 			return ResolvedRef{}, err
 		}
 	} else if err == nil {
@@ -149,14 +149,14 @@ func (m *Manager) resolveGitRef(repoURL string, resolved ResolvedRef) (ResolvedR
 			if err := os.RemoveAll(mirror); err != nil {
 				return ResolvedRef{}, err
 			}
-			if err := m.opts.Git.Run("clone", "--mirror", repoURL, mirror); err != nil {
+			if err := m.initBareRepo(mirror, repoURL); err != nil {
 				return ResolvedRef{}, err
 			}
 		}
 	} else {
 		return ResolvedRef{}, err
 	}
-	if err := m.opts.Git.Run("--git-dir", mirror, "fetch"); err != nil {
+	if err := m.opts.Git.Run("--git-dir", mirror, "fetch", "--depth=1", "origin", resolved.Requested+":refs/heads/"+resolved.Requested); err != nil {
 		return ResolvedRef{}, err
 	}
 	out, err := m.opts.Git.Output("--git-dir", mirror, "rev-parse", resolved.Requested+"^{commit}")
@@ -170,6 +170,16 @@ func (m *Manager) resolveGitRef(repoURL string, resolved ResolvedRef) (ResolvedR
 	resolved.Resolved = commit
 	resolved.CheckoutDir = m.CheckoutPath(resolved.Client, commit)
 	return resolved, nil
+}
+
+func (m *Manager) initBareRepo(mirror, repoURL string) error {
+	if err := os.MkdirAll(mirror, 0o755); err != nil {
+		return err
+	}
+	if err := m.opts.Git.Run("--git-dir", mirror, "init", "--bare"); err != nil {
+		return err
+	}
+	return m.opts.Git.Run("--git-dir", mirror, "remote", "add", "origin", repoURL)
 }
 
 func (m *Manager) acquireWithGit(resolved ResolvedRef) error {
