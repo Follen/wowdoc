@@ -178,6 +178,38 @@ func TestResolveSourceAcquiresMissingCheckoutWithGit(t *testing.T) {
 	}
 }
 
+func TestResolveSourceReclonesMirrorWhenOriginDiffers(t *testing.T) {
+	root := t.TempDir()
+	git := &originGit{origin: filepath.Join(root, "archives", "retail", "live"), resolvedCommit: "abc123def456"}
+	mirror := filepath.Join(root, "repos", "retail.git")
+	if err := os.MkdirAll(mirror, 0o755); err != nil {
+		t.Fatalf("create stale mirror: %v", err)
+	}
+	m := NewManager(Options{
+		Root:              root,
+		AllowArbitraryRef: false,
+		DefaultRefs:       map[string]string{"retail": "main"},
+		Repos:             map[string]string{"retail": "https://example.test/wow-ui-source.git"},
+		Git:               git,
+	})
+
+	resolved, err := m.ResolveSource("retail", "")
+	if err != nil {
+		t.Fatalf("ResolveSource failed: %v", err)
+	}
+	if resolved.Resolved != "abc123def456" {
+		t.Fatalf("resolved commit = %q, want abc123def456", resolved.Resolved)
+	}
+	wantRemove := []string{"--git-dir", mirror, "config", "--get", "remote.origin.url"}
+	if !containsCommand(git.commands, wantRemove) {
+		t.Fatalf("git commands = %#v, missing origin check %#v", git.commands, wantRemove)
+	}
+	wantClone := []string{"clone", "--mirror", "https://example.test/wow-ui-source.git", mirror}
+	if !containsCommand(git.commands, wantClone) {
+		t.Fatalf("git commands = %#v, missing reclone %#v", git.commands, wantClone)
+	}
+}
+
 func TestResolveSourceUsesResolvedGitCommitForCheckoutIsolation(t *testing.T) {
 	root := t.TempDir()
 	git := &recordingGit{root: root, resolvedCommit: "abc123def456"}
@@ -293,6 +325,12 @@ type recordingGit struct {
 	commands       [][]string
 }
 
+type originGit struct {
+	origin         string
+	resolvedCommit string
+	commands       [][]string
+}
+
 type failingGit struct{}
 
 func (failingGit) Run(args ...string) error { return os.ErrNotExist }
@@ -332,6 +370,28 @@ func (g *recordingGit) Run(args ...string) error {
 
 func (g *recordingGit) Output(args ...string) ([]byte, error) {
 	g.commands = append(g.commands, append([]string(nil), args...))
+	if g.resolvedCommit != "" && len(args) == 4 && args[2] == "rev-parse" {
+		return []byte(g.resolvedCommit + "\n"), nil
+	}
+	return []byte("main\n"), nil
+}
+
+func (g *originGit) Run(args ...string) error {
+	g.commands = append(g.commands, append([]string(nil), args...))
+	if len(args) == 4 && args[0] == "clone" && args[1] == "--mirror" {
+		return os.MkdirAll(args[3], 0o755)
+	}
+	if len(args) == 7 && args[2] == "worktree" && args[3] == "add" {
+		return os.MkdirAll(args[5], 0o755)
+	}
+	return nil
+}
+
+func (g *originGit) Output(args ...string) ([]byte, error) {
+	g.commands = append(g.commands, append([]string(nil), args...))
+	if len(args) == 5 && args[2] == "config" && args[3] == "--get" && args[4] == "remote.origin.url" {
+		return []byte(g.origin + "\n"), nil
+	}
 	if g.resolvedCommit != "" && len(args) == 4 && args[2] == "rev-parse" {
 		return []byte(g.resolvedCommit + "\n"), nil
 	}

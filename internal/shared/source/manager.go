@@ -140,6 +140,21 @@ func (m *Manager) resolveGitRef(repoURL string, resolved ResolvedRef) (ResolvedR
 		if err := m.opts.Git.Run("clone", "--mirror", repoURL, mirror); err != nil {
 			return ResolvedRef{}, err
 		}
+	} else if err == nil {
+		out, err := m.opts.Git.Output("--git-dir", mirror, "config", "--get", "remote.origin.url")
+		if err != nil {
+			return ResolvedRef{}, err
+		}
+		if strings.TrimSpace(string(out)) != repoURL {
+			if err := os.RemoveAll(mirror); err != nil {
+				return ResolvedRef{}, err
+			}
+			if err := m.opts.Git.Run("clone", "--mirror", repoURL, mirror); err != nil {
+				return ResolvedRef{}, err
+			}
+		}
+	} else {
+		return ResolvedRef{}, err
 	}
 	if err := m.opts.Git.Run("--git-dir", mirror, "fetch"); err != nil {
 		return ResolvedRef{}, err
