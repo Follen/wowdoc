@@ -131,7 +131,7 @@ Each parser task fixes the requested ref to a Commit and creates its own detache
 
 The installed Skill contains source/product aliases and command-selection rules, not copied source facts. An Agent chooses the source, product, ref, topic, and narrowest useful identifier, then cites the CLI evidence. A missing exact plugin Tag can fall back to that product branch's latest snapshot only when the Skill labels the result as a latest fallback and preserves the originally requested version.
 
-The quality suite contains 50 realistic AddOn-author questions across all configured product branches and historical Tags. A strict pass requires the first reference to be correct, relevant, context-complete, version-correct, and byte-for-byte traceable to the resolved Git blob. The current report is in [`quality/report.md`](quality/report.md).
+The quality suite contains 50 realistic AddOn-author questions across all configured product branches and historical Tags. A strict pass requires the first reference to be correct, relevant, context-complete, version-correct, and byte-for-byte traceable to the resolved Git blob. Local scenarios and generated reports live in the Git-ignored `analyze/quality` directory.
 
 ## Development
 

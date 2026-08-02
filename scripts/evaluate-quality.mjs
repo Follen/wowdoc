@@ -4,7 +4,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
-const scenarios = JSON.parse(readFileSync(join(root, "quality", "scenarios.json"), "utf8"));
+const qualityDir = join(root, "analyze", "quality");
+const scenarios = JSON.parse(readFileSync(join(qualityDir, "scenarios.json"), "utf8"));
 const home = process.env.WOWDOC_HOME;
 if (!home) throw new Error("WOWDOC_HOME is required so quality data stays isolated");
 const suffix = process.platform === "win32" ? ".exe" : "";
@@ -45,9 +46,9 @@ for (const [index, scenario] of scenarios.entries()) {
 
 const summary = summarize(results);
 const artifact = { schema: "wowdoc.quality.v1", generatedAt: new Date().toISOString(), home, summary, results };
-mkdirSync(join(root, "quality"), { recursive: true });
-writeFileSync(join(root, "quality", "results.json"), JSON.stringify(artifact, null, 2));
-writeFileSync(join(root, "quality", "report.md"), markdown(artifact));
+mkdirSync(qualityDir, { recursive: true });
+writeFileSync(join(qualityDir, "results.json"), JSON.stringify(artifact, null, 2));
+writeFileSync(join(qualityDir, "report.md"), markdown(artifact));
 process.stdout.write(JSON.stringify(summary, null, 2) + "\n");
 process.exit(summary.passed === summary.total ? 0 : 1);
 
