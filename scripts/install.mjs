@@ -29,7 +29,7 @@ for (const name of ["wowdoc", "wowdata"]) {
     execFileSync("go", ["build", "-trimpath", "-ldflags", `-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${pkg.version}`, "-o", target, `./cmd/${name}`], { cwd: root, stdio: "inherit" });
   } else {
     const asset = `${name}-${platform}${suffix}`;
-    const url = `https://github.com/follenfang/wowdoc/releases/download/v${pkg.version}/${asset}`;
+    const url = `https://github.com/Follen/wowdoc/releases/download/v${pkg.version}/${asset}`;
     const response = await fetch(url, { redirect: "follow" });
     if (!response.ok) throw new Error(`binary_download_failed: ${response.status} ${url}`);
     writeFileSync(target, Buffer.from(await response.arrayBuffer()));
