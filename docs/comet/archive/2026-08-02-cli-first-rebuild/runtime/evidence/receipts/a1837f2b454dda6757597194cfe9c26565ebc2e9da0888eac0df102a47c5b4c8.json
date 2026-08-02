@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-2cc76626b9326766ef2c9399a63f04682161388a1471e8f320b102fdc6de1571"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:11.642Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：`wowdata clean --apply` 没有指定旧版本时，只清理临时文件和没有任何 snapshot 引用的缓存；删除旧版本必须显式指定版本或范围。"
+    ],
+    "observations": [
+      "核对 internal/indexer、internal/store 及其测试；go test ./... 退出 0，五仓库真实 snapshot 查询与内容对象回读通过。"
+    ]
+  },
+  "receiptHash": "a1837f2b454dda6757597194cfe9c26565ebc2e9da0888eac0df102a47c5b4c8"
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-bc5d649e74bdec00a0dd81bb8e6ea86399fd3b7f78f18dcf70f3ef27d01502d9"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:51.794Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：重复安装或升级必须幂等。用户目录不可写、CLI 产物不支持当前平台或 Skill 安装失败时，安装必须失败并给出明确错误，不留下被当成成功安装的残缺状态。"
+    ],
+    "observations": [
+      "本地 npm pack 和隔离全局安装通过；GitHub Actions run 30763038328 在 Windows、Linux、macOS 全部成功，三平台均安装 tarball 并运行 wowdoc、wowdata 与 fixture 索引。"
+    ]
+  },
+  "receiptHash": "024893cff67a6d78413f48d80d7fe8567d9e1d5b1d1a980e4091a27bbd8b5e7a"
+}

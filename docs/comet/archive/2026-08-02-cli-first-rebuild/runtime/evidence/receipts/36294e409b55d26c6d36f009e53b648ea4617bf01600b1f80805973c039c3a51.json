@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-833fa2e3ece299f53313844f5af3471cf04d4af85de0cdd4b40abb9468eca283"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:35.652Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：每个文件保存 `project`、`official-generated-api`、`generated-data`、`locale`、`vendor`、`tool` 等角色。权威 API 和项目实现进入正常结构化召回；超大模型路径表、Locale、vendored externals 与工具文件默认降权，并可按角色显式过滤。"
+    ],
+    "observations": [
+      "核对实现、README、自动化测试与质量报告；go test、go vet、actionlint、npm pack、五平台交叉构建以及 GitHub 三平台 CI 均通过。"
+    ]
+  },
+  "receiptHash": "36294e409b55d26c6d36f009e53b648ea4617bf01600b1f80805973c039c3a51"
+}

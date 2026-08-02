@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-771753f53c222303cdbb6edbe847988fe636d9a29cfded957d0cca3519488b27"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:31.526Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：预览图不在 `init` 中批量生成。`inspect` 确实需要视觉检查时才为受支持图片生成有尺寸上限的 PNG 预览，并按原素材 hash 缓存；命令返回原素材对象路径与预览路径，不把图像字节塞进 JSON。"
+    ],
+    "observations": [
+      "核对 internal/indexer、internal/store 及其测试；go test ./... 退出 0，五仓库真实 snapshot 查询与内容对象回读通过。"
+    ]
+  },
+  "receiptHash": "666cae6008fe1b973afc78811348769acce6326afb4b0490b65a5288cd2224e7"
+}

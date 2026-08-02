@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-4d0dec7d4f1f5616abc7d37ac9a8b67c486af3212b8e01eb6ed1bab4e442b122"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:21.505Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：Skill 根据 Agent 问题选择 source set、client、build/ref、topic 和最小原子命令。"
+    ],
+    "observations": [
+      "核对 skill/SKILL.md 与 references；隔离 npm 安装确认 Skill 写入 ~/.agents/skills/wowdoc，语义桥接保持在 Skill，CLI 保持原子。"
+    ]
+  },
+  "receiptHash": "431aac216f1e07e19db599de05c4c8b27c2b43fe861fee204b14239b1ed994d3"
+}

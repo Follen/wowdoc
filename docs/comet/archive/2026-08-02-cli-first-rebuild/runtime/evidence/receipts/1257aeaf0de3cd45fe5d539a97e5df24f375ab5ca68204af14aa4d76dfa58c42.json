@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-dfc4c97c9b06f4fafa7efc3f8a39727b735912de77446ee791b898a8fc7dabd9"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:59.178Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：普通查询直接使用当前已发布 snapshot，不自动联网；用户明确询问“最新”时，Skill 先检查对应产品分支，发现变化后依次执行 `source sync`、`index refresh`，再用新 resolved Commit 查询。"
+    ],
+    "observations": [
+      "本地 npm pack 和隔离全局安装通过；GitHub Actions run 30763038328 在 Windows、Linux、macOS 全部成功，三平台均安装 tarball 并运行 wowdoc、wowdata 与 fixture 索引。"
+    ]
+  },
+  "receiptHash": "1257aeaf0de3cd45fe5d539a97e5df24f375ab5ca68204af14aa4d76dfa58c42"
+}

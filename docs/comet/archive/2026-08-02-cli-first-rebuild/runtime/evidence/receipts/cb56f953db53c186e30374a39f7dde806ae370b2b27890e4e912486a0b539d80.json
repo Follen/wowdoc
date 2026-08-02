@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-e299122e0332b9c8f8fb026b67ffab776afc91773603c5dc90f7a6a7c91ee4d0"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:59.946Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：召回顺序固定为：完整 qualified symbol 精确匹配、名称/路径前缀匹配、结构化关系匹配、FTS5 标识符/文本匹配。代码标识符保留 `.`、`:`、`_` 等规范化键，并使用专用精确列；FTS5 负责词语、注释、文档和源码片段，不替代符号表。"
+    ],
+    "observations": [
+      "核对实现、README、自动化测试与质量报告；go test、go vet、actionlint、npm pack、五平台交叉构建以及 GitHub 三平台 CI 均通过。"
+    ]
+  },
+  "receiptHash": "cb56f953db53c186e30374a39f7dde806ae370b2b27890e4e912486a0b539d80"
+}

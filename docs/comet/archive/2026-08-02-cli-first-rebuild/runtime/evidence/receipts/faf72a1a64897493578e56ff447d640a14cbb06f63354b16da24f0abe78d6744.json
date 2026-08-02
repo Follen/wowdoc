@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-2d01021c75ec705f58614277975338ec616578e1b15ec4b0a4be8748215c96cc"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:12.047Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：检索质量验收必须使用不少于 50 条插件作者真实问题形态的端到端场景。该验收只评价返回代码参考的质量，不以命令返回率、成功退出或结果非空作为质量通过。场景集覆盖 catalog 的每个产品分支与多个新旧 Tag，记录自然语言问题、Skill 选择的 source/product/ref/topic、实际 CLI 命令、期望代码事实和返回证据。每条结果都必须将 path、line、excerpt 和 content hash 回读到 resolved Commit 的 Git blob"
+    ],
+    "observations": [
+      "quality/report.md 与 quality/results.json 记录严格 50/50；重新执行 evaluate-quality.mjs 退出 0，正确性、相关性、上下文、版本与 Git blob 追溯均为 50/50。"
+    ]
+  },
+  "receiptHash": "faf72a1a64897493578e56ff447d640a14cbb06f63354b16da24f0abe78d6744"
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-cc04b4071842e3c07151113400bcf8901e0fec449662fa3394d0d91c554b170e"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:56.534Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：source catalog 是 Skill Reference 中的机器可读、版本化文件，CLI 只执行其中明确声明的 repository、产品分支、Tag 规则和版本别名，不从远程分支名称自行猜测产品含义。`wowdata init` 把本次 catalog 及 hash 复制到 `~/.wowdoc/config`，保证初始化和查询可追溯。"
+    ],
+    "observations": [
+      "quality/report.md 与 quality/results.json 记录严格 50/50；重新执行 evaluate-quality.mjs 退出 0，正确性、相关性、上下文、版本与 Git blob 追溯均为 50/50。"
+    ]
+  },
+  "receiptHash": "a3f366613d8d9ec4b60806ebf6613f4da761b3e2f025a9f437eaaa67cc5e4032"
+}

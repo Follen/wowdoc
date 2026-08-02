@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-01184af52d9c2c1db7ca532fd97cbbdcc108a839b4f72b75265904b5a05487ef"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:23:36.377Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：初始 catalog 的第三方产品分支为：ElvUI `main`、`ptr`；WeakAuras2 `main`；NDui `master`、`Classic`、`Era`、`Anniversary`、`Titan`；EllesmereUI `main`。WeakAuras2 的历史 `cata`、ElvUI 的功能分支、EllesmereUI 的 `revert-*` 等不进入默认热数据，除非后续 Reference 版本明确把它们声明为产品分支。"
+    ],
+    "observations": [
+      "核对 internal/indexer、internal/store 及其测试；go test ./... 退出 0，五仓库真实 snapshot 查询与内容对象回读通过。"
+    ]
+  },
+  "receiptHash": "4b9ba8313af0f1e77182cc099e5bb095d73911cc0d36153343c8948121db8a08"
+}

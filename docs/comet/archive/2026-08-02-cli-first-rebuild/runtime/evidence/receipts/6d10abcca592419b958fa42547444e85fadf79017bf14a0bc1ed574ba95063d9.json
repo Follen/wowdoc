@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-153b0c91524a15fa428e2449c31e39b8aaefc1e73dfab8cce8bbfbe83bccfb24"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:05.569Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：插件版本没有匹配 Tag 时，CLI 原子命令先返回 `version_not_found`；Skill 根据 Reference 明确切换到该产品分支的 latest 流程，依次检查、同步、刷新索引并查询最新 Commit。最终回答必须保留原请求版本并标记 `resolutionMode=latest_fallback`，不能把最新代码说成请求版本。"
+    ],
+    "observations": [
+      "核对 internal/gitstore/git.go、worktree 测试和实际质量数据：ref 固定为 Commit，bare mirror、detached worktree、锁、清理与 Git blob 回读行为符合该项。"
+    ]
+  },
+  "receiptHash": "6d10abcca592419b958fa42547444e85fadf79017bf14a0bc1ed574ba95063d9"
+}

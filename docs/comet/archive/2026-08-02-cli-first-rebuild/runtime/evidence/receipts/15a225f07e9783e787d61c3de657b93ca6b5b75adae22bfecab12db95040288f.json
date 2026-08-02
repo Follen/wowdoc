@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-8facef5cfaac183ba9093acbb99c9e128501d9f86815d313b05190c9e3e55826"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:40.268Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：`.pkgmeta`、externals、目录移动和占位符替换可能让用户安装包与 Tag 源码不同。wowdoc 必须在查询结果和 Skill Reference 中把“结果来自 Tag 源码”作为明确来源，不把它描述成安装包逐字节复现。"
+    ],
+    "observations": [
+      "本地 npm pack 和隔离全局安装通过；GitHub Actions run 30763038328 在 Windows、Linux、macOS 全部成功，三平台均安装 tarball 并运行 wowdoc、wowdata 与 fixture 索引。"
+    ]
+  },
+  "receiptHash": "15a225f07e9783e787d61c3de657b93ca6b5b75adae22bfecab12db95040288f"
+}

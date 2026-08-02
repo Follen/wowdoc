@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-8e56e2697f69c6fc1cf449ed5637a4e22fc157aaa98a2f281cfc925d3a16f654"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:39.545Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：snapshot 完整发布或任务明确失败后，所有者删除自己的 worktree并在没有冲突写操作时执行 `git worktree prune`。进程异常退出时，遗留 worktree 与任务租约绑定；后续进程只有在租约到期并验证路径位于 `~/.wowdoc/tmp/worktrees`、不属于活动任务后才能清理。普通查询始终只读 SQLite、snapshot manifest 和 objects，不读取 worktree、不执行 checkout，也不因 worktree 清理受阻而返回不完整结果。"
+    ],
+    "observations": [
+      "本地 npm pack 和隔离全局安装通过；GitHub Actions run 30763038328 在 Windows、Linux、macOS 全部成功，三平台均安装 tarball 并运行 wowdoc、wowdata 与 fixture 索引。"
+    ]
+  },
+  "receiptHash": "d19cd3ab5d5d2803fe904e5707180dfabdc619694bbefdb8df80f480c73892cc"
+}

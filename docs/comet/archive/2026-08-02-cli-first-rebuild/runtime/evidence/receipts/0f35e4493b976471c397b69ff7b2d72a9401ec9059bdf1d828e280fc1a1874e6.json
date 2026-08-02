@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-11598b467a0eff094582e19097ab176dc375408c69f5e6cad3aad04539fb815d"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:01.252Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：`wowdata init` 创建并验证 `~/.wowdoc` 目录、读取 Skill Reference 随版本发布的默认 source catalog、获取 catalog 声明的官方及第三方产品分支源码，并为每个产品分支当前 head 与最多 50 个 catalog 匹配 Tag 构建 AST 中间体和 SQLite 索引；分支不足 50 个匹配 Tag 时全部构建。命令完成后，本地无需再次联网即可查询这些 snapshot。"
+    ],
+    "observations": [
+      "本地 npm pack 和隔离全局安装通过；GitHub Actions run 30763038328 在 Windows、Linux、macOS 全部成功，三平台均安装 tarball 并运行 wowdoc、wowdata 与 fixture 索引。"
+    ]
+  },
+  "receiptHash": "0f35e4493b976471c397b69ff7b2d72a9401ec9059bdf1d828e280fc1a1874e6"
+}

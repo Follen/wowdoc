@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-39904d2e0cc2ce3042d6e2bdb5b3ba3ab812cb0628291b23c0d669f966cea017"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:16.718Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：同步新版本后，已经下载和建立索引的旧版本继续可用；`diff` 可以直接比较两个已保留版本，不需要重新下载和解析。"
+    ],
+    "observations": [
+      "核对 internal/indexer、internal/store 及其测试；go test ./... 退出 0，五仓库真实 snapshot 查询与内容对象回读通过。"
+    ]
+  },
+  "receiptHash": "c912bf88addbcd0b56f96918158e51972236cff50af258c3f1699ba0dfa9bf9b"
+}

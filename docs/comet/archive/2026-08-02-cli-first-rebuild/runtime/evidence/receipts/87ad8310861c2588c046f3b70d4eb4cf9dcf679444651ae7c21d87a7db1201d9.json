@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-381318492eabdb0fa4fc4c94287ec047cbbf25fd92343ace60b79490b185e236"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:15.510Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：schema 不兼容时为目标分支构建新的 generation DB，验证后由 catalog 原子切换活动 generation；旧 generation 在现有读事务结束前保留，随后才进入显式清理候选。"
+    ],
+    "observations": [
+      "核对实现、README、自动化测试与质量报告；go test、go vet、actionlint、npm pack、五平台交叉构建以及 GitHub 三平台 CI 均通过。"
+    ]
+  },
+  "receiptHash": "87ad8310861c2588c046f3b70d4eb4cf9dcf679444651ae7c21d87a7db1201d9"
+}

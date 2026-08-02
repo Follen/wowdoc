@@ -1,0 +1,23 @@
+schema: comet.native.v3
+minimum_runtime_version: 3
+revision: 5
+verification_protocol: legacy-v1
+name: cli-first-rebuild
+language: zh-CN
+phase: archive
+brief: brief.md
+approval: confirmed
+approved_contract_hash: 2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d
+spec_changes:
+  - capability: wowdoc-cli
+    operation: create
+    source: specs/wowdoc-cli/spec.md
+    base_hash: null
+verification_result: pass
+verification_report: verification.md
+implementation_scope: runtime/evidence/scopes/ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8.json
+verification_evidence: runtime/evidence/verifications/5007460ce7cae8c9a889187e53ea45c3f37ba203d96a58032e78268ddae39357.json
+partial_allowance: runtime/evidence/allowances/e8364d1bb98f52b2762ba4b22f8bfec476e285a689daefb6ac9dcc65942cffab.json
+archived: true
+created_at: 2026-08-02
+run_id: 7c2e56f5-d293-497e-bb44-3ab48ddb94d0

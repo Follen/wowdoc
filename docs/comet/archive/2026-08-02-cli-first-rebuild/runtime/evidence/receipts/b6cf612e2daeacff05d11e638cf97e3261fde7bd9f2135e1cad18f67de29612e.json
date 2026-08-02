@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-512801ce69f68abbfa3c0b9e0f9381a90ea58aaa02e361d1db0a8b6117b888c0"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:23.065Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：source catalog 同时描述官方 WoW UI 源码及 ElvUI、WeakAuras2、NDui、EllesmereUI 等第三方源码。"
+    ],
+    "observations": [
+      "核对实现、README、自动化测试与质量报告；go test、go vet、actionlint、npm pack、五平台交叉构建以及 GitHub 三平台 CI 均通过。"
+    ]
+  },
+  "receiptHash": "b6cf612e2daeacff05d11e638cf97e3261fde7bd9f2135e1cad18f67de29612e"
+}

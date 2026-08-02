@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-4581b8b84f1fcae495382bd33ad2707460efbab5cad56c0c58b6c336773d78d9"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:19.860Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：CLI 接收明确的 source/source-set、client、build、ref 或 resolved commit；Skill Reference 负责把 `retail`、`classic`、`classic-era`、`ptr`、`ptr2`、Titan 等用户叫法映射到当前可用选择。"
+    ],
+    "observations": [
+      "核对 internal/gitstore/git.go、worktree 测试和实际质量数据：ref 固定为 Commit，bare mirror、detached worktree、锁、清理与 Git blob 回读行为符合该项。"
+    ]
+  },
+  "receiptHash": "f7d1f5b25fe924d1078dd3831a5cc32697bd57b9335a203eb2189b49b54ae68e"
+}

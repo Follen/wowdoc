@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-baf131e7536e701fa69038381e33d8756d5e952213a82d7a3250d8802757bdee"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:51.326Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：完成实现后，以插件作者会真实提出的问题建立不少于 50 条端到端检索场景，覆盖 catalog 中每个产品分支和多个新旧 Tag。每条场景都从 Agent/Skill 的选源与命令参数开始，检查 CLI 返回的源码文件、行号、excerpt、符号关系和 resolved Commit，并回读固定 Commit 的原始 blob 核对引用是否准确；只返回非空结果不算通过。"
+    ],
+    "observations": [
+      "quality/report.md 与 quality/results.json 记录严格 50/50；重新执行 evaluate-quality.mjs 退出 0，正确性、相关性、上下文、版本与 Git blob 追溯均为 50/50。"
+    ]
+  },
+  "receiptHash": "b9635070a54b8032c3efe60350787ba6ee845e0fe394d5ae9ad192ac0fab079f"
+}

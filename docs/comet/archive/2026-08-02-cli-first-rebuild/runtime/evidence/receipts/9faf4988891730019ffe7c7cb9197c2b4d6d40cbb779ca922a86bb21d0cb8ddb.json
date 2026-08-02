@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-4c4aed923dd4bbca811d72667b3069559269ac854fec94dfe2927f80fd2919b2"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:21.072Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：`query` 返回跨 topic 的短列表和建议下一步；`explore` 返回区域、文件、符号及关系的宽列表；`inspect` 以一个精确符号或路径为中心返回定义、签名、引用、调用方/被调用方和片段；`diff` 在两个固定 snapshot 的只读事务中按稳定符号键、签名和内容 hash 比较新增、删除、改变；`validate` 解析用户插件并用目标 snapshot 检查 API、TOC、依赖和兼容性。"
+    ],
+    "observations": [
+      "核对 internal/indexer、internal/store 及其测试；go test ./... 退出 0，五仓库真实 snapshot 查询与内容对象回读通过。"
+    ]
+  },
+  "receiptHash": "9faf4988891730019ffe7c7cb9197c2b4d6d40cbb779ca922a86bb21d0cb8ddb"
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-a1f798f3b85fab494eec3e5ca81cc2c5a3a3da3c893b03be54c0b53e79d26b9c"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:45.768Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：WoW 路径解析保留原始大小写和分隔符，同时生成用于匹配的规范化键；校验可以发现缺失文件、大小写不一致、反斜杠、路径逃逸、未被引用资产和重复内容，但不能因两个不同路径 hash 相同就擅自改写插件源码。"
+    ],
+    "observations": [
+      "核对 internal/indexer、internal/store 及其测试；go test ./... 退出 0，五仓库真实 snapshot 查询与内容对象回读通过。"
+    ]
+  },
+  "receiptHash": "4897a3e6ae19f8d8f2aa08f4d1226e6036af5074193e46f1a8c252559ded1e7d"
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-aea035518fb6abde3f613afce7f1a188132deea0a1c2a4c48c5860038ad1d2a2"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:48.632Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：`wowdata uninstall` 是彻底卸载命令。执行前必须明确列出将删除 npm 包、`~/.agents/skills/wowdoc` 和整个 `~/.wowdoc`，并要求用户确认；无人值守调用必须显式传入确认参数。确认后删除配置、源码、对象、AST 中间体、索引、状态、锁、日志和临时文件，不保留缓存。"
+    ],
+    "observations": [
+      "本地 npm pack 和隔离全局安装通过；GitHub Actions run 30763038328 在 Windows、Linux、macOS 全部成功，三平台均安装 tarball 并运行 wowdoc、wowdata 与 fixture 索引。"
+    ]
+  },
+  "receiptHash": "4a240a38e7907efebc94d92e367404ac4fb06cca63c3613417db045362cf50e1"
+}

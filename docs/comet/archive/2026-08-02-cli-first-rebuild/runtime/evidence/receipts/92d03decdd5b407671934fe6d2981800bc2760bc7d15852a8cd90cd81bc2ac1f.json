@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "cli-first-rebuild",
+    "sourceRevision": 3,
+    "contractHash": "2f2798f63224835a4557296486ba2db2de067bcc57885b4acbc1ec1946999f1d",
+    "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+    "snapshotHash": "70a3e86aae1b621b409cb04915f3dbd5fb5a3461cd0865a0c408b1ec9d26e599",
+    "artifactHash": "a2e1add9f7f30ff4385423a0d205c891557036c5d1b1c2302d833f4b68226aab"
+  },
+  "acceptanceIds": [
+    "acceptance-50a4fe8e423516eef452a21e97adfacc8d4a682ccb43dfddc370497225a84cdd"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-02T19:24:22.629Z",
+  "evidence": {
+    "steps": [
+      "核对验收项：官方仓库声明 `live`、`ptr`、`ptr2`、`beta` 以及 catalog 当前支持的 Classic/Era/Anniversary/Titan 等产品分支；`automation` 等非产品分支不初始化。准确清单随 Reference 更新，不硬编码进 CLI。"
+    ],
+    "observations": [
+      "核对 skill/SKILL.md 与 references；隔离 npm 安装确认 Skill 写入 ~/.agents/skills/wowdoc，语义桥接保持在 Skill，CLI 保持原子。"
+    ]
+  },
+  "receiptHash": "92d03decdd5b407671934fe6d2981800bc2760bc7d15852a8cd90cd81bc2ac1f"
+}
