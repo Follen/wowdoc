@@ -1,0 +1,499 @@
+{
+  "schema": "comet.native.content-snapshot.v1",
+  "origin": "change-created",
+  "capture": {
+    "provider": "git"
+  },
+  "createdAt": "2026-08-02T15:28:59.830Z",
+  "complete": true,
+  "limits": {
+    "maxFiles": 10000,
+    "maxFileBytes": 268435456,
+    "maxTotalBytes": 268435456,
+    "maxManifestBytes": 1048576,
+    "maxDurationMs": 60000
+  },
+  "policy": {
+    "schema": "comet.native.snapshot-policy.v1",
+    "include": [
+      "**/*"
+    ],
+    "exclude": [
+      ".agents/skills/**",
+      ".amazonq/skills/**",
+      ".augment/skills/**",
+      ".bob/skills/**",
+      ".claude/skills/**",
+      ".cline/skills/**",
+      ".codebuddy/skills/**",
+      ".continue/skills/**",
+      ".cospec/skills/**",
+      ".crush/skills/**",
+      ".cursor/skills/**",
+      ".factory/skills/**",
+      ".forge/skills/**",
+      ".gemini/skills/**",
+      ".github/skills/**",
+      ".iflow/skills/**",
+      ".junie/skills/**",
+      ".kilocode/skills/**",
+      ".kimi-code/skills/**",
+      ".kiro/skills/**",
+      ".lingma/skills/**",
+      ".mimocode/skills/**",
+      ".opencode/skills/**",
+      ".pi/skills/**",
+      ".qoder/skills/**",
+      ".qwen/skills/**",
+      ".roo/skills/**",
+      ".trae-cn/skills/**",
+      ".trae/skills/**",
+      ".windsurf/skills/**",
+      ".zcode/skills/**"
+    ],
+    "hash": "1b4c47ee1cdc72323c591ca8b9c7a7a8c123dfe64880b6c65dc768e2bb965385"
+  },
+  "entries": [
+    {
+      "path": ".codegraph/.gitignore",
+      "hash": "47c0dacebca9f56c9020b68584470dfc51f07650a3719904e98f4b447a5dd003",
+      "size": 229,
+      "type": "file"
+    },
+    {
+      "path": ".gitignore",
+      "hash": "4d4816ab9fd69065df4e46a1fcf7b4c6b88f1775f08da7d85c54d436f8c2e905",
+      "size": 68,
+      "type": "file"
+    },
+    {
+      "path": "cmd/wowdoc-server/main_test.go",
+      "hash": "ed65b5e33804c2a8118b4116db76423484aab8b7c170e25aa78ea10fac034703",
+      "size": 2047,
+      "type": "file",
+      "gitObjectId": "0ce835ec9f23ee8ab30014511423185a3bfc4dd0"
+    },
+    {
+      "path": "cmd/wowdoc-server/main.go",
+      "hash": "538f15c7d5aab14b0a73b7ae238b9d86573cd550416b8e922ca2dd96c2474e31",
+      "size": 880,
+      "type": "file",
+      "gitObjectId": "371c45b4b819b3e0c3eae2386966d4669e360170"
+    },
+    {
+      "path": "cmd/wowdoc/main.go",
+      "hash": "f299f14b1f1e376619e60ef2ff6817ca94f6ad531d7ed379d57e872468b1eb8e",
+      "size": 197,
+      "type": "file",
+      "gitObjectId": "b8c2c6d9107a4339902060434f5ffac316dccde0"
+    },
+    {
+      "path": "config/http-mcp.remote.yaml",
+      "hash": "d37615ca8d2b5657be8ddc6e6b7634ed470c3f025a71855ae3cf57eb3a2a13c6",
+      "size": 1184,
+      "type": "file",
+      "gitObjectId": "3995558568b681c1eb486d0d6184762406c36b1e"
+    },
+    {
+      "path": "config/http-mcp.wsl.yaml",
+      "hash": "df3712ddc7e77f3f497331857c1ee933e058d9e7b65b269250701819d1884e01",
+      "size": 1179,
+      "type": "file",
+      "gitObjectId": "9d5170cffa96004e1dcc245380f3dda6a1c17b7b"
+    },
+    {
+      "path": "Dockerfile.http",
+      "hash": "023995a99af449f194ae7df56807b0e0016c33d963d621c4f779b03afe1e0f62",
+      "size": 542,
+      "type": "file",
+      "gitObjectId": "4c8f0d31dc16287914d8ce5a39c30f25bf856621"
+    },
+    {
+      "path": "go.mod",
+      "hash": "3f2d625cff16cdf17a1600acc9161ffa97ca3f75f79d7424ef5796a332c0aa64",
+      "size": 568,
+      "type": "file",
+      "gitObjectId": "2e6d68232e1d0d3892587a13ca576dcc431d1d3e"
+    },
+    {
+      "path": "go.sum",
+      "hash": "f6d4f81f7e4be4e372dd1f454e8cf5208db33910956221463662649166c059a1",
+      "size": 2801,
+      "type": "file",
+      "gitObjectId": "e1292408b443c5a295d3643a7df49aa9f2dae449"
+    },
+    {
+      "path": "internal/cli/boundary_test.go",
+      "hash": "24a5e78023ee6e8cb94faf04a372ccf23f6c52ef328136e0dc22cc76dbc13b11",
+      "size": 760,
+      "type": "file",
+      "gitObjectId": "29d590dfe168cc7e3d28758978e42c4df44d7c5e"
+    },
+    {
+      "path": "internal/cli/root_test.go",
+      "hash": "03d74ce64d8b4de10f0b8b84fbf0bbf5d835ccdf2401428ae2e845b17a8e51bb",
+      "size": 41310,
+      "type": "file",
+      "gitObjectId": "8fad07725c79e7d2283e55afc0f5abaad184f625"
+    },
+    {
+      "path": "internal/cli/root.go",
+      "hash": "f5b54b5c59f40c239db984e340bbcdcfa0fd6726f7fd0513ce049cc4357e3332",
+      "size": 32105,
+      "type": "file",
+      "gitObjectId": "403b313ab71fa70b5f5d95e15a290fee5983a119"
+    },
+    {
+      "path": "internal/http/boundary_test.go",
+      "hash": "c76d55e650fc82103b27e1bf4ff2cf4d9a02cb4388713e0a584af155d8c3b06a",
+      "size": 867,
+      "type": "file",
+      "gitObjectId": "c5a41657bc441fe359ac4db88ce784fa79f22f9e"
+    },
+    {
+      "path": "internal/http/config_test.go",
+      "hash": "c48123d995917a15cf48e2d672e148dd35b84ade0d5090e7dbf8a95cf059f272",
+      "size": 3362,
+      "type": "file",
+      "gitObjectId": "8db230500510b274c193783b98732e51c3306243"
+    },
+    {
+      "path": "internal/http/config.go",
+      "hash": "a6a50b858d3b1fa3f521495fe47f1a9790e330e4e904af0ab7b1e244d82d2639",
+      "size": 2632,
+      "type": "file",
+      "gitObjectId": "426ede6a2fdc1fca8a08b57e4ecd5ad53f82cfe1"
+    },
+    {
+      "path": "internal/http/pools_test.go",
+      "hash": "0e5e53fa8a3a36b67b229913a4d55489d490a34072ebb3e75e7d486f8fee17f8",
+      "size": 6428,
+      "type": "file",
+      "gitObjectId": "8da0da88960fd81450aa7ad87f6428244ca9087c"
+    },
+    {
+      "path": "internal/http/pools.go",
+      "hash": "7297f8d371b6fd60d0d0f06a1919ce52271fa2a1301218cc84d57449a914c46b",
+      "size": 5532,
+      "type": "file",
+      "gitObjectId": "271c6ea56bc14306c432f8e28e52eddce1a15773"
+    },
+    {
+      "path": "internal/http/routes_test.go",
+      "hash": "7eece0e0c8a5e58e55f6e74d7b631d3abc46f1ff5c000892597bbb985864144c",
+      "size": 47501,
+      "type": "file",
+      "gitObjectId": "8160a4650deb9c53547a7404a28400e8deba9a51"
+    },
+    {
+      "path": "internal/http/routes.go",
+      "hash": "a68b65646d13f0cc7b1d7e7bb8caaaeb16064fbdacf3e58f109a04bd3a9b31d3",
+      "size": 20292,
+      "type": "file",
+      "gitObjectId": "a3df9c4a3278dec350829b335bbf0d22f1c2d81d"
+    },
+    {
+      "path": "internal/integration/e2e_test.go",
+      "hash": "adee056a574798d1fec24505d6aed5224a4c6fe98b843a2b365651598ad40706",
+      "size": 11131,
+      "type": "file",
+      "gitObjectId": "50d8da047c03572944df174b458081f308b166fb"
+    },
+    {
+      "path": "internal/shared/analyze/detect_test.go",
+      "hash": "81643e1663d30675c1e727544f126349c342c8e65bfe3ff5cd3300344730467e",
+      "size": 3275,
+      "type": "file",
+      "gitObjectId": "7c90ade9272f4f438eeaabff36b4e670113d00f4"
+    },
+    {
+      "path": "internal/shared/analyze/detect.go",
+      "hash": "60e825a16eaebc8fa68b175813641f0c2f4c955f7d79d50127112e5f6315cb7c",
+      "size": 5283,
+      "type": "file",
+      "gitObjectId": "24494d8b651d5f5a5f3ffcd89d1425da2b3eb745"
+    },
+    {
+      "path": "internal/shared/analyze/index_test.go",
+      "hash": "90875f194ffb460d277bfb7d92a8af2fc14a369d20c28853dc1b13a275b0d5f2",
+      "size": 14409,
+      "type": "file",
+      "gitObjectId": "91d7232a1089a56dd2c8567d4401a41bd8914f01"
+    },
+    {
+      "path": "internal/shared/analyze/index.go",
+      "hash": "afbc1a5ba672b8c19d468b08f7dad1a864ffac7b53e1e543fbe1718f2b4a3de0",
+      "size": 26731,
+      "type": "file",
+      "gitObjectId": "8b6a72b4a44bc342672dff035199e12f0f05a92a"
+    },
+    {
+      "path": "internal/shared/analyze/safety_test.go",
+      "hash": "d9ac0609d36e334dd409f0c9b7666c4fbe8d11ffe14be389399e706c71b278d9",
+      "size": 3829,
+      "type": "file",
+      "gitObjectId": "cb4257ddb8f5f6ee4594c112a5a889b97d79c07d"
+    },
+    {
+      "path": "internal/shared/analyze/safety.go",
+      "hash": "97e68d8c6e930ea61f8478845fdcf64ed9edcc8c37180ac7514165cc775ea98d",
+      "size": 5908,
+      "type": "file",
+      "gitObjectId": "ee93ae9247e3156799f038d12cab3434fb2cf885"
+    },
+    {
+      "path": "internal/shared/config/config_test.go",
+      "hash": "3ef4a9e836bfbb268d273033377a043d28d3192a07265cdc388ccb0865896ced",
+      "size": 2023,
+      "type": "file",
+      "gitObjectId": "83b512954fa969d7bb6def654c9d13b511d6eeed"
+    },
+    {
+      "path": "internal/shared/config/config.go",
+      "hash": "7c765e35eea0385bdc206367594ebf91c8f2f2b1a97e2c59745400840b3adc3d",
+      "size": 608,
+      "type": "file",
+      "gitObjectId": "9fb19d9ab148c2b95c90a32af2fb69eb103dffe0"
+    },
+    {
+      "path": "internal/shared/contracts/contracts_test.go",
+      "hash": "7f4a88320f7bab8c391690c654a5991858a6bfb81ddee6f11ce1aa62d1dd9f51",
+      "size": 1363,
+      "type": "file",
+      "gitObjectId": "6f54cf60488a8ad7a6b19815060881e1072151b0"
+    },
+    {
+      "path": "internal/shared/contracts/contracts.go",
+      "hash": "7134a9c390b66a527fc8f1f54b332e0a28c934f999eff810576c9e2b93ad39cd",
+      "size": 1563,
+      "type": "file",
+      "gitObjectId": "feab337a0ac026dc1f2bb6fea9dc27ebc0d1efa4"
+    },
+    {
+      "path": "internal/shared/contracts/imports_test.go",
+      "hash": "dafd0f007e4ec74d7a38e8c8f8c27fe086cc382f481cbc392aa86815c45c33b6",
+      "size": 902,
+      "type": "file",
+      "gitObjectId": "3fd6a8d99015138dc6e6f665a1dc11d6790daea8"
+    },
+    {
+      "path": "internal/shared/mcp/schemas_test.go",
+      "hash": "3de402cf575286f3fa73ed082017113cced5e92aa96ede3077b3a65bbed12bb8",
+      "size": 5651,
+      "type": "file",
+      "gitObjectId": "bdeb12ba98f12eb95dfc9835433f0e8b8a7dfa62"
+    },
+    {
+      "path": "internal/shared/mcp/schemas.go",
+      "hash": "475cf01cbb3dfdc221f39fc0c90dcb446a01a06bd890c1d7c1f8a4999b4ef134",
+      "size": 5166,
+      "type": "file",
+      "gitObjectId": "b696e0b354d3d428173cd4e1666c100937391e72"
+    },
+    {
+      "path": "internal/shared/mcp/server_test.go",
+      "hash": "17a8f92087aebdefcbfa0b8cf99f1d340e016ae10d146a042342d2bf9112dabc",
+      "size": 36519,
+      "type": "file",
+      "gitObjectId": "0728c18571602294e40ad3984af1bc983314e4aa"
+    },
+    {
+      "path": "internal/shared/mcp/server.go",
+      "hash": "1888e8615c77b0b2046bffc08f034d769d7ef28d7f3915f654aa8f9c505b3937",
+      "size": 23043,
+      "type": "file",
+      "gitObjectId": "aae3fb2d74b4fe13341ae233c27ff515279967c6"
+    },
+    {
+      "path": "internal/shared/source/archive_http.go",
+      "hash": "8d4db265743042594e180a08b0c4927fc2367bdef4f85cb2616d0710862b0a7e",
+      "size": 3076,
+      "type": "file",
+      "gitObjectId": "205d198fefa7e41b4b60d097b234e35020a2308c"
+    },
+    {
+      "path": "internal/shared/source/archive_test.go",
+      "hash": "f526f26411bb4cc07cba70ecd0887d17d39cfe7494af63381807bff9a51fc6b6",
+      "size": 4155,
+      "type": "file",
+      "gitObjectId": "b58a132f0443de3c9119e24e17f102faddf9e80c"
+    },
+    {
+      "path": "internal/shared/source/archive.go",
+      "hash": "f38b86434b52ae81d80cc67474cf42fda601c6b702e2f29713295aadeea651b0",
+      "size": 109,
+      "type": "file",
+      "gitObjectId": "0b6ba155d166ef34b9f10a1227b7a6e021b3f07e"
+    },
+    {
+      "path": "internal/shared/source/git.go",
+      "hash": "2c3c606cf456cb87a51763ea8c40e29a4090d596fbdbd5e6396a2b2b754f4da8",
+      "size": 118,
+      "type": "file",
+      "gitObjectId": "7b86d87586a7df45244a1b6e40f3232c966c2ade"
+    },
+    {
+      "path": "internal/shared/source/manager_test.go",
+      "hash": "35c0048a85a0c365417f1ad84313cf8f144402ddaed0e54bc2388284d04ac1b7",
+      "size": 15349,
+      "type": "file",
+      "gitObjectId": "0c2bd86fb4477e6736b4ccf5f6fda57184e6093b"
+    },
+    {
+      "path": "internal/shared/source/manager.go",
+      "hash": "8670a22cedec2f3b706cbe5a3ca962bca9b34bdf6825df9230e16dfb4d53189f",
+      "size": 8026,
+      "type": "file",
+      "gitObjectId": "43c40facad8b7bc5cec16cc136656549b3a8405c"
+    },
+    {
+      "path": "internal/shared/tools/handlers_test.go",
+      "hash": "7df9167c72604490a7663d9125b508b785587b23e3d624b1e18e7f61cc099cd2",
+      "size": 39551,
+      "type": "file",
+      "gitObjectId": "45608c6ac4dc0ee69afb75613295207634aeae96"
+    },
+    {
+      "path": "internal/shared/tools/registry_test.go",
+      "hash": "be99e520bbf9f22b382a0538ec3dc09adc565999398af61808255be324fe97a8",
+      "size": 858,
+      "type": "file",
+      "gitObjectId": "d064e63ad3410631a1e2b6d0a368e16ec0d6d532"
+    },
+    {
+      "path": "internal/shared/tools/registry.go",
+      "hash": "10876130cb8c58fc40e1cb11fc86e3047635cb89cb43521ed2c4a1cd42fa18f6",
+      "size": 647,
+      "type": "file",
+      "gitObjectId": "22cf4fb63e4ec839396fbec5c8b7a6a8c037cbf6"
+    },
+    {
+      "path": "internal/shared/tools/tools.go",
+      "hash": "fb2ca33487735523579a2a653aca976a4b5987d9ba3d903fb7830ed76f40342f",
+      "size": 48469,
+      "type": "file",
+      "gitObjectId": "246a17786da598c59a05598f2ec7d6cbd7de9ceb"
+    },
+    {
+      "path": "internal/stdio/server_test.go",
+      "hash": "8813a9ef100e29177e419fc2bdd1661408d1946dde68ca0babb7f6069c8e0f29",
+      "size": 2472,
+      "type": "file",
+      "gitObjectId": "a4551ca813c626eb686a4dee22d54dcca977f297"
+    },
+    {
+      "path": "internal/stdio/server.go",
+      "hash": "a28ac13b1333b5eae3268de436a3b164b96409b35579e9e3f2eca5f7b8b75571",
+      "size": 1460,
+      "type": "file",
+      "gitObjectId": "edfd20eae5362d5973da955080880526f345cf3d"
+    },
+    {
+      "path": "testdata/sources/invalid-random/readme.txt",
+      "hash": "3172832119fe52bef8579604fbee7f3aacadb85f9ab659e2babe2407df1db951",
+      "size": 32,
+      "type": "file",
+      "gitObjectId": "f8ab2ff5a29582304589ab6f5658566bd80e253d"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua",
+      "hash": "da3223dfcc179cb36a03a1abfa6c2492b62a85021fee6e76108705b66dee9aac",
+      "size": 116,
+      "type": "file",
+      "gitObjectId": "52ecc18a8d9743373eab650431e13e8157ed5af5"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_TestAddon/TestAddon.lua",
+      "hash": "ec842739cb483fd6fc53a6a86257c389e860dd369a49387b4247bb113158a51b",
+      "size": 133,
+      "type": "file",
+      "gitObjectId": "77653ec56feac68e121cba34987c5f8160d1eced"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_TestAddon/TestAddon.xml",
+      "hash": "b751f6bfef0590021f40f78fb9940d9e8b23aae2037dcdc648ec18f739fe0a71",
+      "size": 112,
+      "type": "file",
+      "gitObjectId": "01424b2ccbb1fea171066cf386f1256f96d89fc0"
+    },
+    {
+      "path": "testdata/sources/partial-classic/version.txt",
+      "hash": "a14929c459d9aa1e670a8a0d564775df13c07cad38fc90d4e2c73fb7656875ab",
+      "size": 14,
+      "type": "file",
+      "gitObjectId": "ea5cd0da6a67b55dc4c9bb07ab4fc470011d2c62"
+    },
+    {
+      "path": "testdata/sources/valid-empty-addons/Interface/AddOns/.keep",
+      "hash": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "size": 2,
+      "type": "file",
+      "gitObjectId": "8b137891791fe96927ad78e64b0aad7bded08bdc"
+    },
+    {
+      "path": "testdata/sources/valid-empty-addons/version.txt",
+      "hash": "24526432f951ea86e61db71a2c7df058d690643d1792c6525c784823544d3c03",
+      "size": 7,
+      "type": "file",
+      "gitObjectId": "c6cac69265af1e1684d2e3038f8fc90b84c87e9c"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/AddOns/Blizzard_APIDocumentationGenerated/ConstantsDocumentation.lua",
+      "hash": "d3693023ec74efdca598b2d8f6693aab7c9f2948aef0e389bf9268804fe5d56d",
+      "size": 328,
+      "type": "file",
+      "gitObjectId": "93f904ee8db45fce20fe3c0dabca5bb978a7192c"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/AddOns/Blizzard_APIDocumentationGenerated/GeneratedDocumentation.lua",
+      "hash": "16bab706b29ba880d8f0e18ebb2da1731e4437baa2cc26e21744fce3a141c5fd",
+      "size": 80,
+      "type": "file",
+      "gitObjectId": "b9e91358029c5684e0b508fd970dcb5ed23c50d2"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/ui-code-list.txt",
+      "hash": "e5485569f2b38937693aad12e48d0fe7c30cf396795611054227037fe443afc2",
+      "size": 160,
+      "type": "file",
+      "gitObjectId": "dd7b3cf6321059026f16569a7a22e26c932383c0"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/version.txt",
+      "hash": "603acf420f2b0fb3fac5c98bdd0ba110b4e51fefcfd7ac6ac0531ef37f4b3a81",
+      "size": 14,
+      "type": "file",
+      "gitObjectId": "55fc25608e0ec17eb756e542be380943598c8a00"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/AddOns/Blizzard_APIDocumentationGenerated/GeneratedDocumentation.lua",
+      "hash": "f14c65e567e88b070de74c48b96da0bc4ded9bb9e63ca496c47ba01e6343ba7e",
+      "size": 2389,
+      "type": "file",
+      "gitObjectId": "e9b3ed382c3f68c8c230b527ee02f7857f8d84b8"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/AddOns/Blizzard_FrameXML/CVars.lua",
+      "hash": "673031dea7e7d22e51a24b661d535c797c2abb0ee05a6d7abdf1109464c42c90",
+      "size": 205,
+      "type": "file",
+      "gitObjectId": "0ad3a1ccc08b4cb0d79e47206a20cd3502cea454"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/ui-code-list.txt",
+      "hash": "a53ea657d03b6c3a7203b215660e6d7d93351fb96aa432acd5c980ebdfa94186",
+      "size": 136,
+      "type": "file",
+      "gitObjectId": "30bdc3c798b5c480ead864b7e5e453b19c55f67e"
+    },
+    {
+      "path": "testdata/sources/valid-retail/version.txt",
+      "hash": "603acf420f2b0fb3fac5c98bdd0ba110b4e51fefcfd7ac6ac0531ef37f4b3a81",
+      "size": 14,
+      "type": "file",
+      "gitObjectId": "55fc25608e0ec17eb756e542be380943598c8a00"
+    }
+  ],
+  "omitted": [],
+  "omittedCount": 0
+}

@@ -2,4 +2,10 @@ dist/
 /wowdoc.exe
 /wowdoc-server.exe
 /sources/
+/analyze/
 .local/
+.codegraph/
+docs/comet/runtime/transactions/
+/native/
+/*.tgz
+/package-files.txt

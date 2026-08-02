@@ -1,0 +1,13 @@
+{
+  "schema": "comet.native.partial-allowance.v1",
+  "change": "cli-first-rebuild",
+  "scopeHash": "ccbc16602479ee83981f173566ce07be91f5a1acda2c5f24a12dcb73e6f300e8",
+  "scopeIds": [
+    "scope:f2e99bb909507b4dd5a43dea0aa31d52e78f300bd7947f92440c8e6aaf7b2b76"
+  ],
+  "reason": "用户已确认删除仓库根目录旧 HTTP Dockerfile 与 AGENTS.md；不存在的删除文件无法声明为 artifact，Git 提交仍完整包含删除",
+  "confirmedSummary": "完成 CLI-only 重写、README、GitHub CI/Release、npm 0.0.2 配置与 50 条真实检索质量验收",
+  "sourceRevision": 2,
+  "confirmedAt": "2026-08-02T19:09:59.095Z",
+  "allowanceHash": "e8364d1bb98f52b2762ba4b22f8bfec476e285a689daefb6ac9dcc65942cffab"
+}

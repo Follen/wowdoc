@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	os.Exit(app.RunWowdoc(os.Args[1:], os.Stdout, os.Stderr))
+	os.Exit(app.RunWowdata(os.Args[1:], os.Stdout, os.Stderr))
 }

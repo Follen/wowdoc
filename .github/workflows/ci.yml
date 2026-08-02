@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: go test ./...
+      - name: Build CLI
+        shell: bash
+        run: |
+          mkdir -p dist
+          version="$(node -p "require('./package.json').version")"
+          suffix=""
+          if [ "${{ runner.os }}" = "Windows" ]; then suffix=".exe"; fi
+          ldflags="-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${version} -X github.com/follenfang/wowdoc/internal/app.Commit=${GITHUB_SHA}"
+          go build -trimpath -ldflags "$ldflags" -o "dist/wowdoc${suffix}" ./cmd/wowdoc
+          go build -trimpath -ldflags "$ldflags" -o "dist/wowdata${suffix}" ./cmd/wowdata
+      - name: Pack npm
+        shell: bash
+        run: npm pack --ignore-scripts
+      - name: Install packed npm package
+        shell: bash
+        env:
+          WOWDOC_BINARY_DIR: ${{ github.workspace }}/dist
+        run: npm install -g ./follenfang-wowdoc-*.tgz
+      - name: Run installed commands
+        shell: bash
+        env:
+          WOWDOC_HOME: ${{ runner.temp }}/wowdoc-fixture
+        run: |
+          test "$(wowdoc --version)" = "wowdoc $(node -p "require('./package.json').version")"
+          wowdata --help
+          wowdoc doctor
+          wowdoc index build --source wow-ui-source --product retail --source-path testdata/sources/valid-retail
+
+  boundaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert CLI-only production tree
+        run: |
+          test ! -e cmd/wowdoc-server
+          test ! -e internal/http
+          test ! -e internal/stdio
+          test ! -e internal/shared/mcp
+          ! grep -RniE 'modelcontextprotocol|mcp stdio|mcp http' --include='*.go' cmd internal go.mod
+      - name: Check npm contents
+        run: |
+          npm pack --ignore-scripts
+          tar -tf follenfang-wowdoc-*.tgz > package-files.txt
+          ! grep -E 'wowdoc-server|Dockerfile|analyze/|repositories/|indexes/|\.exe$' package-files.txt

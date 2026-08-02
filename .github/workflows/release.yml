@@ -1,0 +1,118 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: go test ./... -count=1
+      - run: go vet ./...
+      - run: npm pack --dry-run
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            suffix: ""
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            suffix: ""
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            suffix: .exe
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            suffix: ""
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            suffix: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - name: Build CLIs
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          ldflags="-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${version} -X github.com/follenfang/wowdoc/internal/app.Commit=${GITHUB_SHA}"
+          go build -trimpath -ldflags "$ldflags" -o "wowdoc-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}" ./cmd/wowdoc
+          go build -trimpath -ldflags "$ldflags" -o "wowdata-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}" ./cmd/wowdata
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            wowdoc-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
+            wowdata-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binaries-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Use OIDC-capable npm
+        run: |
+          npm install --global npm@11.18.0
+          node --version
+          npm --version
+      - name: Verify release inputs
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          test "$version" = "$(node -p "require('./package.json').version")"
+          test "$(find dist -maxdepth 1 -type f | wc -l)" -eq 10
+          sha256sum dist/* > dist/SHA256SUMS
+          npm pack --dry-run
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+      - name: Publish npm package
+        run: npm publish --access public --provenance

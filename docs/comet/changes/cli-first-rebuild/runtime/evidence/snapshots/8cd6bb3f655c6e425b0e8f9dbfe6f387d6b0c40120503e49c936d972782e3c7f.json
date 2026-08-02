@@ -1,0 +1,437 @@
+{
+  "schema": "comet.native.content-snapshot-projection.v1",
+  "origin": "change-created",
+  "capture": {
+    "provider": "git"
+  },
+  "complete": true,
+  "limits": {
+    "maxFiles": 10000,
+    "maxFileBytes": 268435456,
+    "maxTotalBytes": 268435456,
+    "maxManifestBytes": 1048576,
+    "maxDurationMs": 60000
+  },
+  "policy": {
+    "schema": "comet.native.snapshot-policy.v1",
+    "include": [
+      "**/*"
+    ],
+    "exclude": [
+      ".agents/skills/**",
+      ".amazonq/skills/**",
+      ".augment/skills/**",
+      ".bob/skills/**",
+      ".claude/skills/**",
+      ".cline/skills/**",
+      ".codebuddy/skills/**",
+      ".continue/skills/**",
+      ".cospec/skills/**",
+      ".crush/skills/**",
+      ".cursor/skills/**",
+      ".factory/skills/**",
+      ".forge/skills/**",
+      ".gemini/skills/**",
+      ".github/skills/**",
+      ".iflow/skills/**",
+      ".junie/skills/**",
+      ".kilocode/skills/**",
+      ".kimi-code/skills/**",
+      ".kiro/skills/**",
+      ".lingma/skills/**",
+      ".mimocode/skills/**",
+      ".opencode/skills/**",
+      ".pi/skills/**",
+      ".qoder/skills/**",
+      ".qwen/skills/**",
+      ".roo/skills/**",
+      ".trae-cn/skills/**",
+      ".trae/skills/**",
+      ".windsurf/skills/**",
+      ".zcode/skills/**"
+    ],
+    "hash": "1b4c47ee1cdc72323c591ca8b9c7a7a8c123dfe64880b6c65dc768e2bb965385"
+  },
+  "entries": [
+    {
+      "path": ".codegraph/.gitignore",
+      "hash": "47c0dacebca9f56c9020b68584470dfc51f07650a3719904e98f4b447a5dd003",
+      "size": 229,
+      "type": "file"
+    },
+    {
+      "path": ".gitignore",
+      "hash": "4d4816ab9fd69065df4e46a1fcf7b4c6b88f1775f08da7d85c54d436f8c2e905",
+      "size": 68,
+      "type": "file"
+    },
+    {
+      "path": "Dockerfile.http",
+      "hash": "023995a99af449f194ae7df56807b0e0016c33d963d621c4f779b03afe1e0f62",
+      "size": 542,
+      "type": "file"
+    },
+    {
+      "path": "cmd/wowdoc-server/main.go",
+      "hash": "538f15c7d5aab14b0a73b7ae238b9d86573cd550416b8e922ca2dd96c2474e31",
+      "size": 880,
+      "type": "file"
+    },
+    {
+      "path": "cmd/wowdoc-server/main_test.go",
+      "hash": "ed65b5e33804c2a8118b4116db76423484aab8b7c170e25aa78ea10fac034703",
+      "size": 2047,
+      "type": "file"
+    },
+    {
+      "path": "cmd/wowdoc/main.go",
+      "hash": "f299f14b1f1e376619e60ef2ff6817ca94f6ad531d7ed379d57e872468b1eb8e",
+      "size": 197,
+      "type": "file"
+    },
+    {
+      "path": "config/http-mcp.remote.yaml",
+      "hash": "d37615ca8d2b5657be8ddc6e6b7634ed470c3f025a71855ae3cf57eb3a2a13c6",
+      "size": 1184,
+      "type": "file"
+    },
+    {
+      "path": "config/http-mcp.wsl.yaml",
+      "hash": "df3712ddc7e77f3f497331857c1ee933e058d9e7b65b269250701819d1884e01",
+      "size": 1179,
+      "type": "file"
+    },
+    {
+      "path": "go.mod",
+      "hash": "3f2d625cff16cdf17a1600acc9161ffa97ca3f75f79d7424ef5796a332c0aa64",
+      "size": 568,
+      "type": "file"
+    },
+    {
+      "path": "go.sum",
+      "hash": "f6d4f81f7e4be4e372dd1f454e8cf5208db33910956221463662649166c059a1",
+      "size": 2801,
+      "type": "file"
+    },
+    {
+      "path": "internal/cli/boundary_test.go",
+      "hash": "24a5e78023ee6e8cb94faf04a372ccf23f6c52ef328136e0dc22cc76dbc13b11",
+      "size": 760,
+      "type": "file"
+    },
+    {
+      "path": "internal/cli/root.go",
+      "hash": "f5b54b5c59f40c239db984e340bbcdcfa0fd6726f7fd0513ce049cc4357e3332",
+      "size": 32105,
+      "type": "file"
+    },
+    {
+      "path": "internal/cli/root_test.go",
+      "hash": "03d74ce64d8b4de10f0b8b84fbf0bbf5d835ccdf2401428ae2e845b17a8e51bb",
+      "size": 41310,
+      "type": "file"
+    },
+    {
+      "path": "internal/http/boundary_test.go",
+      "hash": "c76d55e650fc82103b27e1bf4ff2cf4d9a02cb4388713e0a584af155d8c3b06a",
+      "size": 867,
+      "type": "file"
+    },
+    {
+      "path": "internal/http/config.go",
+      "hash": "a6a50b858d3b1fa3f521495fe47f1a9790e330e4e904af0ab7b1e244d82d2639",
+      "size": 2632,
+      "type": "file"
+    },
+    {
+      "path": "internal/http/config_test.go",
+      "hash": "c48123d995917a15cf48e2d672e148dd35b84ade0d5090e7dbf8a95cf059f272",
+      "size": 3362,
+      "type": "file"
+    },
+    {
+      "path": "internal/http/pools.go",
+      "hash": "7297f8d371b6fd60d0d0f06a1919ce52271fa2a1301218cc84d57449a914c46b",
+      "size": 5532,
+      "type": "file"
+    },
+    {
+      "path": "internal/http/pools_test.go",
+      "hash": "0e5e53fa8a3a36b67b229913a4d55489d490a34072ebb3e75e7d486f8fee17f8",
+      "size": 6428,
+      "type": "file"
+    },
+    {
+      "path": "internal/http/routes.go",
+      "hash": "a68b65646d13f0cc7b1d7e7bb8caaaeb16064fbdacf3e58f109a04bd3a9b31d3",
+      "size": 20292,
+      "type": "file"
+    },
+    {
+      "path": "internal/http/routes_test.go",
+      "hash": "7eece0e0c8a5e58e55f6e74d7b631d3abc46f1ff5c000892597bbb985864144c",
+      "size": 47501,
+      "type": "file"
+    },
+    {
+      "path": "internal/integration/e2e_test.go",
+      "hash": "adee056a574798d1fec24505d6aed5224a4c6fe98b843a2b365651598ad40706",
+      "size": 11131,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/analyze/detect.go",
+      "hash": "60e825a16eaebc8fa68b175813641f0c2f4c955f7d79d50127112e5f6315cb7c",
+      "size": 5283,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/analyze/detect_test.go",
+      "hash": "81643e1663d30675c1e727544f126349c342c8e65bfe3ff5cd3300344730467e",
+      "size": 3275,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/analyze/index.go",
+      "hash": "afbc1a5ba672b8c19d468b08f7dad1a864ffac7b53e1e543fbe1718f2b4a3de0",
+      "size": 26731,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/analyze/index_test.go",
+      "hash": "90875f194ffb460d277bfb7d92a8af2fc14a369d20c28853dc1b13a275b0d5f2",
+      "size": 14409,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/analyze/safety.go",
+      "hash": "97e68d8c6e930ea61f8478845fdcf64ed9edcc8c37180ac7514165cc775ea98d",
+      "size": 5908,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/analyze/safety_test.go",
+      "hash": "d9ac0609d36e334dd409f0c9b7666c4fbe8d11ffe14be389399e706c71b278d9",
+      "size": 3829,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/config/config.go",
+      "hash": "7c765e35eea0385bdc206367594ebf91c8f2f2b1a97e2c59745400840b3adc3d",
+      "size": 608,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/config/config_test.go",
+      "hash": "3ef4a9e836bfbb268d273033377a043d28d3192a07265cdc388ccb0865896ced",
+      "size": 2023,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/contracts/contracts.go",
+      "hash": "7134a9c390b66a527fc8f1f54b332e0a28c934f999eff810576c9e2b93ad39cd",
+      "size": 1563,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/contracts/contracts_test.go",
+      "hash": "7f4a88320f7bab8c391690c654a5991858a6bfb81ddee6f11ce1aa62d1dd9f51",
+      "size": 1363,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/contracts/imports_test.go",
+      "hash": "dafd0f007e4ec74d7a38e8c8f8c27fe086cc382f481cbc392aa86815c45c33b6",
+      "size": 902,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/mcp/schemas.go",
+      "hash": "475cf01cbb3dfdc221f39fc0c90dcb446a01a06bd890c1d7c1f8a4999b4ef134",
+      "size": 5166,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/mcp/schemas_test.go",
+      "hash": "3de402cf575286f3fa73ed082017113cced5e92aa96ede3077b3a65bbed12bb8",
+      "size": 5651,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/mcp/server.go",
+      "hash": "1888e8615c77b0b2046bffc08f034d769d7ef28d7f3915f654aa8f9c505b3937",
+      "size": 23043,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/mcp/server_test.go",
+      "hash": "17a8f92087aebdefcbfa0b8cf99f1d340e016ae10d146a042342d2bf9112dabc",
+      "size": 36519,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/source/archive.go",
+      "hash": "f38b86434b52ae81d80cc67474cf42fda601c6b702e2f29713295aadeea651b0",
+      "size": 109,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/source/archive_http.go",
+      "hash": "8d4db265743042594e180a08b0c4927fc2367bdef4f85cb2616d0710862b0a7e",
+      "size": 3076,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/source/archive_test.go",
+      "hash": "f526f26411bb4cc07cba70ecd0887d17d39cfe7494af63381807bff9a51fc6b6",
+      "size": 4155,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/source/git.go",
+      "hash": "2c3c606cf456cb87a51763ea8c40e29a4090d596fbdbd5e6396a2b2b754f4da8",
+      "size": 118,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/source/manager.go",
+      "hash": "8670a22cedec2f3b706cbe5a3ca962bca9b34bdf6825df9230e16dfb4d53189f",
+      "size": 8026,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/source/manager_test.go",
+      "hash": "35c0048a85a0c365417f1ad84313cf8f144402ddaed0e54bc2388284d04ac1b7",
+      "size": 15349,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/tools/handlers_test.go",
+      "hash": "7df9167c72604490a7663d9125b508b785587b23e3d624b1e18e7f61cc099cd2",
+      "size": 39551,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/tools/registry.go",
+      "hash": "10876130cb8c58fc40e1cb11fc86e3047635cb89cb43521ed2c4a1cd42fa18f6",
+      "size": 647,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/tools/registry_test.go",
+      "hash": "be99e520bbf9f22b382a0538ec3dc09adc565999398af61808255be324fe97a8",
+      "size": 858,
+      "type": "file"
+    },
+    {
+      "path": "internal/shared/tools/tools.go",
+      "hash": "fb2ca33487735523579a2a653aca976a4b5987d9ba3d903fb7830ed76f40342f",
+      "size": 48469,
+      "type": "file"
+    },
+    {
+      "path": "internal/stdio/server.go",
+      "hash": "a28ac13b1333b5eae3268de436a3b164b96409b35579e9e3f2eca5f7b8b75571",
+      "size": 1460,
+      "type": "file"
+    },
+    {
+      "path": "internal/stdio/server_test.go",
+      "hash": "8813a9ef100e29177e419fc2bdd1661408d1946dde68ca0babb7f6069c8e0f29",
+      "size": 2472,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/invalid-random/readme.txt",
+      "hash": "3172832119fe52bef8579604fbee7f3aacadb85f9ab659e2babe2407df1db951",
+      "size": 32,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua",
+      "hash": "da3223dfcc179cb36a03a1abfa6c2492b62a85021fee6e76108705b66dee9aac",
+      "size": 116,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_TestAddon/TestAddon.lua",
+      "hash": "ec842739cb483fd6fc53a6a86257c389e860dd369a49387b4247bb113158a51b",
+      "size": 133,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_TestAddon/TestAddon.xml",
+      "hash": "b751f6bfef0590021f40f78fb9940d9e8b23aae2037dcdc648ec18f739fe0a71",
+      "size": 112,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/version.txt",
+      "hash": "a14929c459d9aa1e670a8a0d564775df13c07cad38fc90d4e2c73fb7656875ab",
+      "size": 14,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-empty-addons/Interface/AddOns/.keep",
+      "hash": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "size": 2,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-empty-addons/version.txt",
+      "hash": "24526432f951ea86e61db71a2c7df058d690643d1792c6525c784823544d3c03",
+      "size": 7,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/AddOns/Blizzard_APIDocumentationGenerated/ConstantsDocumentation.lua",
+      "hash": "d3693023ec74efdca598b2d8f6693aab7c9f2948aef0e389bf9268804fe5d56d",
+      "size": 328,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/AddOns/Blizzard_APIDocumentationGenerated/GeneratedDocumentation.lua",
+      "hash": "16bab706b29ba880d8f0e18ebb2da1731e4437baa2cc26e21744fce3a141c5fd",
+      "size": 80,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/ui-code-list.txt",
+      "hash": "e5485569f2b38937693aad12e48d0fe7c30cf396795611054227037fe443afc2",
+      "size": 160,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/version.txt",
+      "hash": "603acf420f2b0fb3fac5c98bdd0ba110b4e51fefcfd7ac6ac0531ef37f4b3a81",
+      "size": 14,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/AddOns/Blizzard_APIDocumentationGenerated/GeneratedDocumentation.lua",
+      "hash": "f14c65e567e88b070de74c48b96da0bc4ded9bb9e63ca496c47ba01e6343ba7e",
+      "size": 2389,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/AddOns/Blizzard_FrameXML/CVars.lua",
+      "hash": "673031dea7e7d22e51a24b661d535c797c2abb0ee05a6d7abdf1109464c42c90",
+      "size": 205,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/ui-code-list.txt",
+      "hash": "a53ea657d03b6c3a7203b215660e6d7d93351fb96aa432acd5c980ebdfa94186",
+      "size": 136,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/version.txt",
+      "hash": "603acf420f2b0fb3fac5c98bdd0ba110b4e51fefcfd7ac6ac0531ef37f4b3a81",
+      "size": 14,
+      "type": "file"
+    }
+  ],
+  "omitted": [],
+  "omittedCount": 0
+}
