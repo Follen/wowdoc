@@ -15,4 +15,6 @@ Translate the user's wording into explicit `source`, `product`, `ref`, `topic`, 
 6. Do not apply latest fallback to `ambiguous_version`, `unsupported_build`, `ref_not_found`, or update failures.
 7. Cite `sourceId`, product, Tag when present, resolved Commit, path, line, and the returned excerpt. Treat `dynamic-unresolved` edges as unresolved, not exact.
 
+The data directory defaults to `~/.wowdoc`. `WOWDOC_HOME` may override it with another writable path for an isolated workspace, another drive, or a server deployment. This changes only wowdoc's source, index, object, lock, and log storage; it does not change the npm installation directory or the Skill directory. Run `wowdoc doctor` to see the resolved data directory.
+
 Read [source-catalog.md](references/source-catalog.md) for source/product names and [commands.md](references/commands.md) for command selection.
