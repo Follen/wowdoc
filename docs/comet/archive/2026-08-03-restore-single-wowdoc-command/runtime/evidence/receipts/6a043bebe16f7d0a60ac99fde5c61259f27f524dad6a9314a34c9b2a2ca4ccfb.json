@@ -1,0 +1,42 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "static-inspection",
+  "role": "required-check",
+  "status": "passed",
+  "bindings": {
+    "change": "restore-single-wowdoc-command",
+    "sourceRevision": 3,
+    "contractHash": "4156689366c9751e403e7b8c387f51e9af6e01c21bb3f4fa63e7431761da461e",
+    "scopeHash": "83fcd88c75dd78908a9378e728383b1ecd69e5448288c010ed2ae85e40811bb5",
+    "snapshotHash": "18a0a66871b562befdfdb0f90f3af19c5efb834f6067f9485c23e4ca8614c755",
+    "artifactHash": "02ef35d981dc43b2e6043d07acca259d14770363aa87d7f7c33666302e108b1e"
+  },
+  "acceptanceIds": [],
+  "actor": "native-runtime:scoped-text-safety",
+  "issuedAt": "2026-08-03T07:05:53.864Z",
+  "evidence": {
+    "subjects": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/release.yml",
+      "README.md",
+      "bin/wowdata.mjs",
+      "cmd/wowdata/main.go",
+      "internal/app/context.go",
+      "internal/app/lifecycle.go",
+      "internal/app/root.go",
+      "internal/app/root_test.go",
+      "internal/app/wowdata.go",
+      "internal/app/wowdoc.go",
+      "internal/gitinstall/install.go",
+      "package-lock.json",
+      "package.json",
+      "scripts/check-package.mjs",
+      "scripts/install.mjs"
+    ],
+    "rule": "scoped-text-safety",
+    "resultSummary": "The built-in scoped inspection passed without skipped or blocking input.",
+    "checkReceiptRef": "runtime/evidence/check-receipts/1ad9a4942c98452c92271934b96c44d7b0ce939cbea9013e61d8877fdfdb2df9.json",
+    "checkReceiptHash": "1ad9a4942c98452c92271934b96c44d7b0ce939cbea9013e61d8877fdfdb2df9"
+  },
+  "receiptHash": "6a043bebe16f7d0a60ac99fde5c61259f27f524dad6a9314a34c9b2a2ca4ccfb"
+}

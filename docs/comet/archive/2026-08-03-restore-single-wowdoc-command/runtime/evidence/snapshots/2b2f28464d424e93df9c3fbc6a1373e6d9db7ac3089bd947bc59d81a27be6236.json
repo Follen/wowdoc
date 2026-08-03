@@ -1,0 +1,413 @@
+{
+  "schema": "comet.native.content-snapshot-projection.v1",
+  "origin": "change-created",
+  "capture": {
+    "provider": "git"
+  },
+  "complete": true,
+  "limits": {
+    "maxFiles": 10000,
+    "maxFileBytes": 268435456,
+    "maxTotalBytes": 268435456,
+    "maxManifestBytes": 1048576,
+    "maxDurationMs": 60000
+  },
+  "policy": {
+    "schema": "comet.native.snapshot-policy.v1",
+    "include": [
+      "**/*"
+    ],
+    "exclude": [
+      ".agents/skills/**",
+      ".amazonq/skills/**",
+      ".augment/skills/**",
+      ".bob/skills/**",
+      ".claude/skills/**",
+      ".cline/skills/**",
+      ".codebuddy/skills/**",
+      ".continue/skills/**",
+      ".cospec/skills/**",
+      ".crush/skills/**",
+      ".cursor/skills/**",
+      ".factory/skills/**",
+      ".forge/skills/**",
+      ".gemini/skills/**",
+      ".github/skills/**",
+      ".iflow/skills/**",
+      ".junie/skills/**",
+      ".kilocode/skills/**",
+      ".kimi-code/skills/**",
+      ".kiro/skills/**",
+      ".lingma/skills/**",
+      ".mimocode/skills/**",
+      ".opencode/skills/**",
+      ".pi/skills/**",
+      ".qoder/skills/**",
+      ".qwen/skills/**",
+      ".roo/skills/**",
+      ".trae-cn/skills/**",
+      ".trae/skills/**",
+      ".windsurf/skills/**",
+      ".zcode/skills/**"
+    ],
+    "hash": "1b4c47ee1cdc72323c591ca8b9c7a7a8c123dfe64880b6c65dc768e2bb965385"
+  },
+  "entries": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "hash": "c606687a634813b637ef7966effbbd680cbce5f36f23506e33bf87affc8ef976",
+      "size": 2407,
+      "type": "file"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "hash": "aeeda13c676b2d778e7119bb0257b04c45b01354048fe5009826efc281bcf725",
+      "size": 4560,
+      "type": "file"
+    },
+    {
+      "path": ".gitignore",
+      "hash": "a2470b40bee178a478812d61f48a5a3e28349de36740bab9d4465b9287794b1c",
+      "size": 148,
+      "type": "file"
+    },
+    {
+      "path": "LICENSE",
+      "hash": "a386ddcce94e578020e473a3db03e06a47d8edc02da5576b78cfe1a004f8d001",
+      "size": 1067,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "hash": "b9f5f3883c2db383374425c9cedc43ae26d2d73ed4b77726c72276d6149ef434",
+      "size": 6189,
+      "type": "file"
+    },
+    {
+      "path": "bin/run.mjs",
+      "hash": "ae36a492de64548d2372b9988f1be66ec252c12be23b3e877f4c8863595eb9a4",
+      "size": 800,
+      "type": "file"
+    },
+    {
+      "path": "bin/wowdata.mjs",
+      "hash": "dcdad7046065561f0c734d413d60093aa9ac5f5dc4e9b51bdc793929dedb872a",
+      "size": 69,
+      "type": "file"
+    },
+    {
+      "path": "bin/wowdoc.mjs",
+      "hash": "51971701e30f928e662f19c97f218dcefab96b2534aacf84f7397ee9a9385a1e",
+      "size": 68,
+      "type": "file"
+    },
+    {
+      "path": "cmd/wowdata/main.go",
+      "hash": "5ce1ea6c2ff21872d02a77fb2f47ddf3bd4d0f185e43d6d61cfaca9e9458b165",
+      "size": 154,
+      "type": "file"
+    },
+    {
+      "path": "cmd/wowdoc/main.go",
+      "hash": "866dada829d95553039dd4850c7b6194469199da5d2955a2bc3ba8e4c3f2de5d",
+      "size": 153,
+      "type": "file"
+    },
+    {
+      "path": "go.mod",
+      "hash": "4267dff9a955c1f5904c79fc8d6ca374e2717780e902ccc4a0f76cb9f97c068d",
+      "size": 764,
+      "type": "file"
+    },
+    {
+      "path": "go.sum",
+      "hash": "9fc2ee0ac3979931be66b2ceec14e6d2afa58ec24ab87bdd67d498d2300af7e2",
+      "size": 5156,
+      "type": "file"
+    },
+    {
+      "path": "internal/app/context.go",
+      "hash": "8a080656a32c75788ae55b206adcd7bfe40701fbf7b2a1bb6d266d2902335bf4",
+      "size": 2708,
+      "type": "file"
+    },
+    {
+      "path": "internal/app/root.go",
+      "hash": "e5a6a9e937c065c3085e6da874d3dbc581b690373e19c03a5e1bd56510814494",
+      "size": 809,
+      "type": "file"
+    },
+    {
+      "path": "internal/app/root_test.go",
+      "hash": "f463e1cf39704d8382de35ef5f305c8f2dc5bc2da90f132a7077b9495f0268ab",
+      "size": 4664,
+      "type": "file"
+    },
+    {
+      "path": "internal/app/wowdata.go",
+      "hash": "908ca80d3d8e6805b0cd1c912f7262e100a39f3f41302fbb46346094cc6fcf2e",
+      "size": 11261,
+      "type": "file"
+    },
+    {
+      "path": "internal/app/wowdoc.go",
+      "hash": "0330d9d4bc8cbdffad4a43d81d77a2f7c6ec951c3307132a2b601ac08bb4ac7d",
+      "size": 13746,
+      "type": "file"
+    },
+    {
+      "path": "internal/catalog/catalog.go",
+      "hash": "d865e83c423ea3d752892a41a3468f1039f555c849963ff8d7f924d2772d73b7",
+      "size": 3654,
+      "type": "file"
+    },
+    {
+      "path": "internal/gitinstall/install.go",
+      "hash": "5d2a18171bf44753493ba26ac5f9db5e18a00bbfdab001b16929c1cfc8d05b4d",
+      "size": 5928,
+      "type": "file"
+    },
+    {
+      "path": "internal/gitinstall/install_test.go",
+      "hash": "20aa040a3119a10db06c7d962fdbd64b599c4a1ff2a861fb7248b90e8ac689bd",
+      "size": 1123,
+      "type": "file"
+    },
+    {
+      "path": "internal/gitstore/git.go",
+      "hash": "181619184798002bc30d04ad749dc0988f5b705596f733cbffcc5a9b3dbbdf17",
+      "size": 15366,
+      "type": "file"
+    },
+    {
+      "path": "internal/gitstore/git_test.go",
+      "hash": "1990c308ffa8c606290b33307c3d405133d9bb05b7f0c48d9d14ccfa809c8032",
+      "size": 8311,
+      "type": "file"
+    },
+    {
+      "path": "internal/home/layout.go",
+      "hash": "1d114d25fd86a826f28f19820b804a84c065fbc0d2842d1e4780fb0b747690c1",
+      "size": 1437,
+      "type": "file"
+    },
+    {
+      "path": "internal/indexer/indexer.go",
+      "hash": "dd0a72e51e69dfcb63b3a5208943d0fab41a6cedf385cc3df2f0f53d8a9a1fec",
+      "size": 16342,
+      "type": "file"
+    },
+    {
+      "path": "internal/indexer/indexer_test.go",
+      "hash": "ae8dfb4108b739465001a57776883b8eb6570663af05fd181a0ca20d0ede1577",
+      "size": 9027,
+      "type": "file"
+    },
+    {
+      "path": "internal/indexer/parse.go",
+      "hash": "9c8813c8a8eacf34673c709c086ec5e97bb947f8ca3db6ebb07eb11d3789825d",
+      "size": 14461,
+      "type": "file"
+    },
+    {
+      "path": "internal/indexer/worktree_test.go",
+      "hash": "4ecfc47fc6d303ff0e05d5b0ed015fa14dbf0d1e744553265ae63231132f4494",
+      "size": 2849,
+      "type": "file"
+    },
+    {
+      "path": "internal/lock/lock.go",
+      "hash": "44c506b188ddec00fe2f802f6842ee8f0dfc037ef375c974e423ef9bced9ecc9",
+      "size": 1033,
+      "type": "file"
+    },
+    {
+      "path": "internal/objectstore/store.go",
+      "hash": "c5d88265f9d352cbc22b5eb30d27ac6d057d2c7560091e5f292f69410ca03af9",
+      "size": 2135,
+      "type": "file"
+    },
+    {
+      "path": "internal/query/query.go",
+      "hash": "d5b7a308d7623573a4f3de9f904c47e1510d8b842907322f4519b754cd1a8139",
+      "size": 15325,
+      "type": "file"
+    },
+    {
+      "path": "internal/result/result.go",
+      "hash": "ffd99c24cd19b32151104ef0939c7141362872c58d3a4c5de27d9ae3e23aceb7",
+      "size": 1710,
+      "type": "file"
+    },
+    {
+      "path": "internal/schema/schema.go",
+      "hash": "0eedae52b1368421615e3ed5b3e3e0d31fa5b7b3f34d8d713deb5e40704d5121",
+      "size": 123,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/branch.go",
+      "hash": "6e5febc38c63d32341ea476788c2d329e7ad1f448eaf4cf7484a820381c1cb63",
+      "size": 15718,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/catalog.go",
+      "hash": "acf30585d4b26f95a3791147d0c48f5a5ce5067ef5e69378662b5d9f53e89dbe",
+      "size": 8083,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/catalog_test.go",
+      "hash": "ca66382076508d3038bfe25ef564e74a4d9d1a12db3677908c68ea8e2bc8f11c",
+      "size": 1014,
+      "type": "file"
+    },
+    {
+      "path": "internal/store/fs.go",
+      "hash": "c138addca22b8e6c6fedc9af4be05d639de3feb3b11f546d09f441b0c300eda7",
+      "size": 97,
+      "type": "file"
+    },
+    {
+      "path": "package-lock.json",
+      "hash": "b3e2e09f7b652cb5368d25858d2063637901b512cc99f88bbe70b652d7e8f761",
+      "size": 403,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "hash": "1c7e3c86244eee34289a1bb9df7478c208054809f612f853db23c154fedab1f5",
+      "size": 715,
+      "type": "file"
+    },
+    {
+      "path": "scripts/check-package.mjs",
+      "hash": "b02c70917253655b21ca51ad33ab9365b67cd342822caa607eea1526118614ea",
+      "size": 250,
+      "type": "file"
+    },
+    {
+      "path": "scripts/evaluate-quality.mjs",
+      "hash": "d162fe637fcc59da825cbe2bf25d3c63f42ebd514197aff8d43f31d0fc723564",
+      "size": 7506,
+      "type": "file"
+    },
+    {
+      "path": "scripts/install.mjs",
+      "hash": "9aa107977e1585397425c76a2204b4d178a25907484976a09ecee124a0bbaa97",
+      "size": 3684,
+      "type": "file"
+    },
+    {
+      "path": "skill/SKILL.md",
+      "hash": "13c1a6afa8e59fc64d3787878b7e62109c571130816593888c7e33c488b9c2be",
+      "size": 1789,
+      "type": "file"
+    },
+    {
+      "path": "skill/references/commands.md",
+      "hash": "02809f91caebd68a89aea57af64c8a525a7d51f50de096bd6b35bb6144245156",
+      "size": 1205,
+      "type": "file"
+    },
+    {
+      "path": "skill/references/source-catalog.md",
+      "hash": "c41f4ded280edcf02ebcfcc5b7820b25521d7105766b1bab19beb984decbd22f",
+      "size": 1213,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/invalid-random/readme.txt",
+      "hash": "3172832119fe52bef8579604fbee7f3aacadb85f9ab659e2babe2407df1db951",
+      "size": 32,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_FrameXML/SecureTemplates.lua",
+      "hash": "da3223dfcc179cb36a03a1abfa6c2492b62a85021fee6e76108705b66dee9aac",
+      "size": 116,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_TestAddon/TestAddon.lua",
+      "hash": "ec842739cb483fd6fc53a6a86257c389e860dd369a49387b4247bb113158a51b",
+      "size": 133,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/Interface/AddOns/Blizzard_TestAddon/TestAddon.xml",
+      "hash": "b751f6bfef0590021f40f78fb9940d9e8b23aae2037dcdc648ec18f739fe0a71",
+      "size": 112,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/partial-classic/version.txt",
+      "hash": "a14929c459d9aa1e670a8a0d564775df13c07cad38fc90d4e2c73fb7656875ab",
+      "size": 14,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-empty-addons/Interface/AddOns/.keep",
+      "hash": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "size": 2,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-empty-addons/version.txt",
+      "hash": "24526432f951ea86e61db71a2c7df058d690643d1792c6525c784823544d3c03",
+      "size": 7,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/AddOns/Blizzard_APIDocumentationGenerated/ConstantsDocumentation.lua",
+      "hash": "d3693023ec74efdca598b2d8f6693aab7c9f2948aef0e389bf9268804fe5d56d",
+      "size": 328,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/AddOns/Blizzard_APIDocumentationGenerated/GeneratedDocumentation.lua",
+      "hash": "16bab706b29ba880d8f0e18ebb2da1731e4437baa2cc26e21744fce3a141c5fd",
+      "size": 80,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/Interface/ui-code-list.txt",
+      "hash": "e5485569f2b38937693aad12e48d0fe7c30cf396795611054227037fe443afc2",
+      "size": 160,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail-constants/version.txt",
+      "hash": "603acf420f2b0fb3fac5c98bdd0ba110b4e51fefcfd7ac6ac0531ef37f4b3a81",
+      "size": 14,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/AddOns/Blizzard_APIDocumentationGenerated/GeneratedDocumentation.lua",
+      "hash": "f14c65e567e88b070de74c48b96da0bc4ded9bb9e63ca496c47ba01e6343ba7e",
+      "size": 2389,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/AddOns/Blizzard_FrameXML/CVars.lua",
+      "hash": "673031dea7e7d22e51a24b661d535c797c2abb0ee05a6d7abdf1109464c42c90",
+      "size": 205,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/Interface/ui-code-list.txt",
+      "hash": "a53ea657d03b6c3a7203b215660e6d7d93351fb96aa432acd5c980ebdfa94186",
+      "size": 136,
+      "type": "file"
+    },
+    {
+      "path": "testdata/sources/valid-retail/version.txt",
+      "hash": "603acf420f2b0fb3fac5c98bdd0ba110b4e51fefcfd7ac6ac0531ef37f4b3a81",
+      "size": 14,
+      "type": "file"
+    }
+  ],
+  "omitted": [],
+  "omittedCount": 0
+}

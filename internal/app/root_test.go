@@ -14,7 +14,7 @@ import (
 	"github.com/follenfang/wowdoc/internal/indexer"
 )
 
-func TestWowdataInitDefaultsToTenHotTags(t *testing.T) {
+func TestWowdocInitDefaultsToTenHotTags(t *testing.T) {
 	cmd := dataInitCommand()
 	flag := cmd.Flags().Lookup("hot-tags")
 	if flag == nil {
@@ -22,6 +22,19 @@ func TestWowdataInitDefaultsToTenHotTags(t *testing.T) {
 	}
 	if flag.DefValue != "10" {
 		t.Fatalf("hot-tags default=%s, want 10", flag.DefValue)
+	}
+}
+
+func TestWowdocOwnsLifecycleCommands(t *testing.T) {
+	root := newWowdoc()
+	for _, name := range []string{"init", "update", "clean", "uninstall"} {
+		command, _, err := root.Find([]string{name})
+		if err != nil {
+			t.Fatalf("find %s: %v", name, err)
+		}
+		if command == root || command.Name() != name {
+			t.Fatalf("%s is not a wowdoc subcommand", name)
+		}
 	}
 }
 
@@ -129,7 +142,7 @@ func TestMachineReadableNotInitializedError(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
 		t.Fatal(err)
 	}
-	if envelope.OK || envelope.Error.Code != "not_initialized" || len(envelope.Error.Next) == 0 {
+	if envelope.OK || envelope.Error.Code != "not_initialized" || len(envelope.Error.Next) != 1 || envelope.Error.Next[0] != "wowdoc init" {
 		t.Fatalf("unexpected envelope: %#v", envelope)
 	}
 }

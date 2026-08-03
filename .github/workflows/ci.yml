@@ -35,7 +35,6 @@ jobs:
           if [ "${{ runner.os }}" = "Windows" ]; then suffix=".exe"; fi
           ldflags="-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${version} -X github.com/follenfang/wowdoc/internal/app.Commit=${GITHUB_SHA}"
           go build -trimpath -ldflags "$ldflags" -o "dist/wowdoc${suffix}" ./cmd/wowdoc
-          go build -trimpath -ldflags "$ldflags" -o "dist/wowdata${suffix}" ./cmd/wowdata
       - name: Pack npm
         shell: bash
         run: npm pack --ignore-scripts
@@ -50,7 +49,7 @@ jobs:
           WOWDOC_HOME: ${{ runner.temp }}/wowdoc-fixture
         run: |
           test "$(wowdoc --version)" = "wowdoc $(node -p "require('./package.json').version")"
-          wowdata --help
+          wowdoc init --help
           wowdoc doctor
           wowdoc index build --source wow-ui-source --product retail --source-path testdata/sources/valid-retail
 

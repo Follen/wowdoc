@@ -1,6 +1,6 @@
 {
   "name": "@follenfang/wowdoc",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Auditable WoW UI source intelligence CLI for coding agents",
   "license": "MIT",
   "type": "module",
@@ -9,8 +9,7 @@
     "url": "https://github.com/Follen/wowdoc"
   },
   "bin": {
-    "wowdoc": "bin/wowdoc.mjs",
-    "wowdata": "bin/wowdata.mjs"
+    "wowdoc": "bin/wowdoc.mjs"
   },
   "files": [
     "bin/",

@@ -13,9 +13,6 @@ var Commit = "unknown"
 func RunWowdoc(args []string, stdout, stderr io.Writer) int {
 	return execute(newWowdoc(), args, stdout, stderr)
 }
-func RunWowdata(args []string, stdout, stderr io.Writer) int {
-	return execute(newWowdata(), args, stdout, stderr)
-}
 func execute(root *cobra.Command, args []string, stdout, stderr io.Writer) int {
 	root.SetArgs(args)
 	root.SetOut(stdout)

@@ -13,24 +13,20 @@ The product is CLI-only. The included Agent Skill translates a natural-language 
 ```powershell
 npm install -g @follenfang/wowdoc
 wowdoc --version
-wowdata --help
+wowdoc --help
 ```
 
-The package installs:
-
-- `wowdoc`: read-only source queries and explicit source/index operations;
-- `wowdata`: local data initialization, update, cleanup, and uninstall;
-- the `wowdoc` Skill in `~/.agents/skills/wowdoc`.
+The package installs the `wowdoc` CLI and the `wowdoc` Skill in `~/.agents/skills/wowdoc`. The single CLI handles queries, source/index operations, initialization, updates, cleanup, and uninstall.
 
 Run the one-time data initialization before querying source:
 
 ```powershell
-wowdata init
+wowdoc init
 ```
 
 Initialization creates `~/.wowdoc`, fetches the configured Git mirrors, and builds searchable SQLite snapshots for each product branch and its hot Tags. It can take time and substantial disk space. The command is resumable: rerunning it keeps completed work and continues failed or pending snapshots.
 
-If Git is missing, `wowdata init` detects the platform package manager, shows the exact package and installer command, installs Git, refreshes `PATH`, and verifies `git --version`. `wowdoc doctor` remains read-only.
+If Git is missing, `wowdoc init` detects the platform package manager, shows the exact package and installer command, installs Git, refreshes `PATH`, and verifies `git --version`. `wowdoc doctor` remains read-only.
 
 ## Supported source
 
@@ -86,8 +82,7 @@ wowdoc query|explore|inspect|diff|validate
 wowdoc source list|check|sync
 wowdoc index build|refresh|status
 wowdoc doctor
-
-wowdata init|update|clean|uninstall
+wowdoc init|update|clean|uninstall
 ```
 
 Common lifecycle:
@@ -103,10 +98,10 @@ wowdoc source sync --source elvui --product main
 wowdoc index refresh --source elvui --product main --ref latest
 
 # Preview cleanup; no files are deleted
-wowdata clean
+wowdoc clean
 ```
 
-Use `wowdata clean --apply` only after reviewing its candidates. Removing indexed versions requires an explicit version or range. `wowdata uninstall` requires confirmation and removes the npm package, managed Skill, and `~/.wowdoc` data.
+Use `wowdoc clean --yes` only after reviewing its candidates. Removing indexed versions requires an explicit version or range. `wowdoc uninstall` requires confirmation and removes the npm package, managed Skill, and `~/.wowdoc` data.
 
 ## Storage model
 
@@ -114,7 +109,7 @@ Local state lives under `~/.wowdoc`:
 
 ```text
 config/         versioned source catalog and local configuration
-repositories/   bare partial Git mirrors
+repositories/   complete bare Git mirrors
 objects/        content-addressed source and asset bytes
 ast/            auditable per-file JSON syntax trees
 indexes/        one WAL SQLite database per product branch
@@ -142,10 +137,9 @@ go test ./...
 go vet ./...
 npm pack --dry-run
 go run ./cmd/wowdoc --help
-go run ./cmd/wowdata --help
 ```
 
-Release tags use `vMAJOR.MINOR.PATCH`. GitHub Actions tests the project, builds `wowdoc` and `wowdata` for Windows amd64, Linux amd64/arm64, and macOS amd64/arm64, publishes checksums and a GitHub Release, then publishes the matching npm version through npm Trusted Publisher OIDC with provenance.
+Release tags use `vMAJOR.MINOR.PATCH`. GitHub Actions tests the project, builds `wowdoc` for Windows amd64, Linux amd64/arm64, and macOS amd64/arm64, publishes checksums and a GitHub Release, then publishes the matching npm version through npm Trusted Publisher OIDC with provenance.
 
 ## License
 

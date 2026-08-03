@@ -27,7 +27,7 @@ func selectSnapshot(sourceID, productID, ref string) (selection, error) {
 	}
 	if !layout.Initialized() {
 		e := result.E("not_initialized", "wowdoc data is not initialized", 3)
-		e.NextSteps = []string{"wowdata init"}
+		e.NextSteps = []string{"wowdoc init"}
 		return selection{}, e
 	}
 	source, ok := catalog.FindSource(sourceID)

@@ -28,9 +28,9 @@ func Ensure(ctx context.Context, stderr io.Writer) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Fprintf(stderr, "wowdata: Git is missing; installer=%s package=%s\n", plan.Manager, plan.Package)
+	fmt.Fprintf(stderr, "wowdoc: Git is missing; installer=%s package=%s\n", plan.Manager, plan.Package)
 	for _, step := range plan.Steps {
-		fmt.Fprintf(stderr, "wowdata: running %s\n", strings.Join(step, " "))
+		fmt.Fprintf(stderr, "wowdoc: running %s\n", strings.Join(step, " "))
 		command := exec.CommandContext(ctx, step[0], step[1:]...)
 		var captured bytes.Buffer
 		stream := io.MultiWriter(stderr, &captured)
@@ -41,14 +41,14 @@ func Ensure(ctx context.Context, stderr io.Writer) (string, error) {
 	}
 	if plan.Interactive {
 		e := result.E("git_install_interactive", "the system Git installer requires user interaction", 4)
-		e.NextSteps = []string{"finish the Xcode Command Line Tools dialog", "run git --version", "retry wowdata init"}
+		e.NextSteps = []string{"finish the Xcode Command Line Tools dialog", "run git --version", "retry wowdoc init"}
 		return "", e
 	}
 	refreshPATH(runtime.GOOS)
 	path, err := exec.LookPath("git")
 	if err != nil {
 		e := result.E("git_path_not_refreshed", "Git was installed but is not visible on PATH", 4)
-		e.NextSteps = []string{"open a new terminal", "run git --version", "retry wowdata init"}
+		e.NextSteps = []string{"open a new terminal", "run git --version", "retry wowdoc init"}
 		return "", e
 	}
 	return verify(ctx, path)
@@ -100,7 +100,7 @@ func Detect(goos string, lookup func(string) (string, error)) (Command, error) {
 		}
 	}
 	e := result.E("git_installer_not_found", "no supported Git package manager was found", 4)
-	e.NextSteps = []string{"install Git from the operating system package manager", "run git --version", "retry wowdata init"}
+	e.NextSteps = []string{"install Git from the operating system package manager", "run git --version", "retry wowdoc init"}
 	return Command{}, e
 }
 
@@ -108,7 +108,7 @@ func verify(ctx context.Context, path string) (string, error) {
 	out, err := exec.CommandContext(ctx, path, "--version").CombinedOutput()
 	if err != nil {
 		e := result.E("git_verification_failed", strings.TrimSpace(string(out)), 4)
-		e.NextSteps = []string{"repair the Git installation", "run git --version", "retry wowdata init"}
+		e.NextSteps = []string{"repair the Git installation", "run git --version", "retry wowdoc init"}
 		return "", e
 	}
 	version := strings.TrimSpace(string(out))
@@ -137,15 +137,15 @@ func classifyInstallError(err error) error {
 	switch {
 	case strings.Contains(s, "cancel"):
 		e := result.E("git_install_cancelled", err.Error(), 4)
-		e.NextSteps = []string{"rerun wowdata init when ready", "approve the operating system Git installation"}
+		e.NextSteps = []string{"rerun wowdoc init when ready", "approve the operating system Git installation"}
 		return e
 	case strings.Contains(s, "access") || strings.Contains(s, "permission") || strings.Contains(s, "elevation"):
 		e := result.E("git_install_admin_required", err.Error(), 4)
-		e.NextSteps = []string{"run the package manager with administrator privileges", "run git --version", "retry wowdata init"}
+		e.NextSteps = []string{"run the package manager with administrator privileges", "run git --version", "retry wowdoc init"}
 		return e
 	default:
 		e := result.E("git_install_failed", err.Error(), 4)
-		e.NextSteps = []string{"inspect the package manager output above", "install Git with the detected package manager", "run git --version", "retry wowdata init"}
+		e.NextSteps = []string{"inspect the package manager output above", "install Git with the detected package manager", "run git --version", "retry wowdoc init"}
 		return e
 	}
 }

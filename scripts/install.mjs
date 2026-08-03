@@ -20,22 +20,21 @@ if (!platform) throw new Error(`unsupported_platform: ${process.platform}-${proc
 const nativeDir = join(root, "native");
 mkdirSync(nativeDir, { recursive: true });
 
-for (const name of ["wowdoc", "wowdata"]) {
-  const target = join(nativeDir, name + suffix);
-  const supplied = process.env.WOWDOC_BINARY_DIR && join(process.env.WOWDOC_BINARY_DIR, name + suffix);
-  if (supplied && existsSync(supplied)) {
-    cpSync(supplied, target);
-  } else if (existsSync(join(root, "go.mod"))) {
-    execFileSync("go", ["build", "-trimpath", "-ldflags", `-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${pkg.version}`, "-o", target, `./cmd/${name}`], { cwd: root, stdio: "inherit" });
-  } else {
-    const asset = `${name}-${platform}${suffix}`;
-    const url = `https://github.com/Follen/wowdoc/releases/download/v${pkg.version}/${asset}`;
-    const response = await fetch(url, { redirect: "follow" });
-    if (!response.ok) throw new Error(`binary_download_failed: ${response.status} ${url}`);
-    writeFileSync(target, Buffer.from(await response.arrayBuffer()));
-  }
-  if (process.platform !== "win32") chmodSync(target, 0o755);
+const name = "wowdoc";
+const target = join(nativeDir, name + suffix);
+const supplied = process.env.WOWDOC_BINARY_DIR && join(process.env.WOWDOC_BINARY_DIR, name + suffix);
+if (supplied && existsSync(supplied)) {
+  cpSync(supplied, target);
+} else if (existsSync(join(root, "go.mod"))) {
+  execFileSync("go", ["build", "-trimpath", "-ldflags", `-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${pkg.version}`, "-o", target, `./cmd/${name}`], { cwd: root, stdio: "inherit" });
+} else {
+  const asset = `${name}-${platform}${suffix}`;
+  const url = `https://github.com/Follen/wowdoc/releases/download/v${pkg.version}/${asset}`;
+  const response = await fetch(url, { redirect: "follow" });
+  if (!response.ok) throw new Error(`binary_download_failed: ${response.status} ${url}`);
+  writeFileSync(target, Buffer.from(await response.arrayBuffer()));
 }
+if (process.platform !== "win32") chmodSync(target, 0o755);
 
 const skillSource = join(root, "skill");
 const skillTarget = join(homedir(), ".agents", "skills", "wowdoc");

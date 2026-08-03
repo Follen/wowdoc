@@ -1,0 +1,67 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "manual-evidence",
+  "role": "acceptance-evidence",
+  "status": "passed",
+  "bindings": {
+    "change": "restore-single-wowdoc-command",
+    "sourceRevision": 3,
+    "contractHash": "4156689366c9751e403e7b8c387f51e9af6e01c21bb3f4fa63e7431761da461e",
+    "scopeHash": "83fcd88c75dd78908a9378e728383b1ecd69e5448288c010ed2ae85e40811bb5",
+    "snapshotHash": "18a0a66871b562befdfdb0f90f3af19c5efb834f6067f9485c23e4ca8614c755",
+    "artifactHash": "02ef35d981dc43b2e6043d07acca259d14770363aa87d7f7c33666302e108b1e"
+  },
+  "acceptanceIds": [
+    "acceptance-07d8504e9cb24842657c235d69e40c8b0accb3b7da24975fd0b5aae94d5c4355",
+    "acceptance-086a4666ef5cf513c8af5e54eeb26cb0c13505bb6772f02b0cbc2a570077890a",
+    "acceptance-0a6d38e4eb33606a806506a44c9eded862a8171215bf7e5337bf6545f7077b98",
+    "acceptance-0abb16feec395387cfaec96f95adf8f08c788c68052340522bf4b8fb72816d6b",
+    "acceptance-10f6d8482a5903dde4ea31144b2591ff3e6e7d5fedf0184e8cecf762285b9922",
+    "acceptance-10fb0e5c6ae4ddfeb5f3e108e8e09c257767f759c081e1779fe102a49ce039b9",
+    "acceptance-1c5516cd0b214c905b3e6d1a7ec02312f1035abec26bb2b9ded7c5b2e774bea1",
+    "acceptance-237590cf2031b802ce374eef5274ef8c08086575fbaac29349695e4d4214d756",
+    "acceptance-3261cc4c7718666907b6bb92148a6e796698979305c453da38e6418e9b164f3f",
+    "acceptance-33587cacb0addf676e058a0957926bf0a2b3ec151c78fa45c4ef1f476b305ccd",
+    "acceptance-33b3db5f5d5c86fc3a92a1a4b12dab627ebb78032e6a0c7aeb387726c51374c1",
+    "acceptance-3410137aaa9a77aaf48ce440ef29b30105ad8a0f9a9c002e70b8d221b49db38b",
+    "acceptance-343cf24f1f3efa2d62d5b7cf9d47dbaa0dd4ec0a09dbfda8c3bf7efcd2485f83",
+    "acceptance-3bb2ca7639bd6c7f96dbf3b0b9831b87b4f235dd06da7018721ba76f5847b997",
+    "acceptance-41822c4c992eb6e8418d6585893574cc630276e66b6f8a4d92c856daeef8b43f",
+    "acceptance-4fd8df3ded47abba90b668307061de4363a5bf8f8a267a0c2c46fdc9f2d4f7b4",
+    "acceptance-5025d9198e77a93e06b5cb975bb7e7e85a5cf6308ada593850a9f850f689d6bb",
+    "acceptance-51901eba93e55855ff3112e441c8e7bf8f399c78edacbff64b4b30bde0f714e0",
+    "acceptance-568d770ee4b1d325a7ab6635a212d46e1f7ca9ed1274e62e57dadff16362aa9b",
+    "acceptance-5a7728fac1ddeded8265fe9e6cd5e1ce84f547a23d7ca850d844070166991389",
+    "acceptance-6356f4f899a433914d46f9346c34abd77f2997a822daa27790aadeba731f72c5",
+    "acceptance-7aa04de09f1c127195f9f605d4d3dd545cef4d0bf7a9590b1c78cff47005a230",
+    "acceptance-7b1a62ecc3c0214af26bea3db00d7fa8290c72ff117df2f605a7637afcbd9f7d",
+    "acceptance-7bbdf2746c2338f0cc5ccedc09b3255c6e9afd2f9c1fa76eeccf7276e3000004",
+    "acceptance-8e7c32b23dbb7d994143ab24d9ddade35a31598c456787d7378db09efefcbdf4",
+    "acceptance-9c2869cf7add117e71f97eea3967b60a17dd46a57e2f8cf16518a299c2147446",
+    "acceptance-9f122e9a952e7864c9075f940683b102a34c7c654e5be145381857c347ef4069",
+    "acceptance-ae2751f2bcddd40a010dbd67094f6ee0a5f25b7e433c75352e95531bcc284b48",
+    "acceptance-c60a2862a268163e1c28f379c91abea28e89f70ad11197342e47970c603be921",
+    "acceptance-ec4d3fe31dd05a1d702dfbd2c7bd2fdd59342664e88001f09b4e01073236c899",
+    "acceptance-edac4b01aa48f601bda374fd1e009a0edd5cb2f8651d0546211e57cc9131993a",
+    "acceptance-fc97413bcc1d36a2f91b7505fc1ff6c6b6eab88d96b6df462c5db6b2beb2cf07",
+    "acceptance-fd6140393ad5e5079fa7bc5d02a300a3545c2a8b06cd84a95425b056355ca14a",
+    "acceptance-fe1779eed7e60e78406a4583565844cc138a9cc818505bd4953cebad1126c2cf"
+  ],
+  "actor": "native-runtime:manual-evidence",
+  "issuedAt": "2026-08-03T07:03:39.110Z",
+  "evidence": {
+    "steps": [
+      "Run go test ./... -count=1, go test -race ./... -count=1, go vet ./..., and git diff --check.",
+      "Build wowdoc 0.0.5, use an isolated WOWDOC_HOME, and run version, doctor, update --dry-run, clean, uninstall preview, and an uninitialized query.",
+      "Pack and globally install the npm tarball with a supplied native binary, then inspect the installed commands and package manifest.",
+      "Cross-compile the single wowdoc command for Windows amd64, Linux amd64/arm64, and macOS amd64/arm64, then inspect CI and release gates."
+    ],
+    "observations": [
+      "All Go tests, race tests, vet, diff hygiene, npm package checks, and Comet text checks passed.",
+      "wowdoc --help contains init, update, clean, uninstall and existing query commands; all observed nextSteps name wowdoc init or wowdoc uninstall --yes.",
+      "The 0.0.5 tarball contains one bin mapping and the isolated global install exposed wowdoc only; lifecycle help ran through that installed command.",
+      "Exactly five cross-platform binaries built successfully; the release workflow expects five artifacts and production source, npm, README, Skill, and CI surfaces contain no obsolete command entry."
+    ]
+  },
+  "receiptHash": "ffc082ec5ff3d01f7740d2d08b2ff4287bcc62eff0885056defa251ebdc22f7e"
+}

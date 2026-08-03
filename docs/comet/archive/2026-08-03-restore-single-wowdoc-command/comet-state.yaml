@@ -1,0 +1,23 @@
+schema: comet.native.v3
+minimum_runtime_version: 3
+revision: 5
+verification_protocol: legacy-v1
+name: restore-single-wowdoc-command
+language: zh-CN
+phase: archive
+brief: brief.md
+approval: confirmed
+approved_contract_hash: 4156689366c9751e403e7b8c387f51e9af6e01c21bb3f4fa63e7431761da461e
+spec_changes:
+  - capability: wowdoc-cli
+    operation: replace
+    source: specs/wowdoc-cli/spec.md
+    base_hash: 341bd10d044e46161aff32d32b4965b347e69465fe01f920ee30abf1a86095fb
+verification_result: pass
+verification_report: verification.md
+implementation_scope: runtime/evidence/scopes/83fcd88c75dd78908a9378e728383b1ecd69e5448288c010ed2ae85e40811bb5.json
+verification_evidence: runtime/evidence/verifications/eb0069a155c971af3e8bdc2726cbc9856c2641c7635d98e2542b4800c80859bd.json
+partial_allowance: null
+archived: true
+created_at: 2026-08-03
+run_id: c3b357ac-db7c-46ca-948c-971f5c2b593b

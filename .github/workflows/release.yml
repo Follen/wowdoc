@@ -65,7 +65,7 @@ jobs:
         with:
           go-version: "1.23.x"
           cache: true
-      - name: Build CLIs
+      - name: Build CLI
         shell: bash
         env:
           GOOS: ${{ matrix.goos }}
@@ -75,15 +75,12 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           ldflags="-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${version} -X github.com/follenfang/wowdoc/internal/app.Commit=${GITHUB_SHA}"
           go build -trimpath -ldflags "$ldflags" -o "wowdoc-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}" ./cmd/wowdoc
-          go build -trimpath -ldflags "$ldflags" -o "wowdata-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}" ./cmd/wowdata
       - uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
           if-no-files-found: error
           retention-days: 7
-          path: |
-            wowdoc-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
-            wowdata-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
+          path: wowdoc-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}
 
   publish:
     if: github.event_name == 'push'
@@ -115,7 +112,7 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           test "$version" = "$(node -p "require('./package.json').version")"
-          test "$(find dist -maxdepth 1 -type f | wc -l)" -eq 10
+          test "$(find dist -maxdepth 1 -type f | wc -l)" -eq 5
           sha256sum dist/* > dist/SHA256SUMS
           npm pack --dry-run
       - name: Create GitHub Release

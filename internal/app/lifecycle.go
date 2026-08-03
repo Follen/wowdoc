@@ -38,13 +38,6 @@ type initFailure struct {
 	Message  string `json:"message"`
 }
 
-func newWowdata() *cobra.Command {
-	root := &cobra.Command{Use: "wowdata", Short: "Manage wowdoc data and installation", Version: Version}
-	root.SetVersionTemplate("wowdata {{.Version}}\n")
-	root.AddCommand(dataInitCommand(), dataUpdateCommand(), dataCleanCommand(), dataUninstallCommand())
-	return root
-}
-
 func dataInitCommand() *cobra.Command {
 	var sourceID, productID string
 	var hotTags, workers int
@@ -129,7 +122,7 @@ func dataInitCommand() *cobra.Command {
 		if len(failures) > 0 {
 			e := result.E("initialization_failed", "one or more product branches failed to initialize", 4)
 			e.Details = map[string]any{"completedSnapshots": built, "failures": failures, "workerBudget": workerBudget, "branchWorkers": branchWorkers}
-			e.NextSteps = []string{"rerun wowdata init to continue incomplete branches"}
+			e.NextSteps = []string{"rerun wowdoc init to continue incomplete branches"}
 			return e
 		}
 		ready := map[string]any{"schema": "wowdoc.ready.v1", "ready": true, "completedAt": time.Now().UTC().Format(time.RFC3339), "version": Version}
@@ -239,7 +232,7 @@ func dataUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{Use: "update", Short: "Update the npm package and bundled Skill", RunE: func(cmd *cobra.Command, args []string) error {
 		npm, err := exec.LookPath("npm")
 		if err != nil {
-			return result.E("npm_not_found", "npm is required for wowdata update", 4)
+			return result.E("npm_not_found", "npm is required for wowdoc update", 4)
 		}
 		argv := []string{"install", "-g", "@follenfang/wowdoc@latest"}
 		if dryRun {
@@ -303,7 +296,7 @@ func dataUninstallCommand() *cobra.Command {
 			return err
 		}
 		if !yes {
-			return result.Write(cmd.OutOrStdout(), map[string]any{"executed": false, "willRemove": []string{layout.Root, "~/.agents/skills/wowdoc"}, "nextStep": "wowdata uninstall --yes"})
+			return result.Write(cmd.OutOrStdout(), map[string]any{"executed": false, "willRemove": []string{layout.Root, "~/.agents/skills/wowdoc"}, "nextStep": "wowdoc uninstall --yes"})
 		}
 		if err = os.RemoveAll(layout.Root); err != nil {
 			return err

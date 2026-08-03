@@ -26,7 +26,7 @@ import (
 func newWowdoc() *cobra.Command {
 	root := &cobra.Command{Use: "wowdoc", Short: "Versioned WoW UI source intelligence for agents", Version: Version}
 	root.SetVersionTemplate("wowdoc {{.Version}}\n")
-	root.AddCommand(doctorCommand(), sourceCommand(), indexCommand(), searchCommand("query"), searchCommand("explore"), inspectCommand(), diffCommand(), validateCommand())
+	root.AddCommand(dataInitCommand(), dataUpdateCommand(), dataCleanCommand(), dataUninstallCommand(), doctorCommand(), sourceCommand(), indexCommand(), searchCommand("query"), searchCommand("explore"), inspectCommand(), diffCommand(), validateCommand())
 	return root
 }
 
@@ -57,7 +57,7 @@ func doctorCommand() *cobra.Command {
 			}
 			writableHint := pathErr == nil && info.IsDir() && info.Mode().Perm()&0o200 != 0
 			add("homeWritableHint", writableHint, probePath, "check permissions for "+probePath)
-			add("initialized", layout.Initialized(), layout.State, "wowdata init")
+			add("initialized", layout.Initialized(), layout.State, "wowdoc init")
 			healthy := gitErr == nil && writableHint
 			return result.Write(cmd.OutOrStdout(), map[string]any{"version": Version, "commit": Commit, "go": runtime.Version(), "platform": runtime.GOOS + "/" + runtime.GOARCH, "home": layout.Root, "healthy": healthy, "checks": checks})
 		},
