@@ -1,0 +1,234 @@
+{
+  "schema": "comet.native.implementation-scope.v2",
+  "contractHash": "2225a114c3849711482d4a790cca0dcc174d3b3099c86f8fda61c47b9ac69015",
+  "baselineProjectionRef": "runtime/evidence/snapshots/61d532794a67c2f192b4e456ef474a7f7dd5f5cc1ee2cac8ae2ab2293654c3c4.json",
+  "baselineProjectionHash": "61d532794a67c2f192b4e456ef474a7f7dd5f5cc1ee2cac8ae2ab2293654c3c4",
+  "currentProjectionRef": "runtime/evidence/snapshots/ed85cbf709450ee733e72182afab24781c4ce69c6a13a586a32f60ebf61c9380.json",
+  "currentProjectionHash": "ed85cbf709450ee733e72182afab24781c4ce69c6a13a586a32f60ebf61c9380",
+  "complete": true,
+  "declaredArtifacts": [
+    {
+      "path": "internal",
+      "kind": "directory"
+    }
+  ],
+  "changes": [
+    {
+      "path": "internal/app/context.go",
+      "kind": "modified",
+      "before": {
+        "hash": "82a9e7dc3ee70abbe26d1feae675bd67bbb4dde86e7409c32711cd86c6363628",
+        "size": 2683
+      },
+      "after": {
+        "hash": "8a080656a32c75788ae55b206adcd7bfe40701fbf7b2a1bb6d266d2902335bf4",
+        "size": 2708
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/app/root_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "0907be6457f7cbc9329da661837bff7b9bcc3df0f4086e73c3355160fcee6880",
+        "size": 1083
+      },
+      "after": {
+        "hash": "f463e1cf39704d8382de35ef5f305c8f2dc5bc2da90f132a7077b9495f0268ab",
+        "size": 4664
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/app/wowdata.go",
+      "kind": "modified",
+      "before": {
+        "hash": "0ea7f1a728111dc09d43925165eafa6bacbeffbb6ce6ec28b4d714fde7b49d92",
+        "size": 8098
+      },
+      "after": {
+        "hash": "908ca80d3d8e6805b0cd1c912f7262e100a39f3f41302fbb46346094cc6fcf2e",
+        "size": 11261
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/gitstore/git.go",
+      "kind": "modified",
+      "before": {
+        "hash": "b4234d73b1b1cd6619de15b8893a5d56a820b5fdf36916a516443d12989e0c5e",
+        "size": 14024
+      },
+      "after": {
+        "hash": "181619184798002bc30d04ad749dc0988f5b705596f733cbffcc5a9b3dbbdf17",
+        "size": 15366
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/gitstore/git_test.go",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "1990c308ffa8c606290b33307c3d405133d9bb05b7f0c48d9d14ccfa809c8032",
+        "size": 8311
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/indexer/indexer.go",
+      "kind": "modified",
+      "before": {
+        "hash": "bdbd621d95d188bb3242a6192cb3a0dc90d7652a0e8b0731c85d45bc1e311c8b",
+        "size": 14652
+      },
+      "after": {
+        "hash": "dd0a72e51e69dfcb63b3a5208943d0fab41a6cedf385cc3df2f0f53d8a9a1fec",
+        "size": 16342
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/indexer/indexer_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "514a2fc6fbb1def95c04566db21400ae08899d66424a1556277d91efaaaebf14",
+        "size": 3425
+      },
+      "after": {
+        "hash": "ae8dfb4108b739465001a57776883b8eb6570663af05fd181a0ca20d0ede1577",
+        "size": 9027
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/indexer/parse.go",
+      "kind": "modified",
+      "before": {
+        "hash": "50b7f4cf55bb352545b99823e93b7ce4078db8f39e4ba3aa4a9c17c24e1d5697",
+        "size": 13855
+      },
+      "after": {
+        "hash": "9c8813c8a8eacf34673c709c086ec5e97bb947f8ca3db6ebb07eb11d3789825d",
+        "size": 14461
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/objectstore/store.go",
+      "kind": "modified",
+      "before": {
+        "hash": "7e82c67eff9f1094348570b6dc0b42a57f4452c069ba9f2b7c6a26c9da4bc0ee",
+        "size": 2092
+      },
+      "after": {
+        "hash": "c5d88265f9d352cbc22b5eb30d27ac6d057d2c7560091e5f292f69410ca03af9",
+        "size": 2135
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/query/query.go",
+      "kind": "modified",
+      "before": {
+        "hash": "a28b4ad6a959f516925fd5aab8668620ab8a1e1ea120a8f64904b47913203dbd",
+        "size": 14340
+      },
+      "after": {
+        "hash": "d5b7a308d7623573a4f3de9f904c47e1510d8b842907322f4519b754cd1a8139",
+        "size": 15325
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/schema/schema.go",
+      "kind": "modified",
+      "before": {
+        "hash": "5510569c1da56ab9705252274a783e3b6918d283210e99d38aa413af356efa4e",
+        "size": 87
+      },
+      "after": {
+        "hash": "0eedae52b1368421615e3ed5b3e3e0d31fa5b7b3f34d8d713deb5e40704d5121",
+        "size": 123
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    },
+    {
+      "path": "internal/store/branch.go",
+      "kind": "modified",
+      "before": {
+        "hash": "a2cc82e9eac97bf4021542e06cb644dfaad0f9123bb3b742d90dd224ae90f689",
+        "size": 11354
+      },
+      "after": {
+        "hash": "6e5febc38c63d32341ea476788c2d329e7ad1f448eaf4cf7484a820381c1cb63",
+        "size": 15718
+      },
+      "attributedTo": [
+        {
+          "path": "internal",
+          "kind": "directory"
+        }
+      ]
+    }
+  ],
+  "unattributed": [],
+  "unresolvedScopes": [],
+  "noCodeReason": null,
+  "scopeHash": "73cbf0d30d916d27a82e7223f7983d9fc0e665d4d99d0e994065cf26e668ae8a"
+}

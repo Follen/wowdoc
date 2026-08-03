@@ -183,7 +183,7 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	}
 	defer guard.Release()
 	snapshotID := opts.SourceID + "-" + opts.ProductID + "-" + opts.Commit
-	branch, err := store.OpenBranch(opts.Layout, opts.SourceID, opts.ProductID)
+	branch, err := store.OpenBranch(opts.Layout, opts.SourceID, opts.ProductID, ParserSchema, IndexSchema)
 	if err != nil {
 		return Stats{}, err
 	}
@@ -226,7 +226,27 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	worker := func() {
 		defer wg.Done()
 		for entry := range jobs {
-			parseData, e := opts.Input.Read(ctx, entry)
+			language := languageFor(strings.ToLower(filepath.Ext(entry.Path)))
+			if entry.OID != "" {
+				record, ok, e := branch.LookupOID(entry.OID, language, ParserSchema, IndexSchema)
+				if e != nil {
+					select {
+					case errCh <- e:
+					default:
+					}
+					return
+				}
+				if ok && contentObjectExists(opts.Layout, record) {
+					p := reusedEntry(entry, record)
+					select {
+					case results <- p:
+					case <-ctx.Done():
+						return
+					}
+					continue
+				}
+			}
+			rawData, e := opts.Input.ReadRaw(ctx, entry)
 			if e != nil {
 				select {
 				case errCh <- e:
@@ -234,7 +254,25 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 				}
 				return
 			}
-			rawData, e := opts.Input.ReadRaw(ctx, entry)
+			hash := objectstore.Hash(rawData)
+			record, ok, e := branch.LookupHash(hash, language, ParserSchema, IndexSchema)
+			if e != nil {
+				select {
+				case errCh <- e:
+				default:
+				}
+				return
+			}
+			if ok && contentObjectExists(opts.Layout, record) {
+				p := reusedEntry(entry, record)
+				select {
+				case results <- p:
+				case <-ctx.Done():
+					return
+				}
+				continue
+			}
+			parseData, e := opts.Input.Read(ctx, entry)
 			if e != nil {
 				select {
 				case errCh <- e:
@@ -321,10 +359,39 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	return stats, nil
 }
 
+func contentObjectExists(layout home.Layout, record store.ContentRecord) bool {
+	root := layout.Objects
+	if record.Asset != nil {
+		root = layout.Assets
+	}
+	if len(record.ContentHash) < 2 {
+		return false
+	}
+	_, err := os.Stat(filepath.Join(root, record.ContentHash[:2], record.ContentHash))
+	return err == nil
+}
+
+func reusedEntry(entry Entry, record store.ContentRecord) parsed {
+	role := roleFor(entry.Path)
+	p := parsed{
+		file:         store.FileFact{Path: entry.Path, ContentHash: record.ContentHash, ASTHash: record.ASTHash, Language: record.Language, Role: role, GitOID: entry.OID, Size: record.Size},
+		reusedObject: true,
+		reusedAST:    record.ASTHash != "",
+	}
+	if record.Asset != nil {
+		asset := *record.Asset
+		asset.Path = entry.Path
+		asset.NormalizedPath = objectstore.NormalizePath(entry.Path)
+		asset.GitOID = entry.OID
+		p.assets = append(p.assets, asset)
+	}
+	return p
+}
+
 func parseEntry(objects objectstore.Store, entry Entry, parseData, rawData []byte) (parsed, error) {
 	ext := strings.ToLower(filepath.Ext(entry.Path))
 	role := roleFor(entry.Path)
-	p := parsed{file: store.FileFact{Path: entry.Path, Language: languageFor(ext), Role: role, Size: int64(len(rawData))}}
+	p := parsed{file: store.FileFact{Path: entry.Path, Language: languageFor(ext), Role: role, GitOID: entry.OID, Size: int64(len(rawData))}}
 	if isAsset(ext) {
 		hash, _, reused, err := objects.PutAsset(rawData)
 		if err != nil {
@@ -334,7 +401,6 @@ func parseEntry(objects objectstore.Store, entry Entry, parseData, rawData []byt
 		p.reusedObject = reused
 		w, h, format := imageInfo(rawData, ext)
 		p.assets = append(p.assets, store.AssetFact{Path: entry.Path, NormalizedPath: objectstore.NormalizePath(entry.Path), ContentHash: hash, GitOID: entry.OID, Extension: ext, MIME: mimeFor(ext), Size: int64(len(rawData)), Width: w, Height: h, Format: format})
-		p.search = append(p.search, store.SearchFact{Path: entry.Path, Line: 1, Kind: "asset", Name: filepath.Base(entry.Path), Text: entry.Path, Role: role})
 		p.kind = "asset"
 		return p, nil
 	}
@@ -363,7 +429,7 @@ func parseEntry(objects objectstore.Store, entry Entry, parseData, rawData []byt
 		return p, err
 	}
 	if ext == ".lua" || ext == ".xml" || ext == ".toc" {
-		astHash, _, astReused, e := objects.PutAST(ParserSchema, hash, map[string]any{"schema": ParserSchema, "inputHash": hash, "path": entry.Path, "language": p.file.Language, "tree": tree})
+		astHash, _, astReused, e := objects.PutAST(ParserSchema+"-"+p.file.Language, hash, map[string]any{"schema": ParserSchema, "inputHash": hash, "language": p.file.Language, "tree": tree})
 		if e != nil {
 			return p, e
 		}
@@ -371,19 +437,19 @@ func parseEntry(objects objectstore.Store, entry Entry, parseData, rawData []byt
 		p.reusedAST = astReused
 	}
 	for _, s := range p.symbols {
-		p.search = append(p.search, store.SearchFact{Path: s.Path, Line: s.Line, Kind: s.Kind, Name: s.Qualified, Text: s.Signature, Role: role})
+		p.search = append(p.search, store.SearchFact{Path: s.Path, Line: s.Line, Kind: s.Kind, Name: s.Qualified, Text: s.Signature, RequiredRole: s.RequiredRole})
 	}
 	for _, x := range p.xml {
-		p.search = append(p.search, store.SearchFact{Path: x.Path, Line: x.Line, Kind: x.Kind, Name: x.Name, Text: x.Attributes, Role: role})
+		p.search = append(p.search, store.SearchFact{Path: x.Path, Line: x.Line, Kind: x.Kind, Name: x.Name, Text: x.Attributes, RequiredRole: x.RequiredRole})
 	}
 	for _, t := range p.toc {
-		p.search = append(p.search, store.SearchFact{Path: t.Path, Line: t.Line, Kind: "toc", Name: t.Key, Text: t.Value, Role: role})
+		p.search = append(p.search, store.SearchFact{Path: t.Path, Line: t.Line, Kind: "toc", Name: t.Key, Text: t.Value, RequiredRole: t.RequiredRole})
 	}
 	if (ext == ".lua" || ext == ".xml") && len(rawData) < 1<<20 {
 		for i, line := range strings.Split(string(rawData), "\n") {
 			line = strings.TrimSpace(line)
 			if line != "" {
-				p.search = append(p.search, store.SearchFact{Path: entry.Path, Line: i + 1, Kind: "source", Text: line, Role: role})
+				p.search = append(p.search, store.SearchFact{Path: entry.Path, Line: i + 1, Kind: "source", Text: line})
 			}
 		}
 	}

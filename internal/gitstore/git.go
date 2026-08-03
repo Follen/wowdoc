@@ -61,36 +61,24 @@ func (m Manager) CreateWorktree(ctx context.Context, sourceID, commit, taskID st
 	if _, err := os.Stat(path); err == nil {
 		return nil, result.E("worktree_exists", "task worktree already exists", 5)
 	}
-	if err := m.configurePartialMirror(ctx, sourceID); err != nil {
-		return nil, err
-	}
-	if _, err := run(ctx, "", "--git-dir", m.Mirror(sourceID), "worktree", "add", "--detach", path, commit); err != nil {
-		_, _ = run(ctx, "", "--git-dir", m.Mirror(sourceID), "worktree", "remove", "--force", path)
+	if _, err := run(ctx, "",
+		"-c", "core.longpaths=true",
+		"-c", "filter.lfs.smudge=",
+		"-c", "filter.lfs.process=",
+		"-c", "filter.lfs.required=false",
+		"--git-dir", m.Mirror(sourceID), "worktree", "add", "--detach", path, commit,
+	); err != nil {
+		_, _ = run(ctx, "", "-c", "core.longpaths=true", "--git-dir", m.Mirror(sourceID), "worktree", "remove", "--force", path)
 		_ = os.RemoveAll(path)
-		_, _ = run(ctx, "", "--git-dir", m.Mirror(sourceID), "worktree", "prune")
+		_, _ = run(ctx, "", "-c", "core.longpaths=true", "--git-dir", m.Mirror(sourceID), "worktree", "prune")
 		return nil, classifyGit(err)
 	}
 	marker, _ := json.Marshal(map[string]any{"sourceId": sourceID, "commit": commit, "taskId": taskID, "leaseUntil": time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)})
 	if err := os.WriteFile(filepath.Join(path, ".wowdoc-task.json"), marker, 0o600); err != nil {
-		_, _ = run(ctx, "", "--git-dir", m.Mirror(sourceID), "worktree", "remove", "--force", path)
+		_, _ = run(ctx, "", "-c", "core.longpaths=true", "--git-dir", m.Mirror(sourceID), "worktree", "remove", "--force", path)
 		return nil, err
 	}
 	return &Worktree{manager: m, sourceID: sourceID, path: path}, nil
-}
-
-func (m Manager) configurePartialMirror(ctx context.Context, sourceID string) error {
-	mirror := m.Mirror(sourceID)
-	settings := [][2]string{
-		{"core.repositoryFormatVersion", "1"},
-		{"remote.origin.promisor", "true"},
-		{"remote.origin.partialclonefilter", "blob:none"},
-	}
-	for _, setting := range settings {
-		if _, err := run(ctx, "", "--git-dir", mirror, "config", setting[0], setting[1]); err != nil {
-			return classifyGit(err)
-		}
-	}
-	return nil
 }
 
 func (m Manager) CleanupStaleWorktrees(ctx context.Context) error {
@@ -125,8 +113,8 @@ func (m Manager) CleanupStaleWorktrees(ctx context.Context) error {
 		if target == root || !strings.HasPrefix(strings.ToLower(target), strings.ToLower(root+string(os.PathSeparator))) {
 			continue
 		}
-		_, _ = run(ctx, "", "--git-dir", m.Mirror(item.SourceID), "worktree", "remove", "--force", target)
-		_, _ = run(ctx, "", "--git-dir", m.Mirror(item.SourceID), "worktree", "prune")
+		_, _ = run(ctx, "", "-c", "core.longpaths=true", "--git-dir", m.Mirror(item.SourceID), "worktree", "remove", "--force", target)
+		_, _ = run(ctx, "", "-c", "core.longpaths=true", "--git-dir", m.Mirror(item.SourceID), "worktree", "prune")
 	}
 	return nil
 }
@@ -142,8 +130,8 @@ func (w *Worktree) Close(ctx context.Context) error {
 	if err != nil || target == base || !strings.HasPrefix(strings.ToLower(target), strings.ToLower(base+string(os.PathSeparator))) {
 		return result.E("unsafe_worktree_path", "refusing to remove worktree outside the managed directory", 5)
 	}
-	_, removeErr := run(ctx, "", "--git-dir", w.manager.Mirror(w.sourceID), "worktree", "remove", "--force", target)
-	_, pruneErr := run(ctx, "", "--git-dir", w.manager.Mirror(w.sourceID), "worktree", "prune")
+	_, removeErr := run(ctx, "", "-c", "core.longpaths=true", "--git-dir", w.manager.Mirror(w.sourceID), "worktree", "remove", "--force", target)
+	_, pruneErr := run(ctx, "", "-c", "core.longpaths=true", "--git-dir", w.manager.Mirror(w.sourceID), "worktree", "prune")
 	if removeErr != nil {
 		return classifyGit(removeErr)
 	}
@@ -167,21 +155,71 @@ func (m Manager) Sync(ctx context.Context, source catalog.Source) error {
 		if err := os.MkdirAll(filepath.Dir(mirror), 0o755); err != nil {
 			return err
 		}
-		if _, err := run(ctx, "", "clone", "--mirror", "--filter=blob:none", source.Repository, mirror); err != nil {
+		if _, err := run(ctx, "", "clone", "--mirror", source.Repository, mirror); err != nil {
 			return classifyGit(err)
 		}
 	} else if err != nil {
 		return err
 	} else {
-		if err := m.configurePartialMirror(ctx, source.ID); err != nil {
-			return err
+		partial := m.isPartialMirror(ctx, source.ID)
+		if partial {
+			return m.replacePartialMirror(ctx, source)
 		}
 		if _, err := run(ctx, "", "--git-dir", mirror, "remote", "set-url", "origin", source.Repository); err != nil {
 			return classifyGit(err)
 		}
-		if _, err := run(ctx, "", "--git-dir", mirror, "fetch", "--prune", "--force", "--tags", "origin", "+refs/heads/*:refs/heads/*"); err != nil {
+		args := []string{"--git-dir", mirror, "fetch", "--prune", "--force", "--tags", "origin", "+refs/heads/*:refs/heads/*"}
+		if _, err := run(ctx, "", args...); err != nil {
 			return classifyGit(err)
 		}
+	}
+	return nil
+}
+
+func (m Manager) isPartialMirror(ctx context.Context, sourceID string) bool {
+	out, err := run(ctx, "", "--git-dir", m.Mirror(sourceID), "config", "--get", "remote.origin.promisor")
+	return err == nil && strings.EqualFold(strings.TrimSpace(out), "true")
+}
+
+func (m Manager) replacePartialMirror(ctx context.Context, source catalog.Source) error {
+	mirror := m.Mirror(source.ID)
+	worktrees, err := os.ReadDir(filepath.Join(mirror, "worktrees"))
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if len(worktrees) > 0 {
+		return result.E("operation_in_progress", "partial mirror upgrade is waiting for active worktrees", 5)
+	}
+
+	parent := filepath.Dir(mirror)
+	staging, err := os.MkdirTemp(parent, "."+source.ID+"-full-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(staging)
+	if _, err := run(ctx, "", "clone", "--mirror", source.Repository, staging); err != nil {
+		return classifyGit(err)
+	}
+	if _, err := run(ctx, "", "--git-dir", staging, "fsck", "--full", "--no-dangling"); err != nil {
+		return result.E("repository_incomplete", "full mirror verification found missing or corrupt objects", 5)
+	}
+
+	backup, err := os.MkdirTemp(parent, "."+source.ID+"-partial-")
+	if err != nil {
+		return err
+	}
+	if err := os.Remove(backup); err != nil {
+		return err
+	}
+	if err := os.Rename(mirror, backup); err != nil {
+		return err
+	}
+	if err := os.Rename(staging, mirror); err != nil {
+		_ = os.Rename(backup, mirror)
+		return err
+	}
+	if err := os.RemoveAll(backup); err != nil {
+		return err
 	}
 	return nil
 }

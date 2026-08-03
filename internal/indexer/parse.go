@@ -26,7 +26,7 @@ func parseLua(path string, data []byte, role string) (any, []store.SymbolFact, [
 			clean = append(bytes.Repeat([]byte{' '}, i), clean[i:]...)
 		}
 	}
-	tree, err := parse.Parse(bytes.NewReader(clean), path)
+	tree, err := parse.Parse(bytes.NewReader(clean), "<content>")
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -38,11 +38,15 @@ func parseLua(path string, data []byte, role string) (any, []store.SymbolFact, [
 			refs = append(refs, store.AssetRefFact{SourcePath: path, Line: i + 1, Kind: "lua-resource", Value: m[1], NormalizedValue: objectstore.NormalizePath(m[1])})
 		}
 	}
-	if role == "official-generated-api" {
-		apiSymbols, apiEdges := parseGeneratedAPI(path, lines)
-		symbols = append(symbols, apiSymbols...)
-		edges = append(edges, apiEdges...)
+	apiSymbols, apiEdges := parseGeneratedAPI(path, lines)
+	for i := range apiSymbols {
+		apiSymbols[i].RequiredRole = "official-generated-api"
 	}
+	for i := range apiEdges {
+		apiEdges[i].RequiredRole = "official-generated-api"
+	}
+	symbols = append(symbols, apiSymbols...)
+	edges = append(edges, apiEdges...)
 	return tree, symbols, edges, refs, nil
 }
 
@@ -65,7 +69,7 @@ func extractLuaFacts(tree []ast.Stmt, path string, lines []string) ([]store.Symb
 		case *ast.FuncCallExpr:
 			target := callName(value)
 			if current == "" {
-				current = fmt.Sprintf("<top-level@%s:%d>", path, value.Line())
+				current = fmt.Sprintf("<top-level@{path}:%d>", value.Line())
 			}
 			confidence := "inferred"
 			if target == "" {
@@ -84,7 +88,7 @@ func extractLuaFacts(tree []ast.Stmt, path string, lines []string) ([]store.Symb
 			}
 		case *ast.FunctionExpr:
 			if current == "" {
-				current = fmt.Sprintf("<anonymous@%s:%d>", path, value.Line())
+				current = fmt.Sprintf("<anonymous@{path}:%d>", value.Line())
 			}
 			walkStmts(value.Stmts, current)
 		case *ast.AttrGetExpr:
@@ -287,13 +291,19 @@ func findLuaTableEnd(lines []string, nameLine int) int {
 }
 
 type xmlTree struct {
-	Nodes    []store.XMLFact  `json:"nodes"`
+	Nodes    []xmlTreeNode    `json:"nodes"`
 	Handlers []map[string]any `json:"handlers,omitempty"`
+}
+
+type xmlTreeNode struct {
+	Name, Kind, Attributes string
+	Line                   int
 }
 
 func parseXML(path string, data []byte, role string) (any, []store.XMLFact, []store.EdgeFact, []store.AssetRefFact, error) {
 	decoder := xml.NewDecoder(bytes.NewReader(data))
 	var nodes []store.XMLFact
+	var treeNodes []xmlTreeNode
 	var edges []store.EdgeFact
 	var refs []store.AssetRefFact
 	var stack []string
@@ -329,6 +339,7 @@ func parseXML(path string, data []byte, role string) (any, []store.XMLFact, []st
 			}
 			raw, _ := json.Marshal(attrs)
 			nodes = append(nodes, store.XMLFact{Name: name, Kind: t.Name.Local, Path: path, Line: line, Attributes: string(raw)})
+			treeNodes = append(treeNodes, xmlTreeNode{Name: name, Kind: t.Name.Local, Line: line, Attributes: string(raw)})
 			if isHandler(t.Name.Local) {
 				handler.Reset()
 				handlerStart = line
@@ -368,11 +379,12 @@ func parseXML(path string, data []byte, role string) (any, []store.XMLFact, []st
 			}
 		}
 	}
-	return xmlTree{Nodes: nodes, Handlers: handlers}, nodes, edges, refs, nil
+	return xmlTree{Nodes: treeNodes, Handlers: handlers}, nodes, edges, refs, nil
 }
 
 func parseTOC(path string, data []byte) (any, []store.TOCFact, error) {
 	var facts []store.TOCFact
+	var entries []map[string]any
 	var files []string
 	for i, line := range strings.Split(string(bytes.TrimPrefix(data, []byte{0xef, 0xbb, 0xbf})), "\n") {
 		line = strings.TrimSpace(line)
@@ -382,14 +394,17 @@ func parseTOC(path string, data []byte) (any, []store.TOCFact, error) {
 		if strings.HasPrefix(line, "##") {
 			parts := strings.SplitN(strings.TrimSpace(strings.TrimPrefix(line, "##")), ":", 2)
 			if len(parts) == 2 {
-				facts = append(facts, store.TOCFact{Path: path, Line: i + 1, Key: strings.TrimSpace(parts[0]), Value: strings.TrimSpace(parts[1])})
+				key, value := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+				facts = append(facts, store.TOCFact{Path: path, Line: i + 1, Key: key, Value: value})
+				entries = append(entries, map[string]any{"line": i + 1, "key": key, "value": value})
 			}
 		} else if !strings.HasPrefix(line, "#") {
 			files = append(files, line)
 			facts = append(facts, store.TOCFact{Path: path, Line: i + 1, Key: "File", Value: line})
+			entries = append(entries, map[string]any{"line": i + 1, "key": "File", "value": line})
 		}
 	}
-	return map[string]any{"entries": facts, "loadOrder": files}, facts, nil
+	return map[string]any{"entries": entries, "loadOrder": files}, facts, nil
 }
 func lastName(v string) string {
 	v = strings.ReplaceAll(v, ":", ".")

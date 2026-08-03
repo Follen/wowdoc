@@ -1,0 +1,38 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "static-inspection",
+  "role": "required-check",
+  "status": "passed",
+  "bindings": {
+    "change": "content-addressed-snapshots",
+    "sourceRevision": 3,
+    "contractHash": "2225a114c3849711482d4a790cca0dcc174d3b3099c86f8fda61c47b9ac69015",
+    "scopeHash": "73cbf0d30d916d27a82e7223f7983d9fc0e665d4d99d0e994065cf26e668ae8a",
+    "snapshotHash": "ed85cbf709450ee733e72182afab24781c4ce69c6a13a586a32f60ebf61c9380",
+    "artifactHash": "be4cbb70b0a8ba0991d480e5a25ed1d39669181ae5f2b298f40020076b045f87"
+  },
+  "acceptanceIds": [],
+  "actor": "native-runtime:scoped-text-safety",
+  "issuedAt": "2026-08-03T06:15:05.675Z",
+  "evidence": {
+    "subjects": [
+      "internal/app/context.go",
+      "internal/app/root_test.go",
+      "internal/app/wowdata.go",
+      "internal/gitstore/git.go",
+      "internal/gitstore/git_test.go",
+      "internal/indexer/indexer.go",
+      "internal/indexer/indexer_test.go",
+      "internal/indexer/parse.go",
+      "internal/objectstore/store.go",
+      "internal/query/query.go",
+      "internal/schema/schema.go",
+      "internal/store/branch.go"
+    ],
+    "rule": "scoped-text-safety",
+    "resultSummary": "The built-in scoped inspection passed without skipped or blocking input.",
+    "checkReceiptRef": "runtime/evidence/check-receipts/09a9365378f061cafbff874612690cc97b92900b55015000a02f937c88777bfc.json",
+    "checkReceiptHash": "09a9365378f061cafbff874612690cc97b92900b55015000a02f937c88777bfc"
+  },
+  "receiptHash": "309f6361130f336a0cbdf07a4abb8f1fba1a55c47f9eb86b6ab6ffd19d75980c"
+}

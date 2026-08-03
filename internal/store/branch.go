@@ -1,7 +1,9 @@
 package store
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 
@@ -15,30 +17,29 @@ type Branch struct {
 }
 
 type FileFact struct {
-	Path, ContentHash, ASTHash, Language, Role string
-	Size                                       int64
+	Path, ContentHash, ASTHash, Language, Role, GitOID string
+	Size                                               int64
 }
 type SymbolFact struct {
-	Name, Qualified, Kind, Path, Signature string
-	Line, EndLine                          int
+	Name, Qualified, Kind, Path, Signature, RequiredRole string
+	Line, EndLine                                        int
 }
 type EdgeFact struct {
-	Source, Target, Kind, Confidence, Path string
-	Line                                   int
+	Source, Target, Kind, Confidence, Path, RequiredRole string
+	Line                                                 int
 }
 type XMLFact struct {
-	Name, Kind, Path string
-	Line             int
-	Attributes       string
+	Name, Kind, Path, RequiredRole string
+	Line                           int
+	Attributes                     string
 }
 type TOCFact struct {
-	Path, Key, Value string
-	Line             int
+	Path, Key, Value, RequiredRole string
+	Line                           int
 }
 type SearchFact struct {
-	Path, Kind, Name, Text string
-	Line                   int
-	Role                   string
+	Path, Kind, Name, Text, RequiredRole string
+	Line                                 int
 }
 type AssetFact struct {
 	Path, NormalizedPath, ContentHash, GitOID, Extension, MIME, Format string
@@ -46,12 +47,25 @@ type AssetFact struct {
 	Width, Height                                                      int
 }
 type AssetRefFact struct {
-	SourcePath, Value, NormalizedValue, Kind string
-	Line                                     int
+	SourcePath, Value, NormalizedValue, Kind, RequiredRole string
+	Line                                                   int
 }
 
-func OpenBranch(layout home.Layout, sourceID, productID string) (*Branch, error) {
-	path := filepath.Join(layout.Indexes, sourceID, productID+".sqlite")
+type ContentRecord struct {
+	ID                             int64
+	ContentHash, ASTHash, Language string
+	Size                           int64
+	Asset                          *AssetFact
+}
+
+func BranchPath(layout home.Layout, sourceID, productID, parserSchema, indexSchema string) string {
+	sum := sha256.Sum256([]byte(parserSchema + "\x00" + indexSchema))
+	generation := hex.EncodeToString(sum[:])[:12]
+	return filepath.Join(layout.Indexes, sourceID, productID+"-"+generation+".sqlite")
+}
+
+func OpenBranch(layout home.Layout, sourceID, productID, parserSchema, indexSchema string) (*Branch, error) {
+	path := BranchPath(layout, sourceID, productID, parserSchema, indexSchema)
 	if err := ensureParent(path); err != nil {
 		return nil, err
 	}
@@ -70,14 +84,14 @@ func OpenBranch(layout home.Layout, sourceID, productID string) (*Branch, error)
 		db.Close()
 		return nil, err
 	}
-	_, _ = db.Exec(`ALTER TABLE symbols ADD COLUMN end_line INTEGER NOT NULL DEFAULT 0`)
-	_, _ = db.Exec(`ALTER TABLE snapshots ADD COLUMN parser_schema TEXT NOT NULL DEFAULT ''`)
-	_, _ = db.Exec(`ALTER TABLE snapshots ADD COLUMN index_schema TEXT NOT NULL DEFAULT ''`)
 	return &Branch{DB: db, Path: path}, nil
 }
 
-func OpenBranchRead(layout home.Layout, sourceID, productID string) (*Branch, error) {
-	path := filepath.Join(layout.Indexes, sourceID, productID+".sqlite")
+func OpenBranchRead(layout home.Layout, sourceID, productID, parserSchema, indexSchema string) (*Branch, error) {
+	return OpenBranchReadPath(BranchPath(layout, sourceID, productID, parserSchema, indexSchema))
+}
+
+func OpenBranchReadPath(path string) (*Branch, error) {
 	if _, err := os.Stat(path); err != nil {
 		return nil, err
 	}
@@ -128,11 +142,11 @@ func (b *Branch) ReadySnapshot(snapshotID, parserSchema, indexSchema string) (Sn
 		query string
 	}{
 		{&summary.Files, `SELECT count(*) FROM snapshot_files WHERE snapshot_id=?`},
-		{&summary.Lua, `SELECT count(*) FROM snapshot_files sf JOIN files f ON f.content_hash=sf.content_hash WHERE sf.snapshot_id=? AND f.language='lua'`},
-		{&summary.XML, `SELECT count(*) FROM snapshot_files sf JOIN files f ON f.content_hash=sf.content_hash WHERE sf.snapshot_id=? AND f.language='xml'`},
-		{&summary.TOC, `SELECT count(*) FROM snapshot_files sf JOIN files f ON f.content_hash=sf.content_hash WHERE sf.snapshot_id=? AND f.language='toc'`},
+		{&summary.Lua, `SELECT count(*) FROM snapshot_files sf JOIN contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND c.language='lua'`},
+		{&summary.XML, `SELECT count(*) FROM snapshot_files sf JOIN contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND c.language='xml'`},
+		{&summary.TOC, `SELECT count(*) FROM snapshot_files sf JOIN contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND c.language='toc'`},
 		{&summary.Assets, `SELECT count(*) FROM snapshot_assets WHERE snapshot_id=?`},
-		{&summary.AST, `SELECT count(*) FROM snapshot_files sf JOIN files f ON f.content_hash=sf.content_hash WHERE sf.snapshot_id=? AND f.ast_hash<>''`},
+		{&summary.AST, `SELECT count(*) FROM snapshot_files sf JOIN contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND c.ast_hash<>''`},
 	}
 	for _, item := range queries {
 		if err := b.DB.QueryRow(item.query, snapshotID).Scan(item.value); err != nil {
@@ -140,6 +154,33 @@ func (b *Branch) ReadySnapshot(snapshotID, parserSchema, indexSchema string) (Sn
 		}
 	}
 	return summary, true, nil
+}
+
+func (b *Branch) LookupOID(oid, language, parserSchema, indexSchema string) (ContentRecord, bool, error) {
+	return b.lookupContent(`JOIN blob_aliases ba ON ba.content_id=c.id WHERE ba.git_oid=? AND ba.language=? AND c.parser_schema=? AND c.index_schema=?`, oid, language, parserSchema, indexSchema)
+}
+
+func (b *Branch) LookupHash(hash, language, parserSchema, indexSchema string) (ContentRecord, bool, error) {
+	return b.lookupContent(`WHERE c.content_hash=? AND c.language=? AND c.parser_schema=? AND c.index_schema=?`, hash, language, parserSchema, indexSchema)
+}
+
+func (b *Branch) lookupContent(clause string, args ...any) (ContentRecord, bool, error) {
+	var record ContentRecord
+	var ast sql.NullString
+	var ext, mime, format sql.NullString
+	var assetBytes, width, height sql.NullInt64
+	err := b.DB.QueryRow(`SELECT c.id,c.content_hash,c.ast_hash,c.language,c.bytes,a.extension,a.mime,a.bytes,a.width,a.height,a.format FROM contents c LEFT JOIN assets a ON a.content_id=c.id `+clause, args...).Scan(&record.ID, &record.ContentHash, &ast, &record.Language, &record.Size, &ext, &mime, &assetBytes, &width, &height, &format)
+	if err == sql.ErrNoRows {
+		return ContentRecord{}, false, nil
+	}
+	if err != nil {
+		return ContentRecord{}, false, err
+	}
+	record.ASTHash = ast.String
+	if ext.Valid {
+		record.Asset = &AssetFact{ContentHash: record.ContentHash, Extension: ext.String, MIME: mime.String, Size: assetBytes.Int64, Width: int(width.Int64), Height: int(height.Int64), Format: format.String}
+	}
+	return record, true, nil
 }
 
 func (b *Branch) Publish(snapshotID, commit, requestedRef, tag, parserSchema, indexSchema string, batch SnapshotBatch) error {
@@ -151,55 +192,89 @@ func (b *Branch) Publish(snapshotID, commit, requestedRef, tag, parserSchema, in
 	if _, err = tx.Exec(`INSERT INTO snapshots(id,commit_hash,requested_ref,tag,status,created_at,parser_schema,index_schema) VALUES(?,?,?,?, 'building',datetime('now'),?,?) ON CONFLICT(id) DO UPDATE SET status='building',requested_ref=excluded.requested_ref,tag=excluded.tag,parser_schema=excluded.parser_schema,index_schema=excluded.index_schema`, snapshotID, commit, requestedRef, tag, parserSchema, indexSchema); err != nil {
 		return err
 	}
-	for _, table := range []string{"snapshot_files", "symbols", "edges", "xml_nodes", "toc_entries", "search_docs", "snapshot_assets", "asset_refs"} {
+	for _, table := range []string{"snapshot_assets", "snapshot_files"} {
 		if _, err = tx.Exec(`DELETE FROM `+table+` WHERE snapshot_id=?`, snapshotID); err != nil {
 			return err
 		}
 	}
+	pathContent := make(map[string]int64, len(batch.Files))
+	newContent := make(map[int64]bool)
+	factPath := make(map[int64]string)
 	for _, f := range batch.Files {
-		if _, err = tx.Exec(`INSERT OR IGNORE INTO files(content_hash,ast_hash,language,bytes) VALUES(?,?,?,?)`, f.ContentHash, f.ASTHash, f.Language, f.Size); err != nil {
+		result, execErr := tx.Exec(`INSERT OR IGNORE INTO contents(content_hash,parser_schema,index_schema,ast_hash,language,bytes) VALUES(?,?,?,?,?,?)`, f.ContentHash, parserSchema, indexSchema, f.ASTHash, f.Language, f.Size)
+		if execErr != nil {
+			return execErr
+		}
+		var contentID int64
+		if err = tx.QueryRow(`SELECT id FROM contents WHERE content_hash=? AND language=? AND parser_schema=? AND index_schema=?`, f.ContentHash, f.Language, parserSchema, indexSchema).Scan(&contentID); err != nil {
 			return err
 		}
-		if _, err = tx.Exec(`INSERT INTO snapshot_files(snapshot_id,path,content_hash,role) VALUES(?,?,?,?)`, snapshotID, f.Path, f.ContentHash, f.Role); err != nil {
+		if affected, _ := result.RowsAffected(); affected > 0 {
+			newContent[contentID] = true
+			factPath[contentID] = f.Path
+		}
+		pathContent[f.Path] = contentID
+		if f.GitOID != "" {
+			if _, err = tx.Exec(`INSERT OR IGNORE INTO blob_aliases(git_oid,language,content_id) VALUES(?,?,?)`, f.GitOID, f.Language, contentID); err != nil {
+				return err
+			}
+		}
+		if _, err = tx.Exec(`INSERT INTO snapshot_files(snapshot_id,path,content_id,role) VALUES(?,?,?,?)`, snapshotID, f.Path, contentID, f.Role); err != nil {
 			return err
 		}
 	}
 	for _, s := range batch.Symbols {
-		if _, err = tx.Exec(`INSERT INTO symbols(snapshot_id,name,qualified_name,kind,path,line,end_line,signature) VALUES(?,?,?,?,?,?,?,?)`, snapshotID, s.Name, s.Qualified, s.Kind, s.Path, s.Line, s.EndLine, s.Signature); err != nil {
-			return err
+		if id := pathContent[s.Path]; id != 0 && newContent[id] && factPath[id] == s.Path {
+			if _, err = tx.Exec(`INSERT INTO symbols(content_id,name,qualified_name,kind,line,end_line,signature,required_role) VALUES(?,?,?,?,?,?,?,?)`, id, s.Name, s.Qualified, s.Kind, s.Line, s.EndLine, s.Signature, s.RequiredRole); err != nil {
+				return err
+			}
 		}
 	}
 	for _, e := range batch.Edges {
-		if _, err = tx.Exec(`INSERT INTO edges(snapshot_id,source,target,kind,confidence,path,line) VALUES(?,?,?,?,?,?,?)`, snapshotID, e.Source, e.Target, e.Kind, e.Confidence, e.Path, e.Line); err != nil {
-			return err
+		if id := pathContent[e.Path]; id != 0 && newContent[id] && factPath[id] == e.Path {
+			if _, err = tx.Exec(`INSERT INTO edges(content_id,source,target,kind,confidence,line,required_role) VALUES(?,?,?,?,?,?,?)`, id, e.Source, e.Target, e.Kind, e.Confidence, e.Line, e.RequiredRole); err != nil {
+				return err
+			}
 		}
 	}
 	for _, x := range batch.XML {
-		if _, err = tx.Exec(`INSERT INTO xml_nodes(snapshot_id,name,kind,path,line,attributes) VALUES(?,?,?,?,?,?)`, snapshotID, x.Name, x.Kind, x.Path, x.Line, x.Attributes); err != nil {
-			return err
+		if id := pathContent[x.Path]; id != 0 && newContent[id] && factPath[id] == x.Path {
+			if _, err = tx.Exec(`INSERT INTO xml_nodes(content_id,name,kind,line,attributes,required_role) VALUES(?,?,?,?,?,?)`, id, x.Name, x.Kind, x.Line, x.Attributes, x.RequiredRole); err != nil {
+				return err
+			}
 		}
 	}
 	for _, v := range batch.TOC {
-		if _, err = tx.Exec(`INSERT INTO toc_entries(snapshot_id,path,line,key,value) VALUES(?,?,?,?,?)`, snapshotID, v.Path, v.Line, v.Key, v.Value); err != nil {
-			return err
+		if id := pathContent[v.Path]; id != 0 && newContent[id] && factPath[id] == v.Path {
+			if _, err = tx.Exec(`INSERT INTO toc_entries(content_id,line,key,value,required_role) VALUES(?,?,?,?,?)`, id, v.Line, v.Key, v.Value, v.RequiredRole); err != nil {
+				return err
+			}
 		}
 	}
 	for _, d := range batch.Search {
-		if _, err = tx.Exec(`INSERT INTO search_docs(snapshot_id,path,line,kind,name,text,role) VALUES(?,?,?,?,?,?,?)`, snapshotID, d.Path, d.Line, d.Kind, d.Name, d.Text, d.Role); err != nil {
-			return err
+		if id := pathContent[d.Path]; id != 0 && newContent[id] && factPath[id] == d.Path {
+			if _, err = tx.Exec(`INSERT INTO search_docs(content_id,line,kind,name,text,required_role) VALUES(?,?,?,?,?,?)`, id, d.Line, d.Kind, d.Name, d.Text, d.RequiredRole); err != nil {
+				return err
+			}
 		}
 	}
 	for _, a := range batch.Assets {
-		if _, err = tx.Exec(`INSERT OR IGNORE INTO assets(content_hash,git_oid,extension,mime,bytes,width,height,format) VALUES(?,?,?,?,?,?,?,?)`, a.ContentHash, a.GitOID, a.Extension, a.MIME, a.Size, a.Width, a.Height, a.Format); err != nil {
+		contentID := pathContent[a.Path]
+		if contentID == 0 {
+			continue
+		}
+		if _, err = tx.Exec(`INSERT OR IGNORE INTO assets(content_id,extension,mime,bytes,width,height,format) VALUES(?,?,?,?,?,?,?)`, contentID, a.Extension, a.MIME, a.Size, a.Width, a.Height, a.Format); err != nil {
 			return err
 		}
-		if _, err = tx.Exec(`INSERT INTO snapshot_assets(snapshot_id,path,normalized_path,content_hash) VALUES(?,?,?,?)`, snapshotID, a.Path, a.NormalizedPath, a.ContentHash); err != nil {
+		if _, err = tx.Exec(`INSERT INTO snapshot_assets(snapshot_id,path,normalized_path,content_id) VALUES(?,?,?,?)`, snapshotID, a.Path, a.NormalizedPath, contentID); err != nil {
 			return err
 		}
 	}
 	for _, a := range batch.AssetRefs {
-		if _, err = tx.Exec(`INSERT INTO asset_refs(snapshot_id,source_path,line,kind,value,normalized_value) VALUES(?,?,?,?,?,?)`, snapshotID, a.SourcePath, a.Line, a.Kind, a.Value, a.NormalizedValue); err != nil {
-			return err
+		if id := pathContent[a.SourcePath]; id != 0 && newContent[id] && factPath[id] == a.SourcePath {
+			if _, err = tx.Exec(`INSERT INTO asset_refs(content_id,line,kind,value,normalized_value,required_role) VALUES(?,?,?,?,?,?)`, id, a.Line, a.Kind, a.Value, a.NormalizedValue, a.RequiredRole); err != nil {
+				return err
+			}
 		}
 	}
 	if _, err = tx.Exec(`UPDATE snapshots SET status='ready',published_at=datetime('now') WHERE id=?`, snapshotID); err != nil {
@@ -214,23 +289,28 @@ func (b *Branch) Publish(snapshotID, commit, requestedRef, tag, parserSchema, in
 func ensureParent(path string) error { return mkdirAll(filepath.Dir(path)) }
 
 const branchSchema = `
+PRAGMA user_version=4;
 CREATE TABLE IF NOT EXISTS branch_state(key TEXT PRIMARY KEY,value TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS snapshots(id TEXT PRIMARY KEY,commit_hash TEXT NOT NULL UNIQUE,requested_ref TEXT NOT NULL,tag TEXT,status TEXT NOT NULL,created_at TEXT NOT NULL,published_at TEXT,parser_schema TEXT NOT NULL DEFAULT '',index_schema TEXT NOT NULL DEFAULT '');
-CREATE TABLE IF NOT EXISTS files(content_hash TEXT PRIMARY KEY,ast_hash TEXT,language TEXT NOT NULL,bytes INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS snapshot_files(snapshot_id TEXT NOT NULL,path TEXT NOT NULL,content_hash TEXT NOT NULL,role TEXT NOT NULL,PRIMARY KEY(snapshot_id,path));
-CREATE TABLE IF NOT EXISTS symbols(id INTEGER PRIMARY KEY,snapshot_id TEXT NOT NULL,name TEXT NOT NULL,qualified_name TEXT NOT NULL,kind TEXT NOT NULL,path TEXT NOT NULL,line INTEGER NOT NULL,end_line INTEGER NOT NULL DEFAULT 0,signature TEXT);
-CREATE INDEX IF NOT EXISTS symbols_exact ON symbols(snapshot_id,qualified_name);
-CREATE INDEX IF NOT EXISTS symbols_name ON symbols(snapshot_id,name);
-CREATE TABLE IF NOT EXISTS edges(id INTEGER PRIMARY KEY,snapshot_id TEXT NOT NULL,source TEXT,target TEXT NOT NULL,kind TEXT NOT NULL,confidence TEXT NOT NULL,path TEXT NOT NULL,line INTEGER NOT NULL);
-CREATE INDEX IF NOT EXISTS edges_target ON edges(snapshot_id,target);
-CREATE TABLE IF NOT EXISTS xml_nodes(id INTEGER PRIMARY KEY,snapshot_id TEXT NOT NULL,name TEXT,kind TEXT NOT NULL,path TEXT NOT NULL,line INTEGER NOT NULL,attributes TEXT);
-CREATE TABLE IF NOT EXISTS toc_entries(id INTEGER PRIMARY KEY,snapshot_id TEXT NOT NULL,path TEXT NOT NULL,line INTEGER NOT NULL,key TEXT NOT NULL,value TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS search_docs(id INTEGER PRIMARY KEY,snapshot_id TEXT NOT NULL,path TEXT NOT NULL,line INTEGER NOT NULL,kind TEXT NOT NULL,name TEXT,text TEXT NOT NULL,role TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS snapshots(id TEXT PRIMARY KEY,commit_hash TEXT NOT NULL UNIQUE,requested_ref TEXT NOT NULL,tag TEXT,status TEXT NOT NULL,created_at TEXT NOT NULL,published_at TEXT,parser_schema TEXT NOT NULL,index_schema TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS contents(id INTEGER PRIMARY KEY,content_hash TEXT NOT NULL,parser_schema TEXT NOT NULL,index_schema TEXT NOT NULL,ast_hash TEXT NOT NULL DEFAULT '',language TEXT NOT NULL,bytes INTEGER NOT NULL,UNIQUE(content_hash,language,parser_schema,index_schema));
+CREATE TABLE IF NOT EXISTS blob_aliases(git_oid TEXT NOT NULL,language TEXT NOT NULL,content_id INTEGER NOT NULL REFERENCES contents(id),PRIMARY KEY(git_oid,language));
+CREATE TABLE IF NOT EXISTS snapshot_files(snapshot_id TEXT NOT NULL REFERENCES snapshots(id),path TEXT NOT NULL,content_id INTEGER NOT NULL REFERENCES contents(id),role TEXT NOT NULL,PRIMARY KEY(snapshot_id,path));
+CREATE INDEX IF NOT EXISTS snapshot_files_content ON snapshot_files(snapshot_id,content_id);
+CREATE INDEX IF NOT EXISTS content_snapshots ON snapshot_files(content_id,snapshot_id);
+CREATE TABLE IF NOT EXISTS symbols(id INTEGER PRIMARY KEY,content_id INTEGER NOT NULL REFERENCES contents(id),name TEXT NOT NULL,qualified_name TEXT NOT NULL,kind TEXT NOT NULL,line INTEGER NOT NULL,end_line INTEGER NOT NULL DEFAULT 0,signature TEXT,required_role TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS symbols_exact ON symbols(content_id,qualified_name);
+CREATE INDEX IF NOT EXISTS symbols_name ON symbols(content_id,name);
+CREATE TABLE IF NOT EXISTS edges(id INTEGER PRIMARY KEY,content_id INTEGER NOT NULL REFERENCES contents(id),source TEXT,target TEXT NOT NULL,kind TEXT NOT NULL,confidence TEXT NOT NULL,line INTEGER NOT NULL,required_role TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS edges_target ON edges(content_id,target);
+CREATE TABLE IF NOT EXISTS xml_nodes(id INTEGER PRIMARY KEY,content_id INTEGER NOT NULL REFERENCES contents(id),name TEXT,kind TEXT NOT NULL,line INTEGER NOT NULL,attributes TEXT,required_role TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS toc_entries(id INTEGER PRIMARY KEY,content_id INTEGER NOT NULL REFERENCES contents(id),line INTEGER NOT NULL,key TEXT NOT NULL,value TEXT NOT NULL,required_role TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS search_docs(id INTEGER PRIMARY KEY,content_id INTEGER NOT NULL REFERENCES contents(id),line INTEGER NOT NULL,kind TEXT NOT NULL,name TEXT,text TEXT NOT NULL,required_role TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS search_docs_content ON search_docs(content_id);
 CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(name,text,content='search_docs',content_rowid='id',tokenize='unicode61 tokenchars ''._:''');
 CREATE TRIGGER IF NOT EXISTS search_ai AFTER INSERT ON search_docs BEGIN INSERT INTO search_fts(rowid,name,text) VALUES(new.id,new.name,new.text); END;
 CREATE TRIGGER IF NOT EXISTS search_ad AFTER DELETE ON search_docs BEGIN INSERT INTO search_fts(search_fts,rowid,name,text) VALUES('delete',old.id,old.name,old.text); END;
-CREATE TABLE IF NOT EXISTS assets(content_hash TEXT PRIMARY KEY,git_oid TEXT,extension TEXT,mime TEXT,bytes INTEGER,width INTEGER,height INTEGER,format TEXT);
-CREATE TABLE IF NOT EXISTS snapshot_assets(snapshot_id TEXT NOT NULL,path TEXT NOT NULL,normalized_path TEXT NOT NULL,content_hash TEXT NOT NULL,PRIMARY KEY(snapshot_id,path));
+CREATE TABLE IF NOT EXISTS assets(content_id INTEGER PRIMARY KEY REFERENCES contents(id),extension TEXT,mime TEXT,bytes INTEGER,width INTEGER,height INTEGER,format TEXT);
+CREATE TABLE IF NOT EXISTS snapshot_assets(snapshot_id TEXT NOT NULL REFERENCES snapshots(id),path TEXT NOT NULL,normalized_path TEXT NOT NULL,content_id INTEGER NOT NULL REFERENCES contents(id),PRIMARY KEY(snapshot_id,path));
 CREATE INDEX IF NOT EXISTS asset_path ON snapshot_assets(snapshot_id,normalized_path);
-CREATE TABLE IF NOT EXISTS asset_refs(id INTEGER PRIMARY KEY,snapshot_id TEXT NOT NULL,source_path TEXT NOT NULL,line INTEGER NOT NULL,kind TEXT NOT NULL,value TEXT NOT NULL,normalized_value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS asset_refs(id INTEGER PRIMARY KEY,content_id INTEGER NOT NULL REFERENCES contents(id),line INTEGER NOT NULL,kind TEXT NOT NULL,value TEXT NOT NULL,normalized_value TEXT NOT NULL,required_role TEXT NOT NULL DEFAULT '');
 `

@@ -69,5 +69,5 @@ func selectSnapshot(sourceID, productID, ref string) (selection, error) {
 		e.NextSteps = []string{fmt.Sprintf("wowdoc source sync --source %s --product %s", source.ID, product.ID), fmt.Sprintf("wowdoc index build --source %s --product %s --ref %s", source.ID, product.ID, ref)}
 		return selection{}, e
 	}
-	return selection{layout: layout, cat: cat, source: source, product: product, ctx: query.Context{SourceID: source.ID, ProductID: product.ID, RequestedRef: ref, MatchedTag: tag, Commit: commit, SnapshotID: snapshotID}}, nil
+	return selection{layout: layout, cat: cat, source: source, product: product, ctx: query.Context{SourceID: source.ID, ProductID: product.ID, RequestedRef: ref, MatchedTag: tag, Commit: commit, SnapshotID: snapshotID, DBPath: snapshot.DBPath}}, nil
 }

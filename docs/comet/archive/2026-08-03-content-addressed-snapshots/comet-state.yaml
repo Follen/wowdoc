@@ -1,0 +1,23 @@
+schema: comet.native.v3
+minimum_runtime_version: 3
+revision: 5
+verification_protocol: legacy-v1
+name: content-addressed-snapshots
+language: zh-CN
+phase: archive
+brief: brief.md
+approval: confirmed
+approved_contract_hash: 2225a114c3849711482d4a790cca0dcc174d3b3099c86f8fda61c47b9ac69015
+spec_changes:
+  - capability: wowdoc-cli
+    operation: replace
+    source: specs/wowdoc-cli/spec.md
+    base_hash: 02a2e4340a1f86b3789b1d1046a4e054c6d97b529fd7252b514790c0f0b98a83
+verification_result: pass
+verification_report: verification.md
+implementation_scope: runtime/evidence/scopes/73cbf0d30d916d27a82e7223f7983d9fc0e665d4d99d0e994065cf26e668ae8a.json
+verification_evidence: runtime/evidence/verifications/00f399393015b57fb3c6280203e5284ea4f4e96aa9cb94140769459da0b346b5.json
+partial_allowance: null
+archived: true
+created_at: 2026-08-03
+run_id: 77301c64-2ade-44b2-89d2-9f09a869d387
