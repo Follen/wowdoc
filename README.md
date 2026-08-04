@@ -110,9 +110,10 @@ Local state lives under `~/.wowdoc`:
 ```text
 config/         versioned source catalog and local configuration
 repositories/   complete bare Git mirrors
-objects/        content-addressed source and asset bytes
-ast/            auditable per-file JSON syntax trees
-indexes/        one WAL SQLite database per product branch
+objects/        legacy content objects plus immutable Pack storage
+objects/packs/  sequential Pack segments and their catalog
+ast/            auditable legacy per-file syntax trees (new builds use Pack)
+indexes/        one shared content DB plus one WAL SQLite database per product branch
 manifests/      immutable snapshot manifests
 state/          initialization and task state
 tmp/worktrees/  leased detached worktrees used only while parsing
@@ -120,7 +121,20 @@ locks/          repository and snapshot build locks
 logs/           local diagnostics
 ```
 
-Each parser task fixes the requested ref to a Commit and creates its own detached worktree. Published queries never depend on that worktree. Identical Git blobs and AST objects are reused across Tags and branches, while snapshot relationships remain isolated by product and Commit.
+Each parser task fixes the requested ref to a Commit and creates its own detached worktree. Published queries never depend on that worktree. Identical Git blobs and AST objects are written once to immutable Pack segments and reused across Tags and branches, while snapshot relationships remain isolated by product and Commit.
+
+Source objects, AST and assets are appended to one staging Pack per build and atomically published; the Pack catalog verifies original length and SHA-256 on every read. Legacy raw/gzip objects remain readable. One source-level SQLite keeps immutable facts and search-document metadata per content hash, while each product branch keeps its own WAL snapshot mappings and local FTS corpus so BM25 ordering remains branch-equivalent. A full-text hit is resolved back to the exact Pack source line. Initialization downloads up to three source mirrors in parallel, then parses with the normal 4-8 worker budget.
+
+### Performance baseline
+
+Measured on Windows 11, Git 2.53.0, the same `wow-ui-source` Retail Commit `c878310d8432a65bac029c7bacc24eeb2e662bbe`, 8 parser workers, and a complete local bare mirror:
+
+| Build | Cold build time | Indexed files | SQLite | Home total |
+| --- | ---: | ---: | ---: | ---: |
+| `b201d38` baseline | 41.1 s | 3,685 | 158,629,888 B | 352,202,349 B |
+| compact pipeline | 11.4 s | 3,685 | 67,743,744 B | 169,972,173 B |
+
+The cold parse/index stage is 3.61x faster (about 72% less time), its SQLite is 57% smaller, and its complete home is 52% smaller. A separate 10-Tag run produced 196,460,544 B of branch SQLite and 342,740,177 B total while preserving complete Lua/XML full-text coverage. Exact symbol, plain-text source, relation, Commit, path, line, excerpt, and SHA-256 checks pass after the storage changes. These are local measurements; network clone/fetch time varies by GitHub and TLS conditions.
 
 ## Agent integration
 

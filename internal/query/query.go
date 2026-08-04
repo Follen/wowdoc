@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/follenfang/wowdoc/internal/home"
+	"github.com/follenfang/wowdoc/internal/objectstore"
 	"github.com/follenfang/wowdoc/internal/result"
 	"github.com/follenfang/wowdoc/internal/schema"
 	"github.com/follenfang/wowdoc/internal/store"
@@ -50,10 +51,18 @@ type Response struct {
 }
 
 func openBranch(layout home.Layout, ctx Context) (*store.Branch, error) {
-	if ctx.DBPath != "" {
-		return store.OpenBranchReadPath(ctx.DBPath)
+	var branch *store.Branch
+	var err error
+	currentPath := store.BranchPath(layout, ctx.SourceID, ctx.ProductID, schema.Parser, schema.Index)
+	if ctx.DBPath != "" && filepath.Clean(ctx.DBPath) == filepath.Clean(currentPath) {
+		branch, err = store.OpenBranchReadPath(layout, ctx.SourceID, ctx.DBPath, schema.Parser, schema.Index)
+	} else {
+		branch, err = store.OpenBranchRead(layout, ctx.SourceID, ctx.ProductID, schema.Parser, schema.Index)
 	}
-	return store.OpenBranchRead(layout, ctx.SourceID, ctx.ProductID, schema.Parser, schema.Index)
+	if err != nil && os.IsNotExist(err) {
+		return nil, snapshotNotReady("the selected snapshot is not indexed for the current schema")
+	}
+	return branch, err
 }
 
 func Search(layout home.Layout, ctx Context, text, topic string, limit int) (Response, error) {
@@ -73,7 +82,7 @@ func Search(layout home.Layout, ctx Context, text, topic string, limit int) (Res
 		line, endLine, score                        int
 	}
 	var candidates []candidate
-	rows, err := branch.DB.Query(`SELECT s.kind,s.qualified_name,sf.path,s.line,s.end_line,'exact_symbol',sf.role,100 AS rank FROM symbols s JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND (s.qualified_name=? OR s.name=?) UNION ALL SELECT s.kind,s.qualified_name,sf.path,s.line,s.end_line,'symbol_prefix',sf.role,80 AS rank FROM symbols s JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND (s.qualified_name LIKE ? OR s.name LIKE ?) ORDER BY rank DESC,3,4,1,2 LIMIT ?`, ctx.SnapshotID, text, text, ctx.SnapshotID, text+"%", text+"%", limit*3)
+	rows, err := branch.DB.Query(`SELECT s.kind,qualified.value,sf.path,s.line,s.end_line,'exact_symbol',sf.role,100 AS rank FROM content.symbols s JOIN content.strings name ON name.id=s.name_id JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND (qualified.value=? OR name.value=?) UNION ALL SELECT d.kind,name.value,sf.path,d.line,0,'exact_fact',sf.role,90 AS rank FROM content.search_docs d JOIN content.strings name ON name.id=d.name_id JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND name.value=? UNION ALL SELECT s.kind,qualified.value,sf.path,s.line,s.end_line,'symbol_prefix',sf.role,80 AS rank FROM content.symbols s JOIN content.strings name ON name.id=s.name_id JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND (qualified.value LIKE ? OR name.value LIKE ?) ORDER BY rank DESC,3,4,1,2 LIMIT ?`, ctx.SnapshotID, text, text, ctx.SnapshotID, text, ctx.SnapshotID, text+"%", text+"%", limit*3)
 	if err != nil {
 		return Response{}, err
 	}
@@ -87,10 +96,10 @@ func Search(layout home.Layout, ctx Context, text, topic string, limit int) (Res
 	}
 	rows.Close()
 	if len(candidates) < limit {
-		rows, err = branch.DB.Query(`SELECT d.kind,COALESCE(d.name,''),sf.path,d.line,0,'fts5',sf.role,CAST(70-min(20,abs(bm25(search_fts))) AS INTEGER) FROM search_fts JOIN search_docs d ON d.id=search_fts.rowid JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND search_fts MATCH ? ORDER BY bm25(search_fts),CASE sf.role WHEN 'project' THEN 0 WHEN 'official-generated-api' THEN 0 WHEN 'vendor' THEN 2 ELSE 1 END,sf.path,d.line LIMIT ?`, ctx.SnapshotID, ftsQuery(text), limit*3)
+		rows, err = branch.DB.Query(`SELECT d.kind,name.value,sf.path,d.line,0,'fts5',sf.role,CAST(70-min(20,abs(bm25(search_fts))) AS INTEGER) FROM search_fts JOIN content.search_docs d ON d.id=search_fts.rowid JOIN content.strings name ON name.id=d.name_id JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND search_fts MATCH ? ORDER BY bm25(search_fts),CASE sf.role WHEN 'project' THEN 0 WHEN 'official-generated-api' THEN 0 WHEN 'vendor' THEN 2 ELSE 1 END,sf.path,d.line LIMIT ?`, ctx.SnapshotID, ftsQuery(text), limit*3)
 		if err != nil {
 			like := "%" + text + "%"
-			rows, err = branch.DB.Query(`SELECT d.kind,COALESCE(d.name,''),sf.path,d.line,0,'text_fallback',sf.role,60 FROM search_docs d JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND (d.name LIKE ? OR d.text LIKE ?) ORDER BY sf.path,d.line LIMIT ?`, ctx.SnapshotID, like, like, limit*3)
+			rows, err = branch.DB.Query(`SELECT d.kind,name.value,sf.path,d.line,0,'name_fallback',sf.role,60 FROM content.search_docs d JOIN content.strings name ON name.id=d.name_id JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND name.value LIKE ? ORDER BY sf.path,d.line LIMIT ?`, ctx.SnapshotID, like, limit*3)
 			if err != nil {
 				return Response{}, err
 			}
@@ -108,6 +117,13 @@ func Search(layout home.Layout, ctx Context, text, topic string, limit int) (Res
 	seen := map[string]bool{}
 	var matches []Match
 	for _, c := range candidates {
+		if c.kind == "source" && c.line == 0 {
+			resolvedLine, resolveErr := sourceMatchLine(branch.DB, layout, ctx.SnapshotID, c.path, text)
+			if resolveErr != nil {
+				continue
+			}
+			c.line = resolvedLine
+		}
 		key := fmt.Sprintf("%s:%d:%s", c.path, c.line, c.kind)
 		if seen[key] {
 			continue
@@ -134,7 +150,7 @@ func Search(layout home.Layout, ctx Context, text, topic string, limit int) (Res
 		tag = nil
 	}
 	response := Response{SourceID: ctx.SourceID, Product: ctx.ProductID, RequestedRef: ctx.RequestedRef, MatchedTag: tag, ResolvedCommit: ctx.Commit, SnapshotID: ctx.SnapshotID, Results: matches}
-	relationRows, relationErr := branch.DB.Query(`SELECT e.source,e.target,e.kind,e.confidence,sf.path,e.line FROM edges e JOIN snapshot_files sf ON sf.content_id=e.content_id WHERE sf.snapshot_id=? AND (e.required_role='' OR e.required_role=sf.role) AND (e.source=? OR e.target=? OR e.source LIKE ? OR e.target LIKE ?) ORDER BY CASE e.confidence WHEN 'exact' THEN 0 WHEN 'inferred' THEN 1 ELSE 2 END,sf.path,e.line LIMIT 50`, ctx.SnapshotID, text, text, "%"+text+"%", "%"+text+"%")
+	relationRows, relationErr := branch.DB.Query(`SELECT source.value,target.value,e.kind,e.confidence,sf.path,e.line FROM content.edges e JOIN content.strings source ON source.id=e.source_id JOIN content.strings target ON target.id=e.target_id JOIN snapshot_files sf ON sf.content_id=e.content_id WHERE sf.snapshot_id=? AND (e.required_role='' OR e.required_role=sf.role) AND (source.value=? OR target.value=? OR source.value LIKE ? OR target.value LIKE ?) ORDER BY CASE e.confidence WHEN 'exact' THEN 0 WHEN 'inferred' THEN 1 ELSE 2 END,sf.path,e.line LIMIT 50`, ctx.SnapshotID, text, text, "%"+text+"%", "%"+text+"%")
 	if relationErr == nil {
 		defer relationRows.Close()
 		for relationRows.Next() {
@@ -149,6 +165,59 @@ func Search(layout home.Layout, ctx Context, text, topic string, limit int) (Res
 		response.Suggestions = []string{"use explore with a shorter symbol or path prefix", "check source list for the selected product and ref"}
 	}
 	return response, nil
+}
+
+func sourceMatchLine(db *sql.DB, layout home.Layout, snapshotID, path, text string) (int, error) {
+	var hash string
+	if err := db.QueryRow(`SELECT c.content_hash FROM snapshot_files sf JOIN content.contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND sf.path=?`, snapshotID, path).Scan(&hash); err != nil {
+		return 0, err
+	}
+	file, err := objectstore.Open(layout, objectstore.Source, hash)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+	needle := strings.ToLower(strings.TrimSpace(text))
+	tokens := strings.Fields(needle)
+	allTokensLine := 0
+	firstTokenLine := 0
+	scanner := bufio.NewScanner(file)
+	for line := 1; scanner.Scan(); line++ {
+		value := strings.ToLower(scanner.Text())
+		if needle != "" && strings.Contains(value, needle) {
+			return line, nil
+		}
+		if allTokensLine == 0 && len(tokens) > 1 {
+			containsAll := true
+			for _, token := range tokens {
+				if !strings.Contains(value, token) {
+					containsAll = false
+					break
+				}
+			}
+			if containsAll {
+				allTokensLine = line
+			}
+		}
+		if firstTokenLine == 0 {
+			for _, token := range tokens {
+				if strings.Contains(value, token) {
+					firstTokenLine = line
+					break
+				}
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+	if allTokensLine > 0 {
+		return allTokensLine, nil
+	}
+	if firstTokenLine > 0 {
+		return firstTokenLine, nil
+	}
+	return 1, nil
 }
 
 func Inspect(layout home.Layout, ctx Context, symbol, path string) (Response, error) {
@@ -168,7 +237,7 @@ func Inspect(layout home.Layout, ctx Context, symbol, path string) (Response, er
 		tag = nil
 	}
 	response := Response{SourceID: ctx.SourceID, Product: ctx.ProductID, RequestedRef: ctx.RequestedRef, MatchedTag: tag, ResolvedCommit: ctx.Commit, SnapshotID: ctx.SnapshotID}
-	rows, err := branch.DB.Query(`SELECT sf.path,c.content_hash,sf.role FROM snapshot_files sf JOIN contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND (sf.path=? OR lower(sf.path) LIKE lower(?)) ORDER BY CASE WHEN sf.path=? THEN 0 ELSE 1 END,sf.path LIMIT 25`, ctx.SnapshotID, path, "%"+path+"%", path)
+	rows, err := branch.DB.Query(`SELECT sf.path,c.content_hash,sf.role FROM snapshot_files sf JOIN content.contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND (sf.path=? OR lower(sf.path) LIKE lower(?)) ORDER BY CASE WHEN sf.path=? THEN 0 ELSE 1 END,sf.path LIMIT 25`, ctx.SnapshotID, path, "%"+path+"%", path)
 	if err != nil {
 		return Response{}, err
 	}
@@ -182,7 +251,7 @@ func Inspect(layout home.Layout, ctx Context, symbol, path string) (Response, er
 		}
 	}
 	rows.Close()
-	assetRows, assetErr := branch.DB.Query(`SELECT sa.path,c.content_hash,a.extension,a.mime,a.bytes,a.width,a.height,a.format FROM snapshot_assets sa JOIN contents c ON c.id=sa.content_id JOIN assets a ON a.content_id=sa.content_id WHERE sa.snapshot_id=? AND (sa.path=? OR lower(sa.path) LIKE lower(?)) ORDER BY CASE WHEN sa.path=? THEN 0 ELSE 1 END,sa.path LIMIT 25`, ctx.SnapshotID, path, "%"+path+"%", path)
+	assetRows, assetErr := branch.DB.Query(`SELECT sa.path,c.content_hash,a.extension,a.mime,a.bytes,a.width,a.height,a.format FROM snapshot_assets sa JOIN content.contents c ON c.id=sa.content_id JOIN content.assets a ON a.content_id=sa.content_id WHERE sa.snapshot_id=? AND (sa.path=? OR lower(sa.path) LIKE lower(?)) ORDER BY CASE WHEN sa.path=? THEN 0 ELSE 1 END,sa.path LIMIT 25`, ctx.SnapshotID, path, "%"+path+"%", path)
 	if assetErr == nil {
 		defer assetRows.Close()
 		for assetRows.Next() {
@@ -190,7 +259,7 @@ func Inspect(layout home.Layout, ctx Context, symbol, path string) (Response, er
 			var size int64
 			var width, height int
 			if assetRows.Scan(&p, &hash, &ext, &mime, &size, &width, &height, &format) == nil {
-				meta := fmt.Sprintf("format=%s mime=%s bytes=%d width=%d height=%d local=%s", format, mime, size, width, height, filepath.Join(layout.Assets, hash[:2], hash))
+				meta := fmt.Sprintf("format=%s mime=%s bytes=%d width=%d height=%d local=%s", format, mime, size, width, height, objectstore.Location(layout, objectstore.Asset, hash))
 				response.Results = append(response.Results, Match{Kind: "asset", Name: filepath.Base(p), Path: p, Line: 1, MatchedBy: "path", Role: "project", Score: 100, ContentHash: hash, Excerpt: meta})
 			}
 		}
@@ -215,7 +284,7 @@ func Diff(layout home.Layout, a, b Context) (map[string]any, error) {
 	}
 	defer right.Close()
 	load := func(db *sql.DB, id string) (map[string]string, error) {
-		rows, e := db.Query(`SELECT s.qualified_name,s.signature||'@'||sf.path||':'||s.line FROM symbols s JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role)`, id)
+		rows, e := db.Query(`SELECT qualified.value,signature.value||'@'||sf.path||':'||s.line FROM content.symbols s JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN content.strings signature ON signature.id=s.signature_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role)`, id)
 		if e != nil {
 			return nil, e
 		}
@@ -268,8 +337,8 @@ func Status(layout home.Layout, sourceID, productID string) (map[string]any, err
 	var snapshots, files, asts int
 	_ = branch.DB.QueryRow(`SELECT count(*) FROM snapshots WHERE status='ready'`).Scan(&snapshots)
 	_ = branch.DB.QueryRow(`SELECT count(*) FROM snapshot_files`).Scan(&files)
-	_ = branch.DB.QueryRow(`SELECT count(*) FROM contents WHERE ast_hash<>''`).Scan(&asts)
-	return map[string]any{"sourceId": sourceID, "product": productID, "activeSnapshot": active, "readySnapshots": snapshots, "snapshotFiles": files, "astFiles": asts, "parserSchema": schema.Parser, "indexSchema": schema.Index, "database": branch.Path, "journalMode": "wal"}, nil
+	_ = branch.DB.QueryRow(`SELECT count(*) FROM content.contents WHERE ast_hash<>''`).Scan(&asts)
+	return map[string]any{"sourceId": sourceID, "product": productID, "activeSnapshot": active, "readySnapshots": snapshots, "snapshotFiles": files, "astFiles": asts, "parserSchema": schema.Parser, "indexSchema": schema.Index, "database": branch.Path, "contentDatabase": branch.ContentPath, "journalMode": "wal"}, nil
 }
 
 func ensureReady(db *sql.DB, id string) error {
@@ -317,10 +386,10 @@ func ftsQuery(text string) string {
 }
 func excerpt(db *sql.DB, layout home.Layout, snapshotID, path string, line, context int) (string, string, error) {
 	var hash string
-	if err := db.QueryRow(`SELECT c.content_hash FROM snapshot_files sf JOIN contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND sf.path=?`, snapshotID, path).Scan(&hash); err != nil {
+	if err := db.QueryRow(`SELECT c.content_hash FROM snapshot_files sf JOIN content.contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND sf.path=?`, snapshotID, path).Scan(&hash); err != nil {
 		return "", "", err
 	}
-	file, err := os.Open(filepath.Join(layout.Objects, hash[:2], hash))
+	file, err := objectstore.Open(layout, objectstore.Source, hash)
 	if err != nil {
 		return "", "", err
 	}
@@ -351,10 +420,10 @@ func excerptRange(db *sql.DB, layout home.Layout, snapshotID, path string, start
 		end = start + maxLines - 1
 	}
 	var hash string
-	if err := db.QueryRow(`SELECT c.content_hash FROM snapshot_files sf JOIN contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND sf.path=?`, snapshotID, path).Scan(&hash); err != nil {
+	if err := db.QueryRow(`SELECT c.content_hash FROM snapshot_files sf JOIN content.contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND sf.path=?`, snapshotID, path).Scan(&hash); err != nil {
 		return "", "", err
 	}
-	file, err := os.Open(filepath.Join(layout.Objects, hash[:2], hash))
+	file, err := objectstore.Open(layout, objectstore.Source, hash)
 	if err != nil {
 		return "", "", err
 	}

@@ -30,6 +30,10 @@ type initJob struct {
 	product catalog.Product
 	refs    []initRef
 }
+type initSource struct {
+	source   catalog.Source
+	products []catalog.Product
+}
 type initFailure struct {
 	SourceID string `json:"sourceId"`
 	Product  string `json:"product"`
@@ -65,7 +69,8 @@ func dataInitCommand() *cobra.Command {
 		manager := gitstore.Manager{Layout: layout}
 		ctx, cancel := context.WithTimeout(cmd.Context(), 24*time.Hour)
 		defer cancel()
-		var jobs []initJob
+		workerBudget := initWorkerBudget(workers)
+		var selected []initSource
 		matchedProducts := 0
 		for _, source := range sources {
 			if sourceID != "" && source.ID != sourceID {
@@ -77,23 +82,29 @@ func dataInitCommand() *cobra.Command {
 					products = append(products, product)
 				}
 			}
-			if len(products) == 0 {
-				continue
+			if len(products) > 0 {
+				matchedProducts += len(products)
+				selected = append(selected, initSource{source: source, products: products})
 			}
-			if err = manager.Sync(ctx, source); err != nil {
-				return err
-			}
-			for _, product := range products {
-				matchedProducts++
-				head, e := manager.Head(ctx, source.ID, product.Branch)
+		}
+		if matchedProducts == 0 {
+			return result.E("source_not_found", "no source/product matched", 2)
+		}
+		if err = syncInitSources(ctx, manager, selected, workerBudget); err != nil {
+			return err
+		}
+		var jobs []initJob
+		for _, selectedSource := range selected {
+			for _, product := range selectedSource.products {
+				head, e := manager.Head(ctx, selectedSource.source.ID, product.Branch)
 				if e != nil {
 					return e
 				}
-				tags, e := manager.ReachableTags(ctx, source.ID, product, hotTags)
+				tags, e := manager.ReachableTags(ctx, selectedSource.source.ID, product, hotTags)
 				if e != nil {
 					return e
 				}
-				if e = cat.PublishRef(source.ID, product, head, tags); e != nil {
+				if e = cat.PublishRef(selectedSource.source.ID, product, head, tags); e != nil {
 					return e
 				}
 				refs := []initRef{{head, "latest", ""}}
@@ -105,13 +116,9 @@ func dataInitCommand() *cobra.Command {
 					seen[tag.Commit] = true
 					refs = append(refs, initRef{tag.Commit, tag.Name, tag.Name})
 				}
-				jobs = append(jobs, initJob{source: source, product: product, refs: refs})
+				jobs = append(jobs, initJob{source: selectedSource.source, product: product, refs: refs})
 			}
 		}
-		if matchedProducts == 0 {
-			return result.E("source_not_found", "no source/product matched", 2)
-		}
-		workerBudget := initWorkerBudget(workers)
 		built, failures, branchWorkers := runInitJobs(ctx, jobs, workerBudget, func(job initJob, ref initRef, buildWorkers int) (indexer.Stats, error) {
 			stats, buildErr := indexer.Build(ctx, indexer.BuildOptions{Layout: layout, SourceID: job.source.ID, ProductID: job.product.ID, Commit: ref.commit, RequestedRef: ref.requested, Tag: ref.tag, Input: &indexer.GitInput{Manager: manager, SourceID: job.source.ID, ProductID: job.product.ID, Commit: ref.commit}, Workers: buildWorkers})
 			if buildErr == nil {
@@ -137,6 +144,56 @@ func dataInitCommand() *cobra.Command {
 	cmd.Flags().IntVar(&hotTags, "hot-tags", defaultHotTags, "maximum reachable product Tags per branch")
 	cmd.Flags().IntVar(&workers, "workers", 0, "parser workers (default 4-8)")
 	return cmd
+}
+
+func syncInitSources(ctx context.Context, manager gitstore.Manager, sources []initSource, workerBudget int) error {
+	workers := workerBudget
+	if workers > 3 {
+		workers = 3
+	}
+	if workers > len(sources) {
+		workers = len(sources)
+	}
+	if workers < 1 {
+		return nil
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	jobs := make(chan catalog.Source)
+	errs := make(chan error, len(sources))
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for source := range jobs {
+				if err := manager.Sync(ctx, source); err != nil {
+					select {
+					case errs <- err:
+					default:
+					}
+					cancel()
+					return
+				}
+			}
+		}()
+	}
+send:
+	for _, source := range sources {
+		select {
+		case jobs <- source.source:
+		case <-ctx.Done():
+			break send
+		}
+	}
+	close(jobs)
+	wg.Wait()
+	select {
+	case err := <-errs:
+		return err
+	default:
+		return ctx.Err()
+	}
 }
 
 func initWorkerBudget(requested int) int {

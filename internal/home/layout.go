@@ -6,7 +6,7 @@ import (
 )
 
 type Layout struct {
-	Root, Config, Repositories, Objects, Assets, AST, Indexes, State, Manifests, Locks, Logs, Temp string
+	Root, Config, Repositories, Objects, Assets, AST, Packs, Indexes, State, Manifests, Locks, Logs, Temp string
 }
 
 func Resolve() (Layout, error) {
@@ -25,14 +25,15 @@ func Resolve() (Layout, error) {
 	return Layout{
 		Root: root, Config: filepath.Join(root, "config"), Repositories: filepath.Join(root, "repositories"),
 		Objects: filepath.Join(root, "objects", "source"), Assets: filepath.Join(root, "objects", "assets"),
-		AST: filepath.Join(root, "ast"), Indexes: filepath.Join(root, "indexes"), State: filepath.Join(root, "state"),
+		AST: filepath.Join(root, "ast"), Packs: filepath.Join(root, "objects", "packs"),
+		Indexes: filepath.Join(root, "indexes"), State: filepath.Join(root, "state"),
 		Manifests: filepath.Join(root, "manifests"), Locks: filepath.Join(root, "locks"),
 		Logs: filepath.Join(root, "logs"), Temp: filepath.Join(root, "tmp"),
 	}, nil
 }
 
 func (l Layout) Directories() []string {
-	return []string{l.Root, l.Config, l.Repositories, l.Objects, l.Assets, l.AST, l.Indexes, l.State, l.Manifests, l.Locks, l.Logs, l.Temp}
+	return []string{l.Root, l.Config, l.Repositories, l.Objects, l.Assets, l.AST, l.Packs, l.Indexes, l.State, l.Manifests, l.Locks, l.Logs, l.Temp}
 }
 
 func (l Layout) Ensure() error {

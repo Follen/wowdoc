@@ -7,11 +7,16 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/follenfang/wowdoc/internal/home"
 	"github.com/follenfang/wowdoc/internal/indexer"
+	"github.com/follenfang/wowdoc/internal/objectstore"
 	"github.com/follenfang/wowdoc/internal/query"
+	"github.com/follenfang/wowdoc/internal/schema"
+	"github.com/follenfang/wowdoc/internal/store"
 )
 
 func TestBuildReusesObjectsAndReturnsExactSourceEvidence(t *testing.T) {
@@ -59,8 +64,8 @@ func TestBuildReusesObjectsAndReturnsExactSourceEvidence(t *testing.T) {
 	if got.ContentHash == "" || got.Excerpt == "" {
 		t.Fatalf("missing evidence: %#v", got)
 	}
-	if _, err := os.Stat(filepath.Join(layout.Objects, got.ContentHash[:2], got.ContentHash)); err != nil {
-		t.Fatal(err)
+	if !objectstore.Exists(layout, objectstore.Source, got.ContentHash) {
+		t.Fatal("source evidence object is missing")
 	}
 }
 
@@ -100,6 +105,54 @@ func TestXMLInheritanceAndMixinRelations(t *testing.T) {
 	}
 }
 
+func TestExactXMLDefinitionRanksBeforeInheritanceReference(t *testing.T) {
+	t.Setenv("WOWDOC_HOME", t.TempDir())
+	layout, _ := home.Resolve()
+	if err := layout.Ensure(); err != nil {
+		t.Fatal(err)
+	}
+	fixture := t.TempDir()
+	xmlSource := []byte("<Ui>\n  <Frame name=\"Consumer\" inherits=\"TargetTemplate\"/>\n  <Frame name=\"TargetTemplate\" inherits=\"BaseTemplate\"/>\n</Ui>\n")
+	if err := os.WriteFile(filepath.Join(fixture, "Templates.xml"), xmlSource, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stats, err := indexer.Build(context.Background(), indexer.BuildOptions{Layout: layout, SourceID: "fixture", ProductID: "xml-rank", Commit: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", Input: indexer.DirectoryInput{Root: fixture}, Workers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := query.Search(layout, query.Context{SourceID: "fixture", ProductID: "xml-rank", Commit: stats.Commit, SnapshotID: stats.SnapshotID, DBPath: stats.DBPath}, "TargetTemplate", "xml", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(response.Results) != 1 || response.Results[0].Name != "TargetTemplate" || response.Results[0].Line != 3 || response.Results[0].MatchedBy != "exact_fact" {
+		t.Fatalf("unexpected exact XML result: %#v", response.Results)
+	}
+}
+
+func TestStructuredFileKeepsCompletePlainTextSearch(t *testing.T) {
+	t.Setenv("WOWDOC_HOME", t.TempDir())
+	layout, _ := home.Resolve()
+	if err := layout.Ensure(); err != nil {
+		t.Fatal(err)
+	}
+	fixture := t.TempDir()
+	source := []byte("function IndexedFunction()\n  local status = \"obscure regression marker\"\n  return status\nend\n")
+	if err := os.WriteFile(filepath.Join(fixture, "Search.lua"), source, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stats, err := indexer.Build(context.Background(), indexer.BuildOptions{Layout: layout, SourceID: "fixture", ProductID: "fulltext", Commit: "ffffffffffffffffffffffffffffffffffffffff", Input: indexer.DirectoryInput{Root: fixture}, Workers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := query.Search(layout, query.Context{SourceID: "fixture", ProductID: "fulltext", Commit: stats.Commit, SnapshotID: stats.SnapshotID, DBPath: stats.DBPath}, "obscure regression marker", "lua", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(response.Results) != 1 || response.Results[0].Kind != "source" || response.Results[0].Line != 2 || !strings.Contains(response.Results[0].Excerpt, "obscure regression marker") {
+		t.Fatalf("unexpected full-text result: %#v", response.Results)
+	}
+}
+
 func TestUnchangedContentReusesFactsAndFTSAcrossSnapshots(t *testing.T) {
 	t.Setenv("WOWDOC_HOME", t.TempDir())
 	layout, _ := home.Resolve()
@@ -111,11 +164,16 @@ func TestUnchangedContentReusesFactsAndFTSAcrossSnapshots(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	db, err := sql.Open("sqlite", first.DBPath)
+	db, err := sql.Open("sqlite", store.ContentPath(layout, "wow-ui-source", schema.Parser, schema.Index))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer db.Close()
+	branchDB, err := sql.Open("sqlite", first.DBPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer branchDB.Close()
 	contentsBefore := countRows(t, db, "contents")
 	symbolsBefore := countRows(t, db, "symbols")
 	searchBefore := countRows(t, db, "search_docs")
@@ -139,12 +197,143 @@ func TestUnchangedContentReusesFactsAndFTSAcrossSnapshots(t *testing.T) {
 	if got := countRows(t, db, "search_docs"); got != searchBefore {
 		t.Fatalf("search_docs=%d, want %d", got, searchBefore)
 	}
-	if got := countRows(t, db, "snapshot_files"); got != first.Files+second.Files {
+	if got := countRows(t, branchDB, "snapshot_files"); got != first.Files+second.Files {
 		t.Fatalf("snapshot_files=%d, want %d", got, first.Files+second.Files)
 	}
 	response, err := query.Search(layout, query.Context{SourceID: "wow-ui-source", ProductID: "retail", Commit: second.Commit, SnapshotID: second.SnapshotID, DBPath: second.DBPath}, "C_AuctionHouse.GetItemSearchResultInfo", "api", 3)
 	if err != nil || len(response.Results) == 0 || response.Results[0].Line != 16 {
 		t.Fatalf("reused snapshot query err=%v response=%#v", err, response)
+	}
+}
+
+func TestFactsAreSharedAcrossProductsWhileFTSRemainsBranchLocal(t *testing.T) {
+	t.Setenv("WOWDOC_HOME", t.TempDir())
+	layout, _ := home.Resolve()
+	if err := layout.Ensure(); err != nil {
+		t.Fatal(err)
+	}
+	fixture := filepath.Join("..", "..", "testdata", "sources", "valid-retail")
+	first, err := indexer.Build(context.Background(), indexer.BuildOptions{Layout: layout, SourceID: "wow-ui-source", ProductID: "retail", Commit: "1212121212121212121212121212121212121212", RequestedRef: "retail", Input: indexer.DirectoryInput{Root: fixture}, Workers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	contentDB, err := sql.Open("sqlite", store.ContentPath(layout, "wow-ui-source", schema.Parser, schema.Index))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer contentDB.Close()
+	contents := countRows(t, contentDB, "contents")
+	symbols := countRows(t, contentDB, "symbols")
+	searchDocs := countRows(t, contentDB, "search_docs")
+	second, err := indexer.Build(context.Background(), indexer.BuildOptions{Layout: layout, SourceID: "wow-ui-source", ProductID: "ptr", Commit: "3434343434343434343434343434343434343434", RequestedRef: "ptr", Input: indexer.DirectoryInput{Root: fixture}, Workers: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := countRows(t, contentDB, "contents"); got != contents {
+		t.Fatalf("shared contents=%d, want %d", got, contents)
+	}
+	if got := countRows(t, contentDB, "symbols"); got != symbols {
+		t.Fatalf("shared symbols=%d, want %d", got, symbols)
+	}
+	if got := countRows(t, contentDB, "search_docs"); got != searchDocs {
+		t.Fatalf("shared search docs=%d, want %d", got, searchDocs)
+	}
+	for _, dbPath := range []string{first.DBPath, second.DBPath} {
+		db, openErr := sql.Open("sqlite", dbPath)
+		if openErr != nil {
+			t.Fatal(openErr)
+		}
+		if got := countRows(t, db, "branch_contents"); got != contents {
+			db.Close()
+			t.Fatalf("branch contents=%d, want %d", got, contents)
+		}
+		if got := countRows(t, db, "search_fts"); got != searchDocs {
+			db.Close()
+			t.Fatalf("branch FTS docs=%d, want %d", got, searchDocs)
+		}
+		db.Close()
+	}
+	left, err := query.Search(layout, query.Context{SourceID: "wow-ui-source", ProductID: "retail", Commit: first.Commit, SnapshotID: first.SnapshotID, DBPath: first.DBPath}, "C_AuctionHouse.GetItemSearchResultInfo", "api", 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	right, err := query.Search(layout, query.Context{SourceID: "wow-ui-source", ProductID: "ptr", Commit: second.Commit, SnapshotID: second.SnapshotID, DBPath: second.DBPath}, "C_AuctionHouse.GetItemSearchResultInfo", "api", 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(left.Results) != len(right.Results) || len(left.Results) == 0 {
+		t.Fatalf("left=%#v right=%#v", left.Results, right.Results)
+	}
+	for i := range left.Results {
+		if left.Results[i].Path != right.Results[i].Path || left.Results[i].Line != right.Results[i].Line || left.Results[i].MatchedBy != right.Results[i].MatchedBy || left.Results[i].Score != right.Results[i].Score || left.Results[i].ContentHash != right.Results[i].ContentHash {
+			t.Fatalf("result %d differs: left=%#v right=%#v", i, left.Results[i], right.Results[i])
+		}
+	}
+}
+
+func TestConcurrentProductBuildsSerializeSharedContentPublish(t *testing.T) {
+	t.Setenv("WOWDOC_HOME", t.TempDir())
+	layout, _ := home.Resolve()
+	if err := layout.Ensure(); err != nil {
+		t.Fatal(err)
+	}
+	fixture := filepath.Join("..", "..", "testdata", "sources", "valid-retail")
+	products := []string{"retail", "ptr", "beta", "classic"}
+	start := make(chan struct{})
+	results := make(chan struct {
+		stats indexer.Stats
+		err   error
+	}, len(products))
+	var wg sync.WaitGroup
+	for i, product := range products {
+		wg.Add(1)
+		go func(i int, product string) {
+			defer wg.Done()
+			<-start
+			commit := strings.Repeat(string(rune('a'+i)), 40)
+			stats, err := indexer.Build(context.Background(), indexer.BuildOptions{
+				Layout: layout, SourceID: "wow-ui-source", ProductID: product,
+				Commit: commit, RequestedRef: product, Input: indexer.DirectoryInput{Root: fixture}, Workers: 2,
+			})
+			results <- struct {
+				stats indexer.Stats
+				err   error
+			}{stats: stats, err: err}
+		}(i, product)
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+
+	var built []indexer.Stats
+	for result := range results {
+		if result.err != nil {
+			t.Fatalf("concurrent build: %v", result.err)
+		}
+		built = append(built, result.stats)
+	}
+	if len(built) != len(products) {
+		t.Fatalf("built=%d, want %d", len(built), len(products))
+	}
+	contentDB, err := sql.Open("sqlite", store.ContentPath(layout, "wow-ui-source", schema.Parser, schema.Index))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer contentDB.Close()
+	contents := countRows(t, contentDB, "contents")
+	if contents == 0 {
+		t.Fatal("shared content DB is empty")
+	}
+	for _, stats := range built {
+		db, openErr := sql.Open("sqlite", stats.DBPath)
+		if openErr != nil {
+			t.Fatal(openErr)
+		}
+		got := countRows(t, db, "branch_contents")
+		db.Close()
+		if got != contents {
+			t.Fatalf("%s branch contents=%d, want %d", stats.SnapshotID, got, contents)
+		}
 	}
 }
 
@@ -169,11 +358,16 @@ func TestOneContentUnitCanMapToMultipleSnapshotPaths(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	db, err := sql.Open("sqlite", stats.DBPath)
+	db, err := sql.Open("sqlite", store.ContentPath(layout, "fixture", schema.Parser, schema.Index))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer db.Close()
+	branchDB, err := sql.Open("sqlite", stats.DBPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer branchDB.Close()
 	if got := countRows(t, db, "contents"); got != 1 {
 		rows, _ := db.Query(`SELECT content_hash,language,parser_schema,index_schema FROM contents ORDER BY id`)
 		var details []string
@@ -190,7 +384,7 @@ func TestOneContentUnitCanMapToMultipleSnapshotPaths(t *testing.T) {
 	if got := countRows(t, db, "symbols"); got != 1 {
 		t.Fatalf("symbols=%d, want 1", got)
 	}
-	if got := countRows(t, db, "snapshot_files"); got != 2 {
+	if got := countRows(t, branchDB, "snapshot_files"); got != 2 {
 		t.Fatalf("snapshot_files=%d, want 2", got)
 	}
 	response, err := query.Search(layout, query.Context{SourceID: "fixture", ProductID: "main", Commit: stats.Commit, SnapshotID: stats.SnapshotID, DBPath: stats.DBPath}, "SharedFunction", "lua", 10)
@@ -221,11 +415,11 @@ func TestSameBytesUseDifferentParseUnitsForDifferentLanguages(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	stats, err := indexer.Build(context.Background(), indexer.BuildOptions{Layout: layout, SourceID: "fixture", ProductID: "languages", Commit: "dddddddddddddddddddddddddddddddddddddddd", Input: indexer.DirectoryInput{Root: fixture}, Workers: 2})
+	_, err := indexer.Build(context.Background(), indexer.BuildOptions{Layout: layout, SourceID: "fixture", ProductID: "languages", Commit: "dddddddddddddddddddddddddddddddddddddddd", Input: indexer.DirectoryInput{Root: fixture}, Workers: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
-	db, err := sql.Open("sqlite", stats.DBPath)
+	db, err := sql.Open("sqlite", store.ContentPath(layout, "fixture", schema.Parser, schema.Index))
 	if err != nil {
 		t.Fatal(err)
 	}

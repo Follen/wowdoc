@@ -1,0 +1,23 @@
+schema: comet.native.v3
+minimum_runtime_version: 3
+revision: 5
+verification_protocol: legacy-v1
+name: pack-shared-content-store
+language: zh-CN
+phase: archive
+brief: brief.md
+approval: confirmed
+approved_contract_hash: 307c1955aa4676c355efe348ace1be3ab8f88645231f6e505399ea4a9e79ed3b
+spec_changes:
+  - capability: wowdoc-cli
+    operation: replace
+    source: specs/wowdoc-cli/spec.md
+    base_hash: eccbbd4f4393961a287e7beef2934e4bc253f423bde5eb48f87a5c9b57439ce2
+verification_result: pass
+verification_report: verification.md
+implementation_scope: runtime/evidence/scopes/f93bcf8306cc37ab30b9c13c794fad00d21f8bf744f2c35705233461ee406383.json
+verification_evidence: runtime/evidence/verifications/17f4dc96f88770a49853a0383126e2d0baa0ccbf02879b9060b0a88e064f7840.json
+partial_allowance: null
+archived: true
+created_at: 2026-08-04
+run_id: dbd63b4c-9743-4433-8e99-210ba376259b

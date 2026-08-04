@@ -1,0 +1,36 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "static-inspection",
+  "role": "required-check",
+  "status": "passed",
+  "bindings": {
+    "change": "pack-shared-content-store",
+    "sourceRevision": 3,
+    "contractHash": "307c1955aa4676c355efe348ace1be3ab8f88645231f6e505399ea4a9e79ed3b",
+    "scopeHash": "f93bcf8306cc37ab30b9c13c794fad00d21f8bf744f2c35705233461ee406383",
+    "snapshotHash": "a5afc0a889464ec23e9b2da912c50643ab2f69c01a3a44131bc2d83750e95d10",
+    "artifactHash": "eb33d7eade74b6a311d74ef4c01765e4fef61cd98e96e009530f1fa02eddaed1"
+  },
+  "acceptanceIds": [],
+  "actor": "native-runtime:scoped-text-safety",
+  "issuedAt": "2026-08-04T11:45:45.795Z",
+  "evidence": {
+    "subjects": [
+      "README.md",
+      "docs/performance.md",
+      "internal/home/layout.go",
+      "internal/indexer/indexer.go",
+      "internal/indexer/indexer_test.go",
+      "internal/objectstore/store.go",
+      "internal/objectstore/store_test.go",
+      "internal/query/query.go",
+      "internal/schema/schema.go",
+      "internal/store/branch.go"
+    ],
+    "rule": "scoped-text-safety",
+    "resultSummary": "The built-in scoped inspection passed without skipped or blocking input.",
+    "checkReceiptRef": "runtime/evidence/check-receipts/b4780781b998a78888e464cde7aa174f5b733b07d3258a1dc088da37923c5409.json",
+    "checkReceiptHash": "b4780781b998a78888e464cde7aa174f5b733b07d3258a1dc088da37923c5409"
+  },
+  "receiptHash": "f1d09a5b5251b277893a68fdb7b6f79d0089a258b8d64da499962a44a3e0f0bc"
+}

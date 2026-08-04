@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -50,20 +51,13 @@ func (g *GitInput) Entries(ctx context.Context) ([]Entry, error) {
 		return nil, err
 	}
 	g.worktree = worktree
-	entries, err := (DirectoryInput{Root: worktree.Path()}).Entries(ctx)
-	if err != nil {
-		return nil, err
-	}
 	tree, err := g.Manager.Tree(ctx, g.SourceID, g.Commit)
 	if err != nil {
 		return nil, err
 	}
-	oids := make(map[string]string, len(tree))
+	entries := make([]Entry, 0, len(tree))
 	for _, item := range tree {
-		oids[item.Path] = item.OID
-	}
-	for i := range entries {
-		entries[i].OID = oids[entries[i].Path]
+		entries = append(entries, Entry{Path: item.Path, OID: item.OID, Size: item.Size})
 	}
 	g.blobs, err = g.Manager.OpenBlobReader(ctx, g.SourceID)
 	if err != nil {
@@ -185,10 +179,10 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	snapshotID := opts.SourceID + "-" + opts.ProductID + "-" + opts.Commit
 	branch, err := store.OpenBranch(opts.Layout, opts.SourceID, opts.ProductID, ParserSchema, IndexSchema)
 	if err != nil {
-		return Stats{}, err
+		return Stats{}, fmt.Errorf("open branch store: %w", err)
 	}
 	defer branch.Close()
-	manifestPath := filepath.Join(opts.Layout.Manifests, opts.SourceID, opts.ProductID, opts.Commit+".json")
+	manifestPath := filepath.Join(opts.Layout.Manifests, opts.SourceID, opts.ProductID, opts.Commit+".json.gz")
 	if summary, ready, readyErr := branch.ReadySnapshot(snapshotID, ParserSchema, IndexSchema); readyErr != nil {
 		return Stats{}, readyErr
 	} else if ready {
@@ -218,7 +212,8 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	if err != nil {
 		return Stats{}, err
 	}
-	objects := objectstore.Store{Layout: opts.Layout}
+	objects := objectstore.New(opts.Layout, snapshotID)
+	defer objects.Abort()
 	jobs := make(chan Entry)
 	results := make(chan parsed)
 	errCh := make(chan error, 1)
@@ -231,7 +226,7 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 				record, ok, e := branch.LookupOID(entry.OID, language, ParserSchema, IndexSchema)
 				if e != nil {
 					select {
-					case errCh <- e:
+					case errCh <- fmt.Errorf("lookup content by Git OID: %w", e):
 					default:
 					}
 					return
@@ -249,7 +244,7 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 			rawData, e := opts.Input.ReadRaw(ctx, entry)
 			if e != nil {
 				select {
-				case errCh <- e:
+				case errCh <- fmt.Errorf("lookup content by SHA-256: %w", e):
 				default:
 				}
 				return
@@ -272,15 +267,9 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 				}
 				continue
 			}
-			parseData, e := opts.Input.Read(ctx, entry)
-			if e != nil {
-				select {
-				case errCh <- e:
-				default:
-				}
-				return
-			}
-			p, e := parseEntry(objects, entry, parseData, rawData)
+			// ReadRaw is the immutable blob at the selected Commit. Reusing it for
+			// parsing avoids a second worktree read and keeps evidence byte-identical.
+			p, e := parseEntry(objects, entry, rawData, rawData)
 			if e != nil {
 				p.diagnostics = append(p.diagnostics, result.Diagnostic{Code: "parse_failed", Message: e.Error(), Path: entry.Path})
 			}
@@ -341,8 +330,11 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 		return Stats{}, e
 	default:
 	}
+	if err := objects.Publish(); err != nil {
+		return Stats{}, fmt.Errorf("publish object pack: %w", err)
+	}
 	if err := branch.Publish(snapshotID, opts.Commit, opts.RequestedRef, opts.Tag, ParserSchema, IndexSchema, batch); err != nil {
-		return Stats{}, err
+		return Stats{}, fmt.Errorf("publish snapshot: %w", err)
 	}
 	if err := writeManifest(manifestPath, opts, batch); err != nil {
 		return Stats{}, err
@@ -360,15 +352,11 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 }
 
 func contentObjectExists(layout home.Layout, record store.ContentRecord) bool {
-	root := layout.Objects
+	kind := objectstore.Source
 	if record.Asset != nil {
-		root = layout.Assets
+		kind = objectstore.Asset
 	}
-	if len(record.ContentHash) < 2 {
-		return false
-	}
-	_, err := os.Stat(filepath.Join(root, record.ContentHash[:2], record.ContentHash))
-	return err == nil
+	return objectstore.Exists(layout, kind, record.ContentHash)
 }
 
 func reusedEntry(entry Entry, record store.ContentRecord) parsed {
@@ -388,7 +376,7 @@ func reusedEntry(entry Entry, record store.ContentRecord) parsed {
 	return p
 }
 
-func parseEntry(objects objectstore.Store, entry Entry, parseData, rawData []byte) (parsed, error) {
+func parseEntry(objects *objectstore.Store, entry Entry, parseData, rawData []byte) (parsed, error) {
 	ext := strings.ToLower(filepath.Ext(entry.Path))
 	role := roleFor(entry.Path)
 	p := parsed{file: store.FileFact{Path: entry.Path, Language: languageFor(ext), Role: role, GitOID: entry.OID, Size: int64(len(rawData))}}
@@ -445,13 +433,10 @@ func parseEntry(objects objectstore.Store, entry Entry, parseData, rawData []byt
 	for _, t := range p.toc {
 		p.search = append(p.search, store.SearchFact{Path: t.Path, Line: t.Line, Kind: "toc", Name: t.Key, Text: t.Value, RequiredRole: t.RequiredRole})
 	}
+	// Keep the original full-text coverage without one SQLite row per line.
+	// Query resolves a matching file-level document back to its exact source line.
 	if (ext == ".lua" || ext == ".xml") && len(rawData) < 1<<20 {
-		for i, line := range strings.Split(string(rawData), "\n") {
-			line = strings.TrimSpace(line)
-			if line != "" {
-				p.search = append(p.search, store.SearchFact{Path: entry.Path, Line: i + 1, Kind: "source", Text: line})
-			}
-		}
+		p.search = append(p.search, store.SearchFact{Path: entry.Path, Kind: "source", Text: string(rawData)})
 	}
 	return p, nil
 }
@@ -460,12 +445,26 @@ func writeManifest(path string, opts BuildOptions, b store.SnapshotBatch) error 
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(map[string]any{"schema": "wowdoc.snapshot.v1", "sourceId": opts.SourceID, "productId": opts.ProductID, "resolvedCommit": opts.Commit, "requestedRef": opts.RequestedRef, "tag": opts.Tag, "parserSchema": ParserSchema, "indexSchema": IndexSchema, "files": b.Files, "assets": b.Assets}, "", "  ")
+	data, err := json.Marshal(map[string]any{"schema": "wowdoc.snapshot.v2", "sourceId": opts.SourceID, "productId": opts.ProductID, "resolvedCommit": opts.Commit, "requestedRef": opts.RequestedRef, "tag": opts.Tag, "parserSchema": ParserSchema, "indexSchema": IndexSchema, "files": b.Files, "assets": b.Assets})
 	if err != nil {
 		return err
 	}
 	tmp := path + ".tmp"
-	if err = os.WriteFile(tmp, data, 0o644); err != nil {
+	file, err := os.Create(tmp)
+	if err != nil {
+		return err
+	}
+	w := gzip.NewWriter(file)
+	if _, err = w.Write(data); err == nil {
+		err = w.Close()
+	} else {
+		_ = w.Close()
+	}
+	if closeErr := file.Close(); err == nil {
+		err = closeErr
+	}
+	if err != nil {
+		_ = os.Remove(tmp)
 		return err
 	}
 	return os.Rename(tmp, path)

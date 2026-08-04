@@ -1,0 +1,249 @@
+{
+  "schema": "comet.native.implementation-scope.v2",
+  "contractHash": "307c1955aa4676c355efe348ace1be3ab8f88645231f6e505399ea4a9e79ed3b",
+  "baselineProjectionRef": "runtime/evidence/snapshots/b8e4d3560eb815d8bee381076f4b318323421cefc040bf899bfcee8b3748604c.json",
+  "baselineProjectionHash": "b8e4d3560eb815d8bee381076f4b318323421cefc040bf899bfcee8b3748604c",
+  "currentProjectionRef": "runtime/evidence/snapshots/a5afc0a889464ec23e9b2da912c50643ab2f69c01a3a44131bc2d83750e95d10.json",
+  "currentProjectionHash": "a5afc0a889464ec23e9b2da912c50643ab2f69c01a3a44131bc2d83750e95d10",
+  "complete": true,
+  "declaredArtifacts": [
+    {
+      "path": "README.md",
+      "kind": "file"
+    },
+    {
+      "path": "docs/performance.md",
+      "kind": "file"
+    },
+    {
+      "path": "internal/app/lifecycle.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/home/layout.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/indexer/indexer.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/indexer/indexer_test.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/objectstore/replace_unix.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/objectstore/replace_windows.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/objectstore/store.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/objectstore/store_test.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/query/query.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/schema/schema.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/store/branch.go",
+      "kind": "file"
+    }
+  ],
+  "changes": [
+    {
+      "path": "README.md",
+      "kind": "modified",
+      "before": {
+        "hash": "a5842b0bb0d7ff0323ab8610432d14cdd72c05232a88e8a5091b4acb8a5f03a7",
+        "size": 7587
+      },
+      "after": {
+        "hash": "f76f55a94b4fb1289c4df69a73c6c5cf94f459142298eca041ce07548f1281d2",
+        "size": 7814
+      },
+      "attributedTo": [
+        {
+          "path": "README.md",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "docs/performance.md",
+      "kind": "modified",
+      "before": {
+        "hash": "3b84923efc3216dd1ca73486408df5beb7d52476e56eaf49a52d1644bd838724",
+        "size": 2405
+      },
+      "after": {
+        "hash": "be8bb0c12b920434847ae51906b0cadd0cc2d953adbe6df0efdad40df805ab69",
+        "size": 4153
+      },
+      "attributedTo": [
+        {
+          "path": "docs/performance.md",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/home/layout.go",
+      "kind": "modified",
+      "before": {
+        "hash": "1d114d25fd86a826f28f19820b804a84c065fbc0d2842d1e4780fb0b747690c1",
+        "size": 1437
+      },
+      "after": {
+        "hash": "d5f1588c107f93278c9e1003cbadf08ff09239b0585225cec521a2d020042007",
+        "size": 1503
+      },
+      "attributedTo": [
+        {
+          "path": "internal/home/layout.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/indexer/indexer.go",
+      "kind": "modified",
+      "before": {
+        "hash": "e624a8fb33cc8603492ca36c44f17bdfb3024c54637957f1fba2e87e01ddcb70",
+        "size": 16488
+      },
+      "after": {
+        "hash": "1445dee4924cfc6371ac145bfedb3e96e8cea0fd21935114f7e3e148d2171461",
+        "size": 16698
+      },
+      "attributedTo": [
+        {
+          "path": "internal/indexer/indexer.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/indexer/indexer_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "c85da4fc0704c3ba271935ba3433eb9fcf12b2515f82d3d77d0cfef1f06d4b6a",
+        "size": 11510
+      },
+      "after": {
+        "hash": "c8b1928bff182cf1113764af9d54e9ee2c02ccb5cb6d5a62e32af5d294067c84",
+        "size": 17068
+      },
+      "attributedTo": [
+        {
+          "path": "internal/indexer/indexer_test.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/objectstore/store.go",
+      "kind": "modified",
+      "before": {
+        "hash": "f8c06ad67ee0d5d75a4a312d47a6390ec2b75ce4b714e7f8e2e9eaa61ef4a188",
+        "size": 4647
+      },
+      "after": {
+        "hash": "d0c491310c59e306f6d0ab10f9d9252435ea3dc1726f3824c956327a5ea071aa",
+        "size": 17899
+      },
+      "attributedTo": [
+        {
+          "path": "internal/objectstore/store.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/objectstore/store_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "6f6aeafa8ee2e269b64ef4f3226ea5fab0d5dd14de22cc634b9e34b58219344f",
+        "size": 1339
+      },
+      "after": {
+        "hash": "68a4706ae667ab779a6c21c82b2fc642958299f00de612f78f0e3d1f440b2973",
+        "size": 5365
+      },
+      "attributedTo": [
+        {
+          "path": "internal/objectstore/store_test.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/query/query.go",
+      "kind": "modified",
+      "before": {
+        "hash": "4279234f0b164ffd9aa6e4d7bfdf996db1bdf0d781787716a567589356195cf7",
+        "size": 17754
+      },
+      "after": {
+        "hash": "5a3bc97cba11c0e4019ce3baa918be0c2829cd0987f274cc2e7768e90566a1b6",
+        "size": 18384
+      },
+      "attributedTo": [
+        {
+          "path": "internal/query/query.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/schema/schema.go",
+      "kind": "modified",
+      "before": {
+        "hash": "8346dea4c345dfcde94a609a85cc65ce325be33cbbd13e3126c4fec95458de62",
+        "size": 120
+      },
+      "after": {
+        "hash": "1eb0cc20537cc1e00f0c203dbe0e1284fe32769d74c919454d695b31b21b6984",
+        "size": 137
+      },
+      "attributedTo": [
+        {
+          "path": "internal/schema/schema.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/store/branch.go",
+      "kind": "modified",
+      "before": {
+        "hash": "56fe138883217a70ece3df3553861fe3053e7ed8e69c2926ccafe12a4caefafd",
+        "size": 17622
+      },
+      "after": {
+        "hash": "af7ee5f6d6a56fbfdc1ed9998fb824a77f1455667ee65085e53913359465b0ee",
+        "size": 23963
+      },
+      "attributedTo": [
+        {
+          "path": "internal/store/branch.go",
+          "kind": "file"
+        }
+      ]
+    }
+  ],
+  "unattributed": [],
+  "unresolvedScopes": [],
+  "noCodeReason": null,
+  "scopeHash": "f93bcf8306cc37ab30b9c13c794fad00d21f8bf744f2c35705233461ee406383"
+}
