@@ -1,48 +1,81 @@
+<div align="center">
+
 # wowdoc
 
-[![CI](https://github.com/Follen/wowdoc/actions/workflows/ci.yml/badge.svg)](https://github.com/Follen/wowdoc/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@follenfang/wowdoc)](https://www.npmjs.com/package/@follenfang/wowdoc)
-[![license](https://img.shields.io/github/license/Follen/wowdoc)](LICENSE)
+**Versioned World of Warcraft source, ready to cite.**
 
-`wowdoc` gives coding agents versioned, auditable code references for World of Warcraft UI source and popular AddOns. It resolves a branch, Tag, version, or Commit to an immutable snapshot and returns the exact repository path, line, excerpt, content hash, and resolved Commit behind every answer.
+Turn a game build, AddOn version, Tag, or Commit into exact code references for coding agents and AddOn authors.
 
-The product is CLI-only. The included Agent Skill translates a natural-language question into small, stable CLI commands; the CLI handles Git, parsing, indexing, and evidence.
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+[![CI](https://img.shields.io/github/actions/workflow/status/Follen/wowdoc/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/Follen/wowdoc/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/actions/workflow/status/Follen/wowdoc/release.yml?style=flat-square&label=release)](https://github.com/Follen/wowdoc/actions/workflows/release.yml)
+[![npm](https://img.shields.io/npm/v/@follenfang/wowdoc?style=flat-square&logo=npm)](https://www.npmjs.com/package/@follenfang/wowdoc)
+[![downloads](https://img.shields.io/npm/dm/@follenfang/wowdoc?style=flat-square&label=downloads)](https://www.npmjs.com/package/@follenfang/wowdoc)
+[![GitHub release](https://img.shields.io/github/v/release/Follen/wowdoc?style=flat-square&sort=semver)](https://github.com/Follen/wowdoc/releases/latest)
+[![license](https://img.shields.io/github/license/Follen/wowdoc?style=flat-square)](LICENSE)
+
+</div>
+
+---
+
+`wowdoc` is a local, CLI-only source intelligence tool. It resolves mutable names such as `latest`, `retail`, or an AddOn version to an immutable Git Commit, then returns the repository path, line, excerpt, and SHA-256 behind each result.
+
+The bundled Agent Skill handles the choice of source, product, version, and command. The CLI handles Git, parsing, indexing, and evidence. Queries stay local after initialization.
 
 ## Install
 
 ```powershell
 npm install -g @follenfang/wowdoc
 wowdoc --version
-wowdoc --help
-```
-
-The package installs the `wowdoc` CLI and the `wowdoc` Skill in `~/.agents/skills/wowdoc`. The single CLI handles queries, source/index operations, initialization, updates, cleanup, and uninstall.
-
-Run the one-time data initialization before querying source:
-
-```powershell
 wowdoc init
 ```
 
-Initialization creates `~/.wowdoc`, fetches the configured Git mirrors, and builds searchable SQLite snapshots for each product branch and its hot Tags. It can take time and substantial disk space. The command is resumable: rerunning it keeps completed work and continues failed or pending snapshots.
+The npm package installs:
 
-If Git is missing, `wowdoc init` detects the platform package manager, shows the exact package and installer command, installs Git, refreshes `PATH`, and verifies `git --version`. `wowdoc doctor` remains read-only.
+- one executable: `wowdoc`
+- one user-level Skill: `~/.agents/skills/wowdoc`
+
+`wowdoc init` creates `~/.wowdoc`, downloads the configured bare Git mirrors, and builds the searchable snapshots. The operation is resumable; rerun the same command after a network or process interruption.
+
+> Git missing? `wowdoc init` detects the platform package manager, shows the command it will run, installs Git, refreshes `PATH`, and verifies `git --version`. `wowdoc doctor` only reports state and never changes it.
+
+## What you get
+
+```text
+branch / Tag / version / Commit
+              │
+              ▼
+       immutable Commit
+              │
+              ▼
+ Lua · XML · TOC · assets · symbols · relations
+              │
+              ▼
+ path · line · excerpt · SHA-256 · resolved Commit
+```
+
+- **Version-accurate**: Tag and branch names are resolved once and stored as immutable snapshots.
+- **Traceable**: every code reference carries enough information to verify it against the Git blob.
+- **Concurrent**: each parser task gets a detached worktree; queries never depend on checkout state.
+- **Local after init**: search reads SQLite and immutable Pack objects, without switching Git branches or reaching the network.
+- **Built for agents**: stable, narrow commands with JSON output and explicit diagnostics.
 
 ## Supported source
 
-| Source | Products |
+| Source | Products / channels |
 | --- | --- |
 | Blizzard UI source | Retail, PTR, PTR2, Beta, Classic, Classic PTR/Beta, Classic Era/PTR, Anniversary, Titan |
-| ElvUI | main, PTR |
-| WeakAuras | main |
-| NDui | main, Classic, Era, Anniversary, Titan |
-| EllesmereUI | main |
+| [ElvUI](https://github.com/tukui-org/ElvUI) | main, PTR |
+| [WeakAuras](https://github.com/WeakAuras/WeakAuras2) | main |
+| [NDui](https://github.com/siweia/NDui) | main, Classic, Era, Anniversary, Titan |
+| [EllesmereUI](https://github.com/EllesmereGaming/EllesmereUI) | main |
 
-Third-party versions use Git truth: `Tag -> Commit -> snapshot`. Release archives and installed AddOn folders can differ because packaging may inject externals or replace placeholders; wowdoc describes Tag source rather than pretending to reconstruct an installed ZIP byte for byte.
+For third-party AddOns, version truth is `Tag -> Commit -> snapshot`. If a requested version has no matching Tag, the Agent Skill may use the latest snapshot, but the result is clearly marked as a latest fallback and still identifies the resolved Commit.
 
-## Query source
+## Use it
 
-Find an API definition:
+### Find an API definition
 
 ```powershell
 wowdoc query `
@@ -53,7 +86,7 @@ wowdoc query `
   --text C_AuctionHouse.GetItemSearchResultInfo
 ```
 
-Inspect a known ElvUI function at an exact plugin version:
+### Inspect an ElvUI symbol at a released version
 
 ```powershell
 wowdoc inspect `
@@ -63,7 +96,7 @@ wowdoc inspect `
   --symbol 'lib:RegisterPlugin'
 ```
 
-Compare two retained versions:
+### Compare two WeakAuras versions
 
 ```powershell
 wowdoc diff `
@@ -73,74 +106,80 @@ wowdoc diff `
   --to 5.21.9
 ```
 
-Every successful reference identifies its `sourceId`, product, requested ref, matched Tag when present, resolved Commit, repository path, line, excerpt, and SHA-256 content hash. Queries read only published SQLite snapshots and content-addressed objects; they do not switch a shared checkout or silently access the network.
-
-## Commands
-
-```text
-wowdoc query|explore|inspect|diff|validate
-wowdoc source list|check|sync
-wowdoc index build|refresh|status
-wowdoc doctor
-wowdoc init|update|clean|uninstall
-```
-
-Common lifecycle:
+### Validate an AddOn against a target snapshot
 
 ```powershell
-# Check whether a branch changed without modifying local state
-wowdoc source check --source elvui --product main
-
-# Explicitly fetch new Git metadata and source objects
-wowdoc source sync --source elvui --product main
-
-# Build and atomically publish the new snapshot
-wowdoc index refresh --source elvui --product main --ref latest
-
-# Preview cleanup; no files are deleted
-wowdoc clean
+wowdoc validate `
+  --path D:\AddOns\MyAddon `
+  --source wow-ui-source `
+  --product retail `
+  --ref latest
 ```
 
-Use `wowdoc clean --yes` only after reviewing its candidates. Removing indexed versions requires an explicit version or range. `wowdoc uninstall` requires confirmation and removes the npm package, managed Skill, and `~/.wowdoc` data.
+Every successful reference identifies the source, product, requested ref, matching Tag when available, resolved Commit, repository path, line, excerpt, and content hash.
 
-## Storage model
-
-Local state lives under `~/.wowdoc`:
+## Command map
 
 ```text
-config/         versioned source catalog and local configuration
+Search      wowdoc query | explore | inspect | diff | validate
+Sources     wowdoc source list | check | sync
+Indexes     wowdoc index build | refresh | status
+Health      wowdoc doctor
+Lifecycle   wowdoc init | update | clean | uninstall
+```
+
+A normal update flow is explicit:
+
+```powershell
+wowdoc source check --source elvui --product main
+wowdoc source sync --source elvui --product main
+wowdoc index refresh --source elvui --product main --ref latest
+```
+
+`wowdoc update` updates the npm package and Skill. It does not fetch repositories or rebuild indexes. `wowdoc clean` is a preview unless `--yes` is supplied.
+
+## Storage
+
+All local data lives under `~/.wowdoc` by default:
+
+```text
+config/         source catalog and local configuration
 repositories/   complete bare Git mirrors
-objects/        legacy content objects plus immutable Pack storage
-objects/packs/  sequential Pack segments and their catalog
-ast/            auditable legacy per-file syntax trees (new builds use Pack)
-indexes/        one shared content DB plus one WAL SQLite database per product branch
+objects/packs/  immutable, content-addressed Pack segments
+indexes/        shared content DBs and branch-local WAL/FTS databases
 manifests/      immutable snapshot manifests
 state/          initialization and task state
-tmp/worktrees/  leased detached worktrees used only while parsing
-locks/          repository and snapshot build locks
+tmp/worktrees/  leased detached worktrees used while parsing
+locks/          bounded repository and publish locks
 logs/           local diagnostics
 ```
 
-Each parser task fixes the requested ref to a Commit and creates its own detached worktree. Published queries never depend on that worktree. Identical Git blobs and AST objects are written once to immutable Pack segments and reused across Tags and branches, while snapshot relationships remain isolated by product and Commit.
+Set `WOWDOC_HOME` to move the data directory:
 
-Source objects, AST and assets are appended to one staging Pack per build and atomically published; the Pack catalog verifies original length and SHA-256 on every read. Legacy raw/gzip objects remain readable. One source-level SQLite keeps immutable facts and search-document metadata per content hash, while each product branch keeps its own WAL snapshot mappings and local FTS corpus so BM25 ordering remains branch-equivalent. A full-text hit is resolved back to the exact Pack source line. Initialization downloads up to three source mirrors in parallel, then parses with the normal 4-8 worker budget.
+```powershell
+$env:WOWDOC_HOME = 'D:\WOWData\wowdoc'
+wowdoc doctor
+wowdoc init
+```
 
-### Performance baseline
+Content-identical source, AST, and asset bytes are stored once in immutable Pack segments and reused across Tags and branches. A source-level SQLite database holds shared facts; branch databases keep their own snapshot membership and FTS statistics, preserving version filtering and BM25 ordering.
 
-Measured on Windows 11, Git 2.53.0, the same `wow-ui-source` Retail Commit `c878310d8432a65bac029c7bacc24eeb2e662bbe`, 8 parser workers, and a complete local bare mirror:
+## Performance
 
-| Build | Cold build time | Indexed files | SQLite | Home total |
-| --- | ---: | ---: | ---: | ---: |
-| `b201d38` baseline | 41.1 s | 3,685 | 158,629,888 B | 352,202,349 B |
-| compact pipeline | 11.4 s | 3,685 | 67,743,744 B | 169,972,173 B |
+Measured on Windows 11 with a complete local mirror, 8 parser workers, and the same 3,685-file Retail Commit:
 
-The cold parse/index stage is 3.61x faster (about 72% less time), its SQLite is 57% smaller, and its complete home is 52% smaller. A separate 10-Tag run produced 196,460,544 B of branch SQLite and 342,740,177 B total while preserving complete Lua/XML full-text coverage. Exact symbol, plain-text source, relation, Commit, path, line, excerpt, and SHA-256 checks pass after the storage changes. These are local measurements; network clone/fetch time varies by GitHub and TLS conditions.
+| Pipeline | Cold build | SQLite | Complete home |
+| --- | ---: | ---: | ---: |
+| baseline `b201d38` | 41.1 s | 158.6 MB | 352.2 MB |
+| compact content store | 11.4 s | 67.7 MB | 170.0 MB |
+
+That run reduced parse/index time by 72%, SQLite size by 57%, and total local data by 52%, while retaining full Lua/XML search coverage and identical source evidence. See [the reproducible benchmark notes](docs/performance.md) for the scenario, full-catalog numbers, and trade-offs.
 
 ## Agent integration
 
-The installed Skill contains source/product aliases and command-selection rules, not copied source facts. An Agent chooses the source, product, ref, topic, and narrowest useful identifier, then cites the CLI evidence. A missing exact plugin Tag can fall back to that product branch's latest snapshot only when the Skill labels the result as a latest fallback and preserves the originally requested version.
+The installed Skill contains command-selection rules and source/product aliases, not copied source facts. An Agent uses the narrowest stable identifier in the question, calls `wowdoc`, and cites the returned evidence.
 
-The quality suite contains 50 realistic AddOn-author questions across all configured product branches and historical Tags. A strict pass requires the first reference to be correct, relevant, context-complete, version-correct, and byte-for-byte traceable to the resolved Git blob. Local scenarios and generated reports live in the Git-ignored `analyze/quality` directory.
+The quality suite covers 50 realistic AddOn-author questions across product branches and historical Tags. A pass requires the first reference to be correct, relevant, context-complete, version-correct, and byte-for-byte traceable to the resolved Git blob.
 
 ## Development
 
@@ -153,7 +192,7 @@ npm pack --dry-run
 go run ./cmd/wowdoc --help
 ```
 
-Release tags use `vMAJOR.MINOR.PATCH`. GitHub Actions tests the project, builds `wowdoc` for Windows amd64, Linux amd64/arm64, and macOS amd64/arm64, publishes checksums and a GitHub Release, then publishes the matching npm version through npm Trusted Publisher OIDC with provenance.
+Tags follow `vMAJOR.MINOR.PATCH`. GitHub Actions tests Windows, Linux, and macOS, builds five CLI binaries, creates a GitHub Release with checksums, and publishes the matching npm package through Trusted Publisher OIDC with provenance.
 
 ## License
 
