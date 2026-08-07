@@ -1,0 +1,51 @@
+{
+  "schema": "comet.native.verification-receipt.v3",
+  "kind": "static-inspection",
+  "role": "required-check",
+  "status": "passed",
+  "bindings": {
+    "change": "harden-download-pipelines",
+    "sourceRevision": 5,
+    "contractHash": "4ba6e211c7844b18e1a0b7c6573a8f6ce1a0ecb5c6901a302ca6f9c78484cd69",
+    "scopeHash": "8b6376ea1577a96b181ab5f3509855963219b0f491991869aa259b7f721339da",
+    "snapshotHash": "975252f3ddff135bc5d4ff5595ebedab5eaa65b06694fe5241970a0492f1a9b8",
+    "artifactHash": "1f1e5ebf90e03a75f8a9994990ab3ae4912c79c4938ca7a0abdc8cf691522db0"
+  },
+  "acceptanceIds": [],
+  "actor": "native-runtime:scoped-text-safety",
+  "issuedAt": "2026-08-04T16:23:27.868Z",
+  "evidence": {
+    "subjects": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/release.yml",
+      ".gitignore",
+      "README.md",
+      "README.zh-CN.md",
+      "bin/run.mjs",
+      "internal/app/lifecycle.go",
+      "internal/app/root_test.go",
+      "internal/app/wowdoc.go",
+      "internal/gitstore/git.go",
+      "internal/gitstore/git_test.go",
+      "package-lock.json",
+      "package.json",
+      "packages/wowdoc-darwin-arm64/package.json",
+      "packages/wowdoc-darwin-x64/package.json",
+      "packages/wowdoc-linux-arm64/package.json",
+      "packages/wowdoc-linux-x64/package.json",
+      "packages/wowdoc-win32-x64/package.json",
+      "scripts/check-package.mjs",
+      "scripts/download.mjs",
+      "scripts/download.test.mjs",
+      "scripts/install.mjs",
+      "scripts/platform.mjs",
+      "scripts/prepare-platform-packages.mjs",
+      "skill/references/commands.md"
+    ],
+    "rule": "scoped-text-safety",
+    "resultSummary": "The built-in scoped inspection passed without skipped or blocking input.",
+    "checkReceiptRef": "runtime/evidence/check-receipts/e7d6a067e0dba89dab6e897551c91cc8d0c85cb03530e648b4cc9e2f96cf87be.json",
+    "checkReceiptHash": "e7d6a067e0dba89dab6e897551c91cc8d0c85cb03530e648b4cc9e2f96cf87be"
+  },
+  "receiptHash": "1035935d284a1787dab2852c2bcb0c4d4ce2d46cd797e64564230240118b7bfb"
+}

@@ -1,0 +1,774 @@
+{
+  "schema": "comet.native.implementation-scope.v2",
+  "contractHash": "4ba6e211c7844b18e1a0b7c6573a8f6ce1a0ecb5c6901a302ca6f9c78484cd69",
+  "baselineProjectionRef": "runtime/evidence/snapshots/6786e3584efbbe50272930c5992066619b10f515753d3aac41e0977cf6a54117.json",
+  "baselineProjectionHash": "6786e3584efbbe50272930c5992066619b10f515753d3aac41e0977cf6a54117",
+  "currentProjectionRef": "runtime/evidence/snapshots/975252f3ddff135bc5d4ff5595ebedab5eaa65b06694fe5241970a0492f1a9b8.json",
+  "currentProjectionHash": "975252f3ddff135bc5d4ff5595ebedab5eaa65b06694fe5241970a0492f1a9b8",
+  "complete": false,
+  "declaredArtifacts": [
+    {
+      "path": "scripts/download.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "scripts/download.test.mjs",
+      "kind": "file"
+    }
+  ],
+  "changes": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "kind": "modified",
+      "before": {
+        "hash": "9460b56a0bf4eea393d9fdbabc8d6d3d892e67049bb479c456cb37b39f602a36",
+        "size": 2321
+      },
+      "after": {
+        "hash": "334088f00c28177d01b952b6796eb1f2a3bfc7f2d938d7b0d56cbd1a801deb74",
+        "size": 3346
+      },
+      "attributedTo": []
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "kind": "modified",
+      "before": {
+        "hash": "cb7e090bbc75ce34346b3178a86c22f395223b61750359b0cd6461c2fffefbd1",
+        "size": 4328
+      },
+      "after": {
+        "hash": "0c981127e0878b769eee1b7faa9eebe40772d2e23af9bc98279553060813d43f",
+        "size": 5942
+      },
+      "attributedTo": []
+    },
+    {
+      "path": ".gitignore",
+      "kind": "modified",
+      "before": {
+        "hash": "a2470b40bee178a478812d61f48a5a3e28349de36740bab9d4465b9287794b1c",
+        "size": 148
+      },
+      "after": {
+        "hash": "63c72482d1edcfd26faab03e9de54ee541ff4963b7d5d6b805b199a755bdf852",
+        "size": 185
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "README.md",
+      "kind": "modified",
+      "before": {
+        "hash": "dfdc6f2f4846396cb4bc0fdfcad1e617dc735912ddc6eae244b44958e2b1d66f",
+        "size": 7764
+      },
+      "after": {
+        "hash": "a3d4fe315c1c15a5b35b6173b7d6feb056ed86d9401dabf4ec941986cbdd4710",
+        "size": 8470
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "README.zh-CN.md",
+      "kind": "modified",
+      "before": {
+        "hash": "c9fdc1bde715c4c2aaf0ee9fffc7395dac8d0c95ebb386146ba8045c1c171ffd",
+        "size": 7594
+      },
+      "after": {
+        "hash": "32834af1c96395dd7464ee6859eaef7fc5a6908638c4a0378641ac58ce8b7eda",
+        "size": 8327
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "bin/run.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "ae36a492de64548d2372b9988f1be66ec252c12be23b3e877f4c8863595eb9a4",
+        "size": 800
+      },
+      "after": {
+        "hash": "8c1296dccb508c47c0051e60768f495305536726ce2f61589dc41e3b54a7ae39",
+        "size": 944
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/app/lifecycle.go",
+      "kind": "modified",
+      "before": {
+        "hash": "b0e89797ee36d5fe174f3eed0d41dce7fd649834614e011c029a89b6605c98be",
+        "size": 12200
+      },
+      "after": {
+        "hash": "72fde14e71dc9c1cecef70848a2c5cfea697d5c4fd674ad54ab60f74e39bb60d",
+        "size": 13837
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/app/root_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "d1ce2ba1df2567bc37e197a0caf1f52ae6001eabe745c15f09722785a6357d12",
+        "size": 5070
+      },
+      "after": {
+        "hash": "bb132d33cbd587082081256576a16fa00bf759c0ce33efe51e9749bb08e9525e",
+        "size": 6029
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/app/wowdoc.go",
+      "kind": "modified",
+      "before": {
+        "hash": "eebe50c85ef4d0b116ba443e7d9e618cf3892b3c38b2dfdfbe6494cfafa836ef",
+        "size": 13829
+      },
+      "after": {
+        "hash": "9aebc42a7f0315cc67c92245524c27db43c376b04774195e0dd211595060dcc2",
+        "size": 14393
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/gitstore/git.go",
+      "kind": "modified",
+      "before": {
+        "hash": "181619184798002bc30d04ad749dc0988f5b705596f733cbffcc5a9b3dbbdf17",
+        "size": 15366
+      },
+      "after": {
+        "hash": "0b5beecf7ac70ee7afbab19376cd338108c3e22371526fb6a5367f48e1e1eefc",
+        "size": 24583
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/gitstore/git_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "1990c308ffa8c606290b33307c3d405133d9bb05b7f0c48d9d14ccfa809c8032",
+        "size": 8311
+      },
+      "after": {
+        "hash": "58d64fa6b2ff43d114f71bd531350e2bf1e23c21d97561671370d4990c3fc50d",
+        "size": 10360
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "package-lock.json",
+      "kind": "modified",
+      "before": {
+        "hash": "3bb757f47d2805955b7ea62db40425ce4df702d315b9a4511aef188752394412",
+        "size": 365
+      },
+      "after": {
+        "hash": "1f29d37df0d6e635c3295e3d99315155a66f4e89f54c2e4993ab686d1cfce463",
+        "size": 656
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "package.json",
+      "kind": "modified",
+      "before": {
+        "hash": "37f839a2db1903d41721f8179c9f6a48eef497eddb9eaa3a07fe6a8a021734fd",
+        "size": 681
+      },
+      "after": {
+        "hash": "6fa73a96bdda537ecc6e34b36fccdfd79ca7811aae489a1ad30bb56f1ff3b604",
+        "size": 1124
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-darwin-arm64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2030ad1242d602d7e9cde6bbceb0cdaad33dac21867f72e5bd18ac316fbfaf3c",
+        "size": 320
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-darwin-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "b0031115555c0b58cdd5b644658496d39d610fd4d44f1a070791e7aa79c2556e",
+        "size": 314
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-linux-arm64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "339dc46cd09225c6f9f818cbae49a5ebf31ee9bbd5633abd2955c027b53abfe3",
+        "size": 318
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-linux-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "e666366a22afea18fccd80d9158119e2d3c9c105570f045cab7b8692551b5dba",
+        "size": 312
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-win32-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2c09849a57e481c5301ae79c622b5f2a95e9ca7b4545e57f2f8f7eef6de846fd",
+        "size": 314
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/check-package.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "b643bf8c9287985c668279275dfe0db555fe945230a91c6d2d71a6692d0bc4e7",
+        "size": 489
+      },
+      "after": {
+        "hash": "265b5af00dcdb7f981678225a85f255e00b03abc2d1edbd9d9df955073e185f1",
+        "size": 1442
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/download.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "8ccbd565bbd2ed278b7df40060252834c06f8481253f540b5b02600510216245",
+        "size": 16038
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/download.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/download.test.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "6c0884bf27a82df1337ae6fcc12f385d0d77023a21f4745ac189a18aea5e150d",
+        "size": 7684
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/download.test.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/install.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "9984357617158d8dae0427bddaca184193859080e98c0fa0f9f6b1c9f1f22016",
+        "size": 3633
+      },
+      "after": {
+        "hash": "d9fe4af5e0af633feee00ae6d004be7cffe31e2c82e99910ea3ab11dd1406bc1",
+        "size": 4559
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/platform.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2087816dc47a0b7c25a6c837e34e8f4b85010fd7b3d830491f8bb2da2571dbb7",
+        "size": 1175
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/prepare-platform-packages.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "fd1e01a097d48cf2198905bb067a874c7816fb5ec5afd88b00e925de05126cdc",
+        "size": 1685
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "skill/references/commands.md",
+      "kind": "modified",
+      "before": {
+        "hash": "287ff34509071fd327e46c88d37ef2e8a979d4334685334906cae69a8de39e0d",
+        "size": 1974
+      },
+      "after": {
+        "hash": "25ca3ab9366b9cdc76bcc6fb3e325a3f6d690d2af46d8f1a491676abc9c4481d",
+        "size": 2271
+      },
+      "attributedTo": []
+    }
+  ],
+  "unattributed": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "kind": "modified",
+      "before": {
+        "hash": "9460b56a0bf4eea393d9fdbabc8d6d3d892e67049bb479c456cb37b39f602a36",
+        "size": 2321
+      },
+      "after": {
+        "hash": "334088f00c28177d01b952b6796eb1f2a3bfc7f2d938d7b0d56cbd1a801deb74",
+        "size": 3346
+      },
+      "attributedTo": []
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "kind": "modified",
+      "before": {
+        "hash": "cb7e090bbc75ce34346b3178a86c22f395223b61750359b0cd6461c2fffefbd1",
+        "size": 4328
+      },
+      "after": {
+        "hash": "0c981127e0878b769eee1b7faa9eebe40772d2e23af9bc98279553060813d43f",
+        "size": 5942
+      },
+      "attributedTo": []
+    },
+    {
+      "path": ".gitignore",
+      "kind": "modified",
+      "before": {
+        "hash": "a2470b40bee178a478812d61f48a5a3e28349de36740bab9d4465b9287794b1c",
+        "size": 148
+      },
+      "after": {
+        "hash": "63c72482d1edcfd26faab03e9de54ee541ff4963b7d5d6b805b199a755bdf852",
+        "size": 185
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "README.md",
+      "kind": "modified",
+      "before": {
+        "hash": "dfdc6f2f4846396cb4bc0fdfcad1e617dc735912ddc6eae244b44958e2b1d66f",
+        "size": 7764
+      },
+      "after": {
+        "hash": "a3d4fe315c1c15a5b35b6173b7d6feb056ed86d9401dabf4ec941986cbdd4710",
+        "size": 8470
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "README.zh-CN.md",
+      "kind": "modified",
+      "before": {
+        "hash": "c9fdc1bde715c4c2aaf0ee9fffc7395dac8d0c95ebb386146ba8045c1c171ffd",
+        "size": 7594
+      },
+      "after": {
+        "hash": "32834af1c96395dd7464ee6859eaef7fc5a6908638c4a0378641ac58ce8b7eda",
+        "size": 8327
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "bin/run.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "ae36a492de64548d2372b9988f1be66ec252c12be23b3e877f4c8863595eb9a4",
+        "size": 800
+      },
+      "after": {
+        "hash": "8c1296dccb508c47c0051e60768f495305536726ce2f61589dc41e3b54a7ae39",
+        "size": 944
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/app/lifecycle.go",
+      "kind": "modified",
+      "before": {
+        "hash": "b0e89797ee36d5fe174f3eed0d41dce7fd649834614e011c029a89b6605c98be",
+        "size": 12200
+      },
+      "after": {
+        "hash": "72fde14e71dc9c1cecef70848a2c5cfea697d5c4fd674ad54ab60f74e39bb60d",
+        "size": 13837
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/app/root_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "d1ce2ba1df2567bc37e197a0caf1f52ae6001eabe745c15f09722785a6357d12",
+        "size": 5070
+      },
+      "after": {
+        "hash": "bb132d33cbd587082081256576a16fa00bf759c0ce33efe51e9749bb08e9525e",
+        "size": 6029
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/app/wowdoc.go",
+      "kind": "modified",
+      "before": {
+        "hash": "eebe50c85ef4d0b116ba443e7d9e618cf3892b3c38b2dfdfbe6494cfafa836ef",
+        "size": 13829
+      },
+      "after": {
+        "hash": "9aebc42a7f0315cc67c92245524c27db43c376b04774195e0dd211595060dcc2",
+        "size": 14393
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/gitstore/git.go",
+      "kind": "modified",
+      "before": {
+        "hash": "181619184798002bc30d04ad749dc0988f5b705596f733cbffcc5a9b3dbbdf17",
+        "size": 15366
+      },
+      "after": {
+        "hash": "0b5beecf7ac70ee7afbab19376cd338108c3e22371526fb6a5367f48e1e1eefc",
+        "size": 24583
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "internal/gitstore/git_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "1990c308ffa8c606290b33307c3d405133d9bb05b7f0c48d9d14ccfa809c8032",
+        "size": 8311
+      },
+      "after": {
+        "hash": "58d64fa6b2ff43d114f71bd531350e2bf1e23c21d97561671370d4990c3fc50d",
+        "size": 10360
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "package-lock.json",
+      "kind": "modified",
+      "before": {
+        "hash": "3bb757f47d2805955b7ea62db40425ce4df702d315b9a4511aef188752394412",
+        "size": 365
+      },
+      "after": {
+        "hash": "1f29d37df0d6e635c3295e3d99315155a66f4e89f54c2e4993ab686d1cfce463",
+        "size": 656
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "package.json",
+      "kind": "modified",
+      "before": {
+        "hash": "37f839a2db1903d41721f8179c9f6a48eef497eddb9eaa3a07fe6a8a021734fd",
+        "size": 681
+      },
+      "after": {
+        "hash": "6fa73a96bdda537ecc6e34b36fccdfd79ca7811aae489a1ad30bb56f1ff3b604",
+        "size": 1124
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-darwin-arm64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2030ad1242d602d7e9cde6bbceb0cdaad33dac21867f72e5bd18ac316fbfaf3c",
+        "size": 320
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-darwin-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "b0031115555c0b58cdd5b644658496d39d610fd4d44f1a070791e7aa79c2556e",
+        "size": 314
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-linux-arm64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "339dc46cd09225c6f9f818cbae49a5ebf31ee9bbd5633abd2955c027b53abfe3",
+        "size": 318
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-linux-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "e666366a22afea18fccd80d9158119e2d3c9c105570f045cab7b8692551b5dba",
+        "size": 312
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "packages/wowdoc-win32-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2c09849a57e481c5301ae79c622b5f2a95e9ca7b4545e57f2f8f7eef6de846fd",
+        "size": 314
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/check-package.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "b643bf8c9287985c668279275dfe0db555fe945230a91c6d2d71a6692d0bc4e7",
+        "size": 489
+      },
+      "after": {
+        "hash": "265b5af00dcdb7f981678225a85f255e00b03abc2d1edbd9d9df955073e185f1",
+        "size": 1442
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/install.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "9984357617158d8dae0427bddaca184193859080e98c0fa0f9f6b1c9f1f22016",
+        "size": 3633
+      },
+      "after": {
+        "hash": "d9fe4af5e0af633feee00ae6d004be7cffe31e2c82e99910ea3ab11dd1406bc1",
+        "size": 4559
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/platform.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2087816dc47a0b7c25a6c837e34e8f4b85010fd7b3d830491f8bb2da2571dbb7",
+        "size": 1175
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "scripts/prepare-platform-packages.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "fd1e01a097d48cf2198905bb067a874c7816fb5ec5afd88b00e925de05126cdc",
+        "size": 1685
+      },
+      "attributedTo": []
+    },
+    {
+      "path": "skill/references/commands.md",
+      "kind": "modified",
+      "before": {
+        "hash": "287ff34509071fd327e46c88d37ef2e8a979d4334685334906cae69a8de39e0d",
+        "size": 1974
+      },
+      "after": {
+        "hash": "25ca3ab9366b9cdc76bcc6fb3e325a3f6d690d2af46d8f1a491676abc9c4481d",
+        "size": 2271
+      },
+      "attributedTo": []
+    }
+  ],
+  "unresolvedScopes": [
+    {
+      "id": "scope:1302f143c59367bae4b33442de8e3def23ada247d7419e52c2d8e5e6ea23e090",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": ".github/workflows/ci.yml",
+      "reason": "Changed path is not covered by a declared artifact: .github/workflows/ci.yml"
+    },
+    {
+      "id": "scope:888eeadfda043210f98b3784bc3cecf1bf6be285c8eb2b2fd3b671018cdfa056",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": ".github/workflows/release.yml",
+      "reason": "Changed path is not covered by a declared artifact: .github/workflows/release.yml"
+    },
+    {
+      "id": "scope:1276cd373712ecbee293ba252f45397ac5b4a58f0c845970c4117fb764957c3a",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": ".gitignore",
+      "reason": "Changed path is not covered by a declared artifact: .gitignore"
+    },
+    {
+      "id": "scope:f68b1b3463c737d6b96bfa9c9d0a8884445eb6de2485aa6ae917e44898b44706",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "README.md",
+      "reason": "Changed path is not covered by a declared artifact: README.md"
+    },
+    {
+      "id": "scope:2f729441e18881a13afe06fa5603a7dd817e3cf476c0ad081bea6a519667e97b",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "README.zh-CN.md",
+      "reason": "Changed path is not covered by a declared artifact: README.zh-CN.md"
+    },
+    {
+      "id": "scope:ee1f9db160d0004b016ee3c41b5668d201b93b0d7db884849fb7ba33f420eed2",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "bin/run.mjs",
+      "reason": "Changed path is not covered by a declared artifact: bin/run.mjs"
+    },
+    {
+      "id": "scope:6ccd973a56a4b491962582b6706df19716bfedcef8748f6636bd312a7bd8b4c7",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "internal/app/lifecycle.go",
+      "reason": "Changed path is not covered by a declared artifact: internal/app/lifecycle.go"
+    },
+    {
+      "id": "scope:b9e279c6a3b19fb839d78f98f9b0a7b0072bcdc3c38683dfbf17e3e13ef1696f",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "internal/app/root_test.go",
+      "reason": "Changed path is not covered by a declared artifact: internal/app/root_test.go"
+    },
+    {
+      "id": "scope:4cfadb0c823c369f42c3da045698e3ac29c1b558f4c278645af583f4e983a0a2",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "internal/app/wowdoc.go",
+      "reason": "Changed path is not covered by a declared artifact: internal/app/wowdoc.go"
+    },
+    {
+      "id": "scope:381af9d8426f6e3e4ebfb77d01740fb99bf816bd85175d70f6a4de06e8b4cfaa",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "internal/gitstore/git.go",
+      "reason": "Changed path is not covered by a declared artifact: internal/gitstore/git.go"
+    },
+    {
+      "id": "scope:d48b074cfd8575cf2bd5852b32eb94da6c8a3a00932236ce5d395a2d9336eb4c",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "internal/gitstore/git_test.go",
+      "reason": "Changed path is not covered by a declared artifact: internal/gitstore/git_test.go"
+    },
+    {
+      "id": "scope:39956a6d1d7580a1750496da5b580f8f478b3ebfaf3e3cd5f0ddab34b77a7957",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "package-lock.json",
+      "reason": "Changed path is not covered by a declared artifact: package-lock.json"
+    },
+    {
+      "id": "scope:1706316644e85b7b05d2ac3199c2aefce064d909a43668934ad342149d7aaf08",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "package.json",
+      "reason": "Changed path is not covered by a declared artifact: package.json"
+    },
+    {
+      "id": "scope:49a1d0ac3846364097155d713961cc4cd271825ade4c993c898190ec9bc52f1e",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "packages/wowdoc-darwin-arm64/package.json",
+      "reason": "Changed path is not covered by a declared artifact: packages/wowdoc-darwin-arm64/package.json"
+    },
+    {
+      "id": "scope:290841570f9bd33477197a53925c6b71b51d22a90989ad1ad5e364f8d852de83",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "packages/wowdoc-darwin-x64/package.json",
+      "reason": "Changed path is not covered by a declared artifact: packages/wowdoc-darwin-x64/package.json"
+    },
+    {
+      "id": "scope:e8bd332f5b69e235006d1fd56143b56c00ae81cbf0d20f2b085d9a56d3c629b8",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "packages/wowdoc-linux-arm64/package.json",
+      "reason": "Changed path is not covered by a declared artifact: packages/wowdoc-linux-arm64/package.json"
+    },
+    {
+      "id": "scope:236e6e7cb415cc56537777d828ac83662c04eac4afdfe88e71dcce20d0aa96a8",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "packages/wowdoc-linux-x64/package.json",
+      "reason": "Changed path is not covered by a declared artifact: packages/wowdoc-linux-x64/package.json"
+    },
+    {
+      "id": "scope:83cbd7da518a9b813e89039698b4ae1527ab386a7b67b7520f81b4811c61327c",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "packages/wowdoc-win32-x64/package.json",
+      "reason": "Changed path is not covered by a declared artifact: packages/wowdoc-win32-x64/package.json"
+    },
+    {
+      "id": "scope:ddb122e3835e45d81d2f3e3f71fe91e944bcfb413b79ea87909844e688dfb90d",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "scripts/check-package.mjs",
+      "reason": "Changed path is not covered by a declared artifact: scripts/check-package.mjs"
+    },
+    {
+      "id": "scope:3626d38fcf321ad75ab32ef18eb727a15d6e0db9d7120a90b57a10e14e1c3764",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "scripts/install.mjs",
+      "reason": "Changed path is not covered by a declared artifact: scripts/install.mjs"
+    },
+    {
+      "id": "scope:cb15a9a9a039b7ed0f3c1242ab76e3c0ba849b510694876947ab8dd53e96ef61",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "scripts/platform.mjs",
+      "reason": "Changed path is not covered by a declared artifact: scripts/platform.mjs"
+    },
+    {
+      "id": "scope:a60346dd62371115cbcd8924e05744619420616c6aaddefb4402cf8fe02a271a",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "scripts/prepare-platform-packages.mjs",
+      "reason": "Changed path is not covered by a declared artifact: scripts/prepare-platform-packages.mjs"
+    },
+    {
+      "id": "scope:6ce7131441dd673ec1c417d4835093bd419a81fcfa2992e10527a1d9e0f48a6a",
+      "kind": "unattributed-change",
+      "source": "implementation-scope",
+      "path": "skill/references/commands.md",
+      "reason": "Changed path is not covered by a declared artifact: skill/references/commands.md"
+    }
+  ],
+  "noCodeReason": null,
+  "scopeHash": "536aa61e53fcd091dd0e37ba9c746270e94466c3117c8ab5826f1e4a727543be"
+}

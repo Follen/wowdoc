@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.transaction.v2",
+  "id": "38e94818-0c49-4a4b-a451-f2174e380974",
+  "kind": "archive",
+  "status": "committed",
+  "change": "restore-single-wowdoc-command",
+  "createdAt": "2026-08-03T07:06:13.100Z",
+  "preflightHash": "40b35fa1a6cd066584a44e05fa5d7c0cbcbcf00708a06c05e508abe26358d3b7",
+  "operations": [
+    {
+      "id": "spec-1-wowdoc-cli",
+      "type": "write",
+      "target": "specs/wowdoc-cli/spec.md",
+      "staged": "runtime/transactions/38e94818-0c49-4a4b-a451-f2174e380974/staged/specs/wowdoc-cli/spec.md",
+      "backup": "runtime/transactions/38e94818-0c49-4a4b-a451-f2174e380974/backups/specs/wowdoc-cli/spec.md",
+      "expectedTargetHash": "341bd10d044e46161aff32d32b4965b347e69465fe01f920ee30abf1a86095fb",
+      "stagedHash": "eccbbd4f4393961a287e7beef2934e4bc253f423bde5eb48f87a5c9b57439ce2"
+    },
+    {
+      "id": "archive-change",
+      "type": "move",
+      "source": "changes/restore-single-wowdoc-command",
+      "target": "archive/2026-08-03-restore-single-wowdoc-command",
+      "expectedSourceHash": "c68112fb0c72b558b4885d2d21b94d1047578b9379157700dcf6059fa670c1ba",
+      "expectedTargetHash": null
+    }
+  ]
+}

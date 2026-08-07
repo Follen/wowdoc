@@ -1,13 +1,16 @@
 package gitstore
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/follenfang/wowdoc/internal/catalog"
 	"github.com/follenfang/wowdoc/internal/home"
@@ -33,9 +36,20 @@ func TestSyncCreatesFullBareMirror(t *testing.T) {
 		Repositories: filepath.Join(root, "home", "repositories"),
 		Locks:        filepath.Join(root, "home", "locks"),
 	}
-	manager := Manager{Layout: layout}
+	staleStaging := filepath.Join(layout.Repositories, ".fixture-sync.git")
+	if err := os.MkdirAll(staleStaging, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(staleStaging, "incomplete"), []byte("fixture"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var progress bytes.Buffer
+	manager := Manager{Layout: layout, Progress: &progress}
 	if err := manager.Sync(context.Background(), catalog.Source{ID: "fixture", Repository: repository}); err != nil {
 		t.Fatalf("Sync() error = %v", err)
+	}
+	if output := progress.String(); !strings.Contains(output, "[fixture] network attempt 1/4") || !strings.Contains(output, "network synchronization complete") {
+		t.Fatalf("progress output = %q", output)
 	}
 
 	mirror := manager.Mirror("fixture")
@@ -45,6 +59,45 @@ func TestSyncCreatesFullBareMirror(t *testing.T) {
 	runGitTest(t, root, "--git-dir", mirror, "cat-file", "-e", "refs/heads/main:Fixture.lua")
 	assertGitConfigMissing(t, mirror, "remote.origin.promisor")
 	assertGitConfigMissing(t, mirror, "remote.origin.partialclonefilter")
+}
+
+func TestRetryableGitClassifiesTransientAndPermanentFailures(t *testing.T) {
+	for _, message := range []string{"connection reset by peer", "fatal: early EOF", "HTTP 503", "network timed out", "TLS handshake timeout", "RPC failed; curl 56 HTTP/2 stream was reset"} {
+		if !retryableGit(errors.New(message)) {
+			t.Fatalf("%q should be retryable", message)
+		}
+	}
+	for _, message := range []string{"authentication failed", "repository not found", "HTTP 404"} {
+		if retryableGit(errors.New(message)) {
+			t.Fatalf("%q should not be retryable", message)
+		}
+	}
+}
+
+func TestNetworkRetriesTransientFailureAndStopsAfterSuccess(t *testing.T) {
+	var progress bytes.Buffer
+	manager := Manager{Progress: &progress}
+	calls := 0
+	output, err := manager.retryNetwork(context.Background(), "fixture", func(context.Context) (string, error) {
+		calls++
+		if calls == 1 {
+			return "", errors.New("connection reset by peer")
+		}
+		return "done", nil
+	}, func(int) time.Duration { return 0 })
+	if err != nil || output != "done" || calls != 2 {
+		t.Fatalf("output=%q calls=%d err=%v", output, calls, err)
+	}
+	if !strings.Contains(progress.String(), "retrying in 0s") {
+		t.Fatalf("progress output = %q", progress.String())
+	}
+}
+
+func TestGitProgressRedactsCredentialURLs(t *testing.T) {
+	got := redactGitText("fatal: https://user:secret@example.invalid/repo.git")
+	if strings.Contains(got, "user:secret") || !strings.Contains(got, "<credentials>@example.invalid") {
+		t.Fatalf("redacted progress = %q", got)
+	}
 }
 
 func TestSyncHydratesExistingPartialMirror(t *testing.T) {

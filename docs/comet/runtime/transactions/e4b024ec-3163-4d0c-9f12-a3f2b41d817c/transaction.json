@@ -1,0 +1,27 @@
+{
+  "schema": "comet.native.transaction.v2",
+  "id": "e4b024ec-3163-4d0c-9f12-a3f2b41d817c",
+  "kind": "archive",
+  "status": "committed",
+  "change": "cli-first-rebuild",
+  "createdAt": "2026-08-02T19:27:26.384Z",
+  "preflightHash": "66467b7584127dbaf53e8006f405a6a32b544bc5e9fc1af9607a18c0a193f2cc",
+  "operations": [
+    {
+      "id": "spec-1-wowdoc-cli",
+      "type": "write",
+      "target": "specs/wowdoc-cli/spec.md",
+      "staged": "runtime/transactions/e4b024ec-3163-4d0c-9f12-a3f2b41d817c/staged/specs/wowdoc-cli/spec.md",
+      "expectedTargetHash": null,
+      "stagedHash": "4161b53a942ab27ba1e3ccf3c0b47b390f06c828777c574be57468db3efc28e7"
+    },
+    {
+      "id": "archive-change",
+      "type": "move",
+      "source": "changes/cli-first-rebuild",
+      "target": "archive/2026-08-02-cli-first-rebuild",
+      "expectedSourceHash": "f0c1a2243d8a578ffbd479f23d63faf39d82913a47a368978efd0163837f374a",
+      "expectedTargetHash": null
+    }
+  ]
+}

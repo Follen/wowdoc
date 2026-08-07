@@ -2,12 +2,14 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { optionalBinary } from "../scripts/platform.mjs";
 
 export function run(name) {
   const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
   const suffix = process.platform === "win32" ? ".exe" : "";
-  const executable = join(packageRoot, "native", name + suffix);
-  if (!existsSync(executable)) {
+  let executable = join(packageRoot, "native", name + suffix);
+  if (!existsSync(executable)) executable = optionalBinary(packageRoot);
+  if (!executable || !existsSync(executable)) {
     process.stderr.write(`${name}: native binary is missing; reinstall @follenfang/wowdoc\n`);
     process.exit(4);
   }

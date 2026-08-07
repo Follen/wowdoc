@@ -148,15 +148,19 @@ func syncSources(parent context.Context, cmd *cobra.Command, sourceID, productID
 	}
 	ctx, cancel := context.WithTimeout(parent, 30*time.Minute)
 	defer cancel()
-	manager := gitstore.Manager{Layout: layout}
-	var synced []map[string]any
+	manager := gitstore.Manager{Layout: layout, Progress: cmd.ErrOrStderr()}
+	var selected []catalog.Source
 	for _, source := range catalog.Sources() {
-		if sourceID != "" && source.ID != sourceID {
-			continue
+		if sourceID == "" || source.ID == sourceID {
+			selected = append(selected, source)
 		}
-		if err = manager.Sync(ctx, source); err != nil {
-			return err
-		}
+	}
+	if len(selected) == 0 {
+		return result.E("source_not_found", "no source/product matched", 2)
+	}
+	succeeded, failures := syncSourcesConcurrent(ctx, manager, selected, 3)
+	var synced []map[string]any
+	for _, source := range succeeded {
 		for _, product := range source.Products {
 			if productID != "" && product.ID != productID && product.Branch != productID {
 				continue
@@ -174,6 +178,12 @@ func syncSources(parent context.Context, cmd *cobra.Command, sourceID, productID
 			}
 			synced = append(synced, map[string]any{"sourceId": source.ID, "product": product.ID, "branch": product.Branch, "resolvedCommit": head, "hotTags": len(tags)})
 		}
+	}
+	if len(failures) > 0 {
+		e := result.E("source_sync_failed", "one or more source mirrors failed to synchronize", 4)
+		e.Details = map[string]any{"synced": synced, "failures": failures, "concurrency": sourceSyncWorkers(3, len(selected))}
+		e.NextSteps = []string{"rerun wowdoc source sync to retry failed source mirrors"}
+		return e
 	}
 	if len(synced) == 0 {
 		return result.E("source_not_found", "no source/product matched", 2)

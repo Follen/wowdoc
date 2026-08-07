@@ -36,6 +36,8 @@ wowdoc doctor
 wowdoc init
 ```
 
+Initialization synchronizes up to three source mirrors concurrently. Git progress is written to stderr with a source ID while stdout remains the JSON result. Transient Git failures are retried, and rerunning the command reuses complete objects, ref batches, repositories, snapshots, and indexes.
+
 Bash or zsh:
 
 ```bash

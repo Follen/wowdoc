@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -25,7 +26,10 @@ import (
 	"github.com/follenfang/wowdoc/internal/store"
 )
 
-type Manager struct{ Layout home.Layout }
+type Manager struct {
+	Layout   home.Layout
+	Progress io.Writer
+}
 type TreeEntry struct {
 	OID, Path string
 	Size      int64
@@ -155,12 +159,23 @@ func (m Manager) Sync(ctx context.Context, source catalog.Source) error {
 		if err := os.MkdirAll(filepath.Dir(mirror), 0o755); err != nil {
 			return err
 		}
-		if _, err := run(ctx, "", "clone", "--mirror", source.Repository, mirror); err != nil {
+		staging := filepath.Join(filepath.Dir(mirror), "."+source.ID+"-sync.git")
+		if err := m.prepareBareStaging(ctx, source, staging); err != nil {
 			return classifyGit(err)
+		}
+		if err := m.syncBareRepository(ctx, source.ID, staging); err != nil {
+			return classifyGit(err)
+		}
+		if _, err := run(ctx, "", "--git-dir", staging, "fsck", "--full", "--no-dangling"); err != nil {
+			return result.E("repository_incomplete", "mirror verification found missing or corrupt objects", 5)
+		}
+		if err := os.Rename(staging, mirror); err != nil {
+			return err
 		}
 	} else if err != nil {
 		return err
 	} else {
+		_ = os.RemoveAll(filepath.Join(filepath.Dir(mirror), "."+source.ID+"-sync.git"))
 		partial := m.isPartialMirror(ctx, source.ID)
 		if partial {
 			return m.replacePartialMirror(ctx, source)
@@ -168,10 +183,60 @@ func (m Manager) Sync(ctx context.Context, source catalog.Source) error {
 		if _, err := run(ctx, "", "--git-dir", mirror, "remote", "set-url", "origin", source.Repository); err != nil {
 			return classifyGit(err)
 		}
-		args := []string{"--git-dir", mirror, "fetch", "--prune", "--force", "--tags", "origin", "+refs/heads/*:refs/heads/*"}
-		if _, err := run(ctx, "", args...); err != nil {
+		if err := m.syncBareRepository(ctx, source.ID, mirror); err != nil {
 			return classifyGit(err)
 		}
+		if _, err := run(ctx, "", "--git-dir", mirror, "fsck", "--full", "--no-dangling"); err != nil {
+			return result.E("repository_incomplete", "mirror verification found missing or corrupt objects", 5)
+		}
+	}
+	return nil
+}
+
+func (m Manager) prepareBareStaging(ctx context.Context, source catalog.Source, staging string) error {
+	if _, err := os.Stat(staging); os.IsNotExist(err) {
+		if err := m.initializeBareStaging(ctx, source, staging); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		bare, bareErr := run(ctx, "", "--git-dir", staging, "rev-parse", "--is-bare-repository")
+		if bareErr != nil || strings.TrimSpace(bare) != "true" {
+			if removeErr := os.RemoveAll(staging); removeErr != nil {
+				return removeErr
+			}
+			if err := m.initializeBareStaging(ctx, source, staging); err != nil {
+				return err
+			}
+		} else {
+			if _, err := run(ctx, "", "--git-dir", staging, "remote", "set-url", "origin", source.Repository); err != nil {
+				return err
+			}
+		}
+	}
+	_, err := run(ctx, "", "--git-dir", staging, "config", "remote.origin.mirror", "true")
+	return err
+}
+
+func (m Manager) initializeBareStaging(ctx context.Context, source catalog.Source, staging string) error {
+	if _, err := run(ctx, "", "init", "--bare", staging); err != nil {
+		return err
+	}
+	if _, err := run(ctx, "", "--git-dir", staging, "remote", "add", "origin", source.Repository); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m Manager) syncBareRepository(ctx context.Context, sourceID, repository string) error {
+	m.progress(sourceID, "fetching branch refs")
+	if _, err := m.network(ctx, sourceID, "--git-dir", repository, "fetch", "--prune", "--force", "origin", "+refs/heads/*:refs/heads/*"); err != nil {
+		return err
+	}
+	m.progress(sourceID, "fetching tag refs")
+	if _, err := m.network(ctx, sourceID, "--git-dir", repository, "fetch", "--prune", "--force", "origin", "+refs/tags/*:refs/tags/*"); err != nil {
+		return err
 	}
 	return nil
 }
@@ -192,12 +257,11 @@ func (m Manager) replacePartialMirror(ctx context.Context, source catalog.Source
 	}
 
 	parent := filepath.Dir(mirror)
-	staging, err := os.MkdirTemp(parent, "."+source.ID+"-full-")
-	if err != nil {
-		return err
+	staging := filepath.Join(parent, "."+source.ID+"-full.git")
+	if err := m.prepareBareStaging(ctx, source, staging); err != nil {
+		return classifyGit(err)
 	}
-	defer os.RemoveAll(staging)
-	if _, err := run(ctx, "", "clone", "--mirror", source.Repository, staging); err != nil {
+	if err := m.syncBareRepository(ctx, source.ID, staging); err != nil {
 		return classifyGit(err)
 	}
 	if _, err := run(ctx, "", "--git-dir", staging, "fsck", "--full", "--no-dangling"); err != nil {
@@ -420,6 +484,165 @@ func runBytes(ctx context.Context, dir string, args ...string) ([]byte, error) {
 	return out, nil
 }
 
+const gitNetworkAttempts = 4
+
+var gitProgressMu sync.Mutex
+
+func (m Manager) network(ctx context.Context, sourceID string, args ...string) (string, error) {
+	return m.retryNetwork(ctx, sourceID, func(attemptCtx context.Context) (string, error) {
+		return m.networkOnce(attemptCtx, sourceID, args...)
+	}, func(attempt int) time.Duration {
+		return time.Second * time.Duration(1<<(attempt-1))
+	})
+}
+
+func (m Manager) retryNetwork(ctx context.Context, sourceID string, runAttempt func(context.Context) (string, error), retryDelay func(int) time.Duration) (string, error) {
+	var last error
+	started := time.Now()
+	for attempt := 1; attempt <= gitNetworkAttempts; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
+		m.progress(sourceID, fmt.Sprintf("network attempt %d/%d", attempt, gitNetworkAttempts))
+		attemptCtx, cancel := context.WithTimeout(ctx, 20*time.Minute)
+		out, err := runAttempt(attemptCtx)
+		attemptErr := attemptCtx.Err()
+		cancel()
+		if err == nil {
+			m.progress(sourceID, fmt.Sprintf("network synchronization complete in %s", time.Since(started).Round(time.Millisecond)))
+			return out, nil
+		}
+		if errors.Is(ctx.Err(), context.Canceled) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return "", ctx.Err()
+		}
+		if errors.Is(attemptErr, context.DeadlineExceeded) {
+			err = fmt.Errorf("network timed out: %w", err)
+		}
+		last = err
+		if attempt == gitNetworkAttempts || !retryableGit(err) {
+			break
+		}
+		wait := retryDelay(attempt)
+		m.progress(sourceID, fmt.Sprintf("retrying in %s after %s", wait, summarizeGitError(err)))
+		timer := time.NewTimer(wait)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return "", ctx.Err()
+		case <-timer.C:
+		}
+	}
+	return "", last
+}
+
+func (m Manager) networkOnce(ctx context.Context, sourceID string, args ...string) (string, error) {
+	gitArgs := append([]string(nil), args...)
+	for i, arg := range gitArgs {
+		if arg == "fetch" || arg == "clone" {
+			gitArgs = append(gitArgs[:i+1], append([]string{"--progress"}, gitArgs[i+1:]...)...)
+			break
+		}
+	}
+	cmd := exec.CommandContext(ctx, "git", gitArgs...)
+	cmd.Env = gitEnvironment(ctx)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	pipe, err := cmd.StderrPipe()
+	if err != nil {
+		return "", err
+	}
+	if err = cmd.Start(); err != nil {
+		return "", err
+	}
+	done := make(chan struct{})
+	go func() {
+		readGitProgress(pipe, sourceID, m.Progress, &stderr)
+		close(done)
+	}()
+	err = cmd.Wait()
+	<-done
+	if err != nil {
+		return "", fmt.Errorf("git network: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+	return stdout.String(), nil
+}
+
+func readGitProgress(reader io.Reader, sourceID string, output io.Writer, raw *bytes.Buffer) {
+	buffer := make([]byte, 32*1024)
+	line := make([]byte, 0, 512)
+	last := time.Time{}
+	flush := func(force bool) {
+		text := strings.TrimSpace(string(line))
+		line = line[:0]
+		if text == "" || output == nil {
+			return
+		}
+		now := time.Now()
+		if !force && !strings.Contains(text, "100%") && now.Sub(last) < 500*time.Millisecond && strings.Contains(text, "%") {
+			return
+		}
+		last = now
+		gitProgressMu.Lock()
+		fmt.Fprintf(output, "wowdoc: [%s] %s\n", sourceID, redactGitText(text))
+		gitProgressMu.Unlock()
+	}
+	for {
+		n, err := reader.Read(buffer)
+		if n > 0 {
+			raw.Write(buffer[:n])
+			for _, value := range buffer[:n] {
+				if value == '\r' || value == '\n' {
+					flush(false)
+					continue
+				}
+				if len(line) < 16*1024 {
+					line = append(line, value)
+				}
+			}
+		}
+		if err != nil {
+			flush(true)
+			return
+		}
+	}
+}
+
+func (m Manager) progress(sourceID, message string) {
+	if m.Progress == nil {
+		return
+	}
+	gitProgressMu.Lock()
+	fmt.Fprintf(m.Progress, "wowdoc: [%s] %s\n", sourceID, redactGitText(message))
+	gitProgressMu.Unlock()
+}
+
+func retryableGit(err error) bool {
+	text := strings.ToLower(err.Error())
+	if strings.Contains(text, "authentication") || strings.Contains(text, "401") || strings.Contains(text, "403") || strings.Contains(text, "404") || strings.Contains(text, "not found") || strings.Contains(text, "repository_incomplete") {
+		return false
+	}
+	for _, marker := range []string{"timed out", "timeout", "operation too slow", "could not resolve host", "connection reset", "connection was reset", "early eof", "remote end hung up", "connection refused", "rpc failed", "curl 18", "curl 28", "curl 52", "curl 56", "http/2 stream", "network", "http 408", "http 429", "http 500", "http 502", "http 503", "http 504", "tls"} {
+		if strings.Contains(text, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func summarizeGitError(err error) string {
+	text := redactGitText(strings.TrimSpace(err.Error()))
+	if len(text) > 240 {
+		return text[:240] + "..."
+	}
+	return text
+}
+
+var credentialURL = regexp.MustCompile(`(?i)(https?://)[^/@\s]+@`)
+
+func redactGitText(text string) string {
+	return credentialURL.ReplaceAllString(text, `${1}<credentials>@`)
+}
+
 var ghTokenOnce sync.Once
 var cachedGHToken string
 
@@ -441,6 +664,12 @@ func gitEnvironment(ctx context.Context) []string {
 		})
 		token = cachedGHToken
 	}
+	env = append(env,
+		"GIT_TERMINAL_PROMPT=0",
+		"GCM_INTERACTIVE=Never",
+		"GIT_HTTP_LOW_SPEED_LIMIT=1024",
+		"GIT_HTTP_LOW_SPEED_TIME=45",
+	)
 	if token == "" {
 		return env
 	}
@@ -452,20 +681,36 @@ func gitEnvironment(ctx context.Context) []string {
 	)
 }
 func classifyGit(err error) error {
-	s := strings.ToLower(err.Error())
+	message := redactGitText(err.Error())
+	s := strings.ToLower(message)
+	makeError := func(code string, steps ...string) error {
+		e := result.E(code, message, 4)
+		e.NextSteps = steps
+		return e
+	}
 	switch {
+	case errors.Is(err, context.Canceled) || strings.Contains(s, "context canceled"):
+		return makeError("operation_cancelled", "rerun the same wowdoc command to continue from verified checkpoints")
 	case strings.Contains(s, "authentication") || strings.Contains(s, "401"):
-		return result.E("github_auth_failed", err.Error(), 4)
+		return makeError("github_auth_failed", "verify GH_TOKEN, GITHUB_TOKEN, or gh auth status", "rerun the same wowdoc command")
 	case strings.Contains(s, "403") || strings.Contains(s, "rate limit"):
-		return result.E("github_rate_limited", err.Error(), 4)
+		return makeError("github_rate_limited", "wait for the GitHub rate limit to reset or authenticate with gh", "rerun the same wowdoc command")
 	case strings.Contains(s, "not found") || strings.Contains(s, "404"):
-		return result.E("repository_not_found", err.Error(), 4)
+		return makeError("repository_not_found", "verify the source repository URL and access")
 	case strings.Contains(s, "could not resolve host"):
-		return result.E("dns_failed", err.Error(), 4)
-	case strings.Contains(s, "timed out"):
-		return result.E("network_timeout", err.Error(), 4)
+		return makeError("dns_failed", "check DNS and proxy settings", "rerun the same wowdoc command")
+	case strings.Contains(s, "proxy"):
+		return makeError("proxy_failed", "check HTTPS_PROXY, HTTP_PROXY, NO_PROXY, and Git proxy configuration", "rerun the same wowdoc command")
+	case strings.Contains(s, "certificate") || strings.Contains(s, "ssl") || strings.Contains(s, "tls"):
+		return makeError("tls_failed", "check the system clock, certificate store, and TLS-inspecting proxy", "rerun the same wowdoc command")
+	case strings.Contains(s, "timed out") || strings.Contains(s, "timeout") || strings.Contains(s, "operation too slow"):
+		return makeError("network_timeout", "check network stability and proxy settings", "rerun the same wowdoc command to continue from verified checkpoints")
+	case strings.Contains(s, "connection reset") || strings.Contains(s, "connection refused") || strings.Contains(s, "early eof") || strings.Contains(s, "remote end hung up") || strings.Contains(s, "failed to connect"):
+		return makeError("network_unavailable", "check network connectivity and proxy settings", "rerun the same wowdoc command to continue from verified checkpoints")
+	case strings.Contains(s, "no space left") || strings.Contains(s, "disk full"):
+		return makeError("disk_full", "free disk space in WOWDOC_HOME", "rerun the same wowdoc command")
 	default:
-		return result.E("git_failed", err.Error(), 4)
+		return makeError("git_failed", "inspect the prefixed Git progress above", "rerun the same wowdoc command")
 	}
 }
 

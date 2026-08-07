@@ -26,6 +26,7 @@ jobs:
           node-version: "22"
           cache: npm
       - run: go test ./...
+      - run: npm run test:node
       - name: Build CLI
         shell: bash
         run: |
@@ -37,12 +38,29 @@ jobs:
           go build -trimpath -ldflags "$ldflags" -o "dist/wowdoc${suffix}" ./cmd/wowdoc
       - name: Pack npm
         shell: bash
-        run: npm pack --ignore-scripts
+        run: |
+          case "${{ runner.os }}-${{ runner.arch }}" in
+            Linux-X64) package=wowdoc-linux-x64 ;;
+            Linux-ARM64) package=wowdoc-linux-arm64 ;;
+            Windows-X64) package=wowdoc-win32-x64 ;;
+            macOS-X64) package=wowdoc-darwin-x64 ;;
+            macOS-ARM64) package=wowdoc-darwin-arm64 ;;
+            *) echo "unsupported runner ${{ runner.os }}-${{ runner.arch }}" >&2; exit 1 ;;
+          esac
+          export WOWDOC_PLATFORM_PACKAGE="$package"
+          case "$package" in
+            wowdoc-win32-x64) cp dist/wowdoc.exe dist/wowdoc-windows-amd64.exe ;;
+            wowdoc-linux-x64) cp dist/wowdoc dist/wowdoc-linux-amd64 ;;
+            wowdoc-linux-arm64) cp dist/wowdoc dist/wowdoc-linux-arm64 ;;
+            wowdoc-darwin-x64) cp dist/wowdoc dist/wowdoc-darwin-amd64 ;;
+            wowdoc-darwin-arm64) cp dist/wowdoc dist/wowdoc-darwin-arm64 ;;
+          esac
+          node scripts/prepare-platform-packages.mjs
+          npm pack "./packages/$package" --pack-destination dist
+          npm pack --ignore-scripts
       - name: Install packed npm package
         shell: bash
-        env:
-          WOWDOC_BINARY_DIR: ${{ github.workspace }}/dist
-        run: npm install -g ./follenfang-wowdoc-*.tgz
+        run: npm install -g ./dist/follenfang-wowdoc-*.tgz ./follenfang-wowdoc-*.tgz
       - name: Run installed commands
         shell: bash
         env:

@@ -1,0 +1,11 @@
+{
+  "schema": "comet.native.archive-cas.v1",
+  "operationId": "spec-1-wowdoc-cli",
+  "role": "post",
+  "hash": "eccbbd4f4393961a287e7beef2934e4bc253f423bde5eb48f87a5c9b57439ce2",
+  "identity": {
+    "dev": 2421791372,
+    "ino": 1688849860272049,
+    "birthtimeMs": 1785740774767.5735
+  }
+}

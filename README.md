@@ -36,7 +36,13 @@ The npm package installs:
 - one executable: `wowdoc`
 - one user-level Skill: `~/.agents/skills/wowdoc`
 
-`wowdoc init` creates `~/.wowdoc`, downloads the configured bare Git mirrors, and builds the searchable snapshots. The operation is resumable; rerun the same command after a network or process interruption.
+The native executable comes from an npm platform package first, so proxy handling, caching, retries, and package integrity stay with npm. If that package is unavailable, the installer falls back to the matching GitHub Release, reports byte progress, verifies `SHA256SUMS`, resumes a managed `.part` file with HTTP Range, and stops after bounded timeouts and retries. To expose complete lifecycle logs, use:
+
+```powershell
+npm install -g @follenfang/wowdoc --foreground-scripts --verbose
+```
+
+`wowdoc init` creates `~/.wowdoc`, downloads the configured bare Git mirrors, and builds the searchable snapshots. Up to three source mirrors synchronize concurrently, every Git progress line carries a source ID, and transient network errors are retried. Reruns reuse complete Git objects, ref batches, repositories, snapshots, and indexes. An unfinished individual Git pack may be transferred again on the next attempt.
 
 > Git missing? `wowdoc init` detects the platform package manager, shows the command it will run, installs Git, refreshes `PATH`, and verifies `git --version`. `wowdoc doctor` only reports state and never changes it.
 

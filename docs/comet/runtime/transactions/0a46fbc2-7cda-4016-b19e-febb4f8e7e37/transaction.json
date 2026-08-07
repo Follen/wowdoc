@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.transaction.v2",
+  "id": "0a46fbc2-7cda-4016-b19e-febb4f8e7e37",
+  "kind": "archive",
+  "status": "committed",
+  "change": "harden-download-pipelines",
+  "createdAt": "2026-08-04T16:23:47.376Z",
+  "preflightHash": "d3a2a6e665d4a6800074e2296e8156597dac12006582e49aa8cadeac2867bb1d",
+  "operations": [
+    {
+      "id": "spec-1-wowdoc-cli",
+      "type": "write",
+      "target": "specs/wowdoc-cli/spec.md",
+      "staged": "runtime/transactions/0a46fbc2-7cda-4016-b19e-febb4f8e7e37/staged/specs/wowdoc-cli/spec.md",
+      "backup": "runtime/transactions/0a46fbc2-7cda-4016-b19e-febb4f8e7e37/backups/specs/wowdoc-cli/spec.md",
+      "expectedTargetHash": "c4acc231206bade4b1c7f3049852a1c5fa3878f65f0d65c05ce3fd8d7910fcec",
+      "stagedHash": "a29215954f6e3c631e4a4477ff767f2729bff600dab72f0466320c728f7c0ead"
+    },
+    {
+      "id": "archive-change",
+      "type": "move",
+      "source": "changes/harden-download-pipelines",
+      "target": "archive/2026-08-04-harden-download-pipelines",
+      "expectedSourceHash": "1c544a4cb40391e322fdc5e32a63f1f2771be7bab5248125cbb155e544ccef85",
+      "expectedTargetHash": null
+    }
+  ]
+}

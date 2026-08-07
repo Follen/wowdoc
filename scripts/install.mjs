@@ -1,40 +1,46 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { downloadRelease } from "./download.mjs";
+import { optionalBinary, platformKey } from "./platform.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 const suffix = process.platform === "win32" ? ".exe" : "";
-const platformNames = {
-  "linux-x64": "linux-amd64",
-  "linux-arm64": "linux-arm64",
-  "win32-x64": "windows-amd64",
-  "darwin-x64": "darwin-amd64",
-  "darwin-arm64": "darwin-arm64",
-};
-const platform = platformNames[`${process.platform}-${process.arch}`];
-if (!platform) throw new Error(`unsupported_platform: ${process.platform}-${process.arch}`);
+platformKey();
 const nativeDir = join(root, "native");
 mkdirSync(nativeDir, { recursive: true });
 
 const name = "wowdoc";
 const target = join(nativeDir, name + suffix);
 const supplied = process.env.WOWDOC_BINARY_DIR && join(process.env.WOWDOC_BINARY_DIR, name + suffix);
+const packaged = optionalBinary(root);
 if (supplied && existsSync(supplied)) {
-  cpSync(supplied, target);
+  process.stderr.write(`wowdoc: using supplied ${platformKey()} binary\n`);
+  installBinary(supplied, target);
 } else if (existsSync(join(root, "go.mod"))) {
-  execFileSync("go", ["build", "-trimpath", "-ldflags", `-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${pkg.version}`, "-o", target, `./cmd/${name}`], { cwd: root, stdio: "inherit" });
+  process.stderr.write(`wowdoc: building ${platformKey()} binary from source\n`);
+  const built = `${target}.build-${process.pid}`;
+  execFileSync("go", ["build", "-trimpath", "-ldflags", `-s -w -X github.com/follenfang/wowdoc/internal/app.Version=${pkg.version}`, "-o", built, `./cmd/${name}`], { cwd: root, stdio: "inherit" });
+  installBinary(built, target);
+  rmSync(built, { force: true });
+} else if (packaged && existsSync(packaged)) {
+  process.stderr.write(`wowdoc: using verified ${platformKey()} platform package\n`);
+  installBinary(packaged, target);
 } else {
-  const asset = `${name}-${platform}${suffix}`;
-  const url = `https://github.com/Follen/wowdoc/releases/download/v${pkg.version}/${asset}`;
-  const response = await fetch(url, { redirect: "follow" });
-  if (!response.ok) throw new Error(`binary_download_failed: ${response.status} ${url}`);
-  writeFileSync(target, Buffer.from(await response.arrayBuffer()));
+  process.stderr.write(`wowdoc: platform package unavailable; downloading verified GitHub Release fallback\n`);
+  try {
+    const downloaded = await downloadRelease({ version: pkg.version, root, stderr: process.stderr });
+    installBinary(downloaded, target);
+  } catch (error) {
+    process.stderr.write(`wowdoc: binary download failed after bounded retries: ${error.message}\n`);
+    process.stderr.write(`wowdoc: retry npm install with --foreground-scripts --verbose after checking npm and GitHub connectivity\n`);
+    throw error;
+  }
 }
-if (process.platform !== "win32") chmodSync(target, 0o755);
 
 const skillSource = join(root, "skill");
 const skillTarget = join(homedir(), ".agents", "skills", "wowdoc");
@@ -70,6 +76,22 @@ function files(directory) {
   return output;
 }
 function hash(buffer) { return createHash("sha256").update(buffer).digest("hex"); }
+function installBinary(source, destination) {
+  const temporary = `${destination}.tmp-${process.pid}`;
+  rmSync(temporary, { force: true });
+  try {
+    cpSync(source, temporary);
+    if (process.platform !== "win32") chmodSync(temporary, 0o755);
+    try { renameSync(temporary, destination); }
+    catch (error) {
+      if (error.code !== "EEXIST" && error.code !== "EPERM") throw error;
+      rmSync(destination, { force: true });
+      renameSync(temporary, destination);
+    }
+  } finally {
+    rmSync(temporary, { force: true });
+  }
+}
 function writeManifest(target, sourceFiles) {
   const mapped = {};
   for (const source of sourceFiles) mapped[relative(skillSource, source).replaceAll("\\", "/")] = hash(readFileSync(source));

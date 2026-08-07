@@ -5,7 +5,8 @@ dist/
 /analyze/
 .local/
 .codegraph/
-docs/comet/runtime/transactions/
 /native/
+/packages/*/bin/
+/packages/*/LICENSE
 /*.tgz
 /package-files.txt

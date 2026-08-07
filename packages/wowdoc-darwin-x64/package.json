@@ -1,0 +1,19 @@
+{
+  "name": "@follenfang/wowdoc-darwin-x64",
+  "version": "0.0.7",
+  "description": "wowdoc native binary for macOS x64",
+  "license": "MIT",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Follen/wowdoc"
+  }
+}

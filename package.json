@@ -13,14 +13,25 @@
   },
   "files": [
     "bin/",
-    "scripts/",
+    "scripts/download.mjs",
+    "scripts/install.mjs",
+    "scripts/platform.mjs",
     "skill/",
     "README.md",
     "LICENSE"
   ],
+  "optionalDependencies": {
+    "@follenfang/wowdoc-darwin-arm64": "0.0.7",
+    "@follenfang/wowdoc-darwin-x64": "0.0.7",
+    "@follenfang/wowdoc-linux-arm64": "0.0.7",
+    "@follenfang/wowdoc-linux-x64": "0.0.7",
+    "@follenfang/wowdoc-win32-x64": "0.0.7"
+  },
   "scripts": {
     "postinstall": "node scripts/install.mjs",
-    "test": "go test ./...",
+    "test": "npm run test:node && npm run test:go",
+    "test:node": "node --test scripts/download.test.mjs",
+    "test:go": "go test ./...",
     "prepack": "node scripts/check-package.mjs"
   },
   "engines": {

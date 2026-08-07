@@ -1,0 +1,8 @@
+{"sequence":1,"timestamp":"2026-08-03T06:17:58.365Z","type":"prepared"}
+{"sequence":2,"timestamp":"2026-08-03T06:17:59.531Z","type":"operation-started","operationId":"spec-1-wowdoc-cli"}
+{"sequence":3,"timestamp":"2026-08-03T06:17:59.796Z","type":"operation-completed","operationId":"spec-1-wowdoc-cli"}
+{"sequence":4,"timestamp":"2026-08-03T06:18:00.925Z","type":"operation-started","operationId":"archive-change"}
+{"sequence":5,"timestamp":"2026-08-03T06:18:01.453Z","type":"operation-completed","operationId":"archive-change"}
+{"sequence":6,"timestamp":"2026-08-03T06:18:01.744Z","type":"archive-finalization-started"}
+{"sequence":7,"timestamp":"2026-08-03T06:18:01.823Z","type":"archive-finalized"}
+{"sequence":8,"timestamp":"2026-08-03T06:18:01.892Z","type":"commit"}

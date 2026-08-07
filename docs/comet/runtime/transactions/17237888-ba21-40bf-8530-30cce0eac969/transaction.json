@@ -1,0 +1,28 @@
+{
+  "schema": "comet.native.transaction.v2",
+  "id": "17237888-ba21-40bf-8530-30cce0eac969",
+  "kind": "archive",
+  "status": "committed",
+  "change": "content-addressed-snapshots",
+  "createdAt": "2026-08-03T06:17:56.714Z",
+  "preflightHash": "4e131d06d12f32523a3d8c0dc975b85a16d493e632a290fc7b651b5ba6820659",
+  "operations": [
+    {
+      "id": "spec-1-wowdoc-cli",
+      "type": "write",
+      "target": "specs/wowdoc-cli/spec.md",
+      "staged": "runtime/transactions/17237888-ba21-40bf-8530-30cce0eac969/staged/specs/wowdoc-cli/spec.md",
+      "backup": "runtime/transactions/17237888-ba21-40bf-8530-30cce0eac969/backups/specs/wowdoc-cli/spec.md",
+      "expectedTargetHash": "02a2e4340a1f86b3789b1d1046a4e054c6d97b529fd7252b514790c0f0b98a83",
+      "stagedHash": "341bd10d044e46161aff32d32b4965b347e69465fe01f920ee30abf1a86095fb"
+    },
+    {
+      "id": "archive-change",
+      "type": "move",
+      "source": "changes/content-addressed-snapshots",
+      "target": "archive/2026-08-03-content-addressed-snapshots",
+      "expectedSourceHash": "885bc83d5da614904bace543a33c4b1b0b172c30cc45f25db537f0d6d0b0ec9a",
+      "expectedTargetHash": null
+    }
+  ]
+}

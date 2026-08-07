@@ -36,7 +36,13 @@ npm 包会安装：
 - 一个可执行命令：`wowdoc`
 - 一个用户级 Skill：`~/.agents/skills/wowdoc`
 
-`wowdoc init` 会创建 `~/.wowdoc`，下载配置好的 bare Git mirror，并构建可查询的源码快照。初始化支持断点续跑；网络或进程中断后，重新执行同一个命令即可继续。
+当前平台的原生程序优先由 npm 平台包提供，因此代理、缓存、重试和包完整性都沿用 npm。平台包不可用时，安装器才回退到同版本 GitHub Release；回退下载会显示字节进度，校验 `SHA256SUMS`，使用 `.part` 与 HTTP Range 续传，并在有界超时和重试后给出明确失败原因。需要查看完整 lifecycle 日志时使用：
+
+```powershell
+npm install -g @follenfang/wowdoc --foreground-scripts --verbose
+```
+
+`wowdoc init` 会创建 `~/.wowdoc`，下载配置好的 bare Git mirror，并构建可查询的源码快照。最多三个 source mirror 并发同步，每条 Git 进度都带 source ID；瞬时网络错误会自动重试。初始化按已完整接收的 Git 对象、ref 批次、repository、snapshot 和索引续跑；网络或进程中断后，重新执行同一个命令即可继续。单个尚未完成的 Git pack 可能在下一次尝试中重新传输。
 
 > 本机没有 Git 时，`wowdoc init` 会识别系统包管理器，显示即将执行的命令，安装 Git，刷新 `PATH`，最后执行 `git --version` 验证。`wowdoc doctor` 只检查状态，不修改系统。
 

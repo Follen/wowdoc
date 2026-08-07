@@ -1,0 +1,540 @@
+{
+  "schema": "comet.native.implementation-scope.v2",
+  "contractHash": "4ba6e211c7844b18e1a0b7c6573a8f6ce1a0ecb5c6901a302ca6f9c78484cd69",
+  "baselineProjectionRef": "runtime/evidence/snapshots/6786e3584efbbe50272930c5992066619b10f515753d3aac41e0977cf6a54117.json",
+  "baselineProjectionHash": "6786e3584efbbe50272930c5992066619b10f515753d3aac41e0977cf6a54117",
+  "currentProjectionRef": "runtime/evidence/snapshots/8bce6315e0feb469ec8e000fe09201e286d3f7a3c5f9dc11df57c224227eb128.json",
+  "currentProjectionHash": "8bce6315e0feb469ec8e000fe09201e286d3f7a3c5f9dc11df57c224227eb128",
+  "complete": true,
+  "declaredArtifacts": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "kind": "file"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "kind": "file"
+    },
+    {
+      "path": ".gitignore",
+      "kind": "file"
+    },
+    {
+      "path": "README.md",
+      "kind": "file"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "kind": "file"
+    },
+    {
+      "path": "bin/run.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "internal/app/lifecycle.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/app/root_test.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/app/wowdoc.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/gitstore/git.go",
+      "kind": "file"
+    },
+    {
+      "path": "internal/gitstore/git_test.go",
+      "kind": "file"
+    },
+    {
+      "path": "package-lock.json",
+      "kind": "file"
+    },
+    {
+      "path": "package.json",
+      "kind": "file"
+    },
+    {
+      "path": "packages/wowdoc-darwin-arm64/package.json",
+      "kind": "file"
+    },
+    {
+      "path": "packages/wowdoc-darwin-x64/package.json",
+      "kind": "file"
+    },
+    {
+      "path": "packages/wowdoc-linux-arm64/package.json",
+      "kind": "file"
+    },
+    {
+      "path": "packages/wowdoc-linux-x64/package.json",
+      "kind": "file"
+    },
+    {
+      "path": "packages/wowdoc-win32-x64/package.json",
+      "kind": "file"
+    },
+    {
+      "path": "scripts/check-package.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "scripts/download.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "scripts/download.test.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "scripts/install.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "scripts/platform.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "scripts/prepare-platform-packages.mjs",
+      "kind": "file"
+    },
+    {
+      "path": "skill/references/commands.md",
+      "kind": "file"
+    }
+  ],
+  "changes": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "kind": "modified",
+      "before": {
+        "hash": "9460b56a0bf4eea393d9fdbabc8d6d3d892e67049bb479c456cb37b39f602a36",
+        "size": 2321
+      },
+      "after": {
+        "hash": "334088f00c28177d01b952b6796eb1f2a3bfc7f2d938d7b0d56cbd1a801deb74",
+        "size": 3346
+      },
+      "attributedTo": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "kind": "modified",
+      "before": {
+        "hash": "cb7e090bbc75ce34346b3178a86c22f395223b61750359b0cd6461c2fffefbd1",
+        "size": 4328
+      },
+      "after": {
+        "hash": "0c981127e0878b769eee1b7faa9eebe40772d2e23af9bc98279553060813d43f",
+        "size": 5942
+      },
+      "attributedTo": [
+        {
+          "path": ".github/workflows/release.yml",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": ".gitignore",
+      "kind": "modified",
+      "before": {
+        "hash": "a2470b40bee178a478812d61f48a5a3e28349de36740bab9d4465b9287794b1c",
+        "size": 148
+      },
+      "after": {
+        "hash": "63c72482d1edcfd26faab03e9de54ee541ff4963b7d5d6b805b199a755bdf852",
+        "size": 185
+      },
+      "attributedTo": [
+        {
+          "path": ".gitignore",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "README.md",
+      "kind": "modified",
+      "before": {
+        "hash": "dfdc6f2f4846396cb4bc0fdfcad1e617dc735912ddc6eae244b44958e2b1d66f",
+        "size": 7764
+      },
+      "after": {
+        "hash": "a3d4fe315c1c15a5b35b6173b7d6feb056ed86d9401dabf4ec941986cbdd4710",
+        "size": 8470
+      },
+      "attributedTo": [
+        {
+          "path": "README.md",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "README.zh-CN.md",
+      "kind": "modified",
+      "before": {
+        "hash": "c9fdc1bde715c4c2aaf0ee9fffc7395dac8d0c95ebb386146ba8045c1c171ffd",
+        "size": 7594
+      },
+      "after": {
+        "hash": "32834af1c96395dd7464ee6859eaef7fc5a6908638c4a0378641ac58ce8b7eda",
+        "size": 8327
+      },
+      "attributedTo": [
+        {
+          "path": "README.zh-CN.md",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "bin/run.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "ae36a492de64548d2372b9988f1be66ec252c12be23b3e877f4c8863595eb9a4",
+        "size": 800
+      },
+      "after": {
+        "hash": "8c1296dccb508c47c0051e60768f495305536726ce2f61589dc41e3b54a7ae39",
+        "size": 944
+      },
+      "attributedTo": [
+        {
+          "path": "bin/run.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/app/lifecycle.go",
+      "kind": "modified",
+      "before": {
+        "hash": "b0e89797ee36d5fe174f3eed0d41dce7fd649834614e011c029a89b6605c98be",
+        "size": 12200
+      },
+      "after": {
+        "hash": "72fde14e71dc9c1cecef70848a2c5cfea697d5c4fd674ad54ab60f74e39bb60d",
+        "size": 13837
+      },
+      "attributedTo": [
+        {
+          "path": "internal/app/lifecycle.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/app/root_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "d1ce2ba1df2567bc37e197a0caf1f52ae6001eabe745c15f09722785a6357d12",
+        "size": 5070
+      },
+      "after": {
+        "hash": "bb132d33cbd587082081256576a16fa00bf759c0ce33efe51e9749bb08e9525e",
+        "size": 6029
+      },
+      "attributedTo": [
+        {
+          "path": "internal/app/root_test.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/app/wowdoc.go",
+      "kind": "modified",
+      "before": {
+        "hash": "eebe50c85ef4d0b116ba443e7d9e618cf3892b3c38b2dfdfbe6494cfafa836ef",
+        "size": 13829
+      },
+      "after": {
+        "hash": "9aebc42a7f0315cc67c92245524c27db43c376b04774195e0dd211595060dcc2",
+        "size": 14393
+      },
+      "attributedTo": [
+        {
+          "path": "internal/app/wowdoc.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/gitstore/git.go",
+      "kind": "modified",
+      "before": {
+        "hash": "181619184798002bc30d04ad749dc0988f5b705596f733cbffcc5a9b3dbbdf17",
+        "size": 15366
+      },
+      "after": {
+        "hash": "0b5beecf7ac70ee7afbab19376cd338108c3e22371526fb6a5367f48e1e1eefc",
+        "size": 24583
+      },
+      "attributedTo": [
+        {
+          "path": "internal/gitstore/git.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "internal/gitstore/git_test.go",
+      "kind": "modified",
+      "before": {
+        "hash": "1990c308ffa8c606290b33307c3d405133d9bb05b7f0c48d9d14ccfa809c8032",
+        "size": 8311
+      },
+      "after": {
+        "hash": "58d64fa6b2ff43d114f71bd531350e2bf1e23c21d97561671370d4990c3fc50d",
+        "size": 10360
+      },
+      "attributedTo": [
+        {
+          "path": "internal/gitstore/git_test.go",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "package-lock.json",
+      "kind": "modified",
+      "before": {
+        "hash": "3bb757f47d2805955b7ea62db40425ce4df702d315b9a4511aef188752394412",
+        "size": 365
+      },
+      "after": {
+        "hash": "1f29d37df0d6e635c3295e3d99315155a66f4e89f54c2e4993ab686d1cfce463",
+        "size": 656
+      },
+      "attributedTo": [
+        {
+          "path": "package-lock.json",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "package.json",
+      "kind": "modified",
+      "before": {
+        "hash": "37f839a2db1903d41721f8179c9f6a48eef497eddb9eaa3a07fe6a8a021734fd",
+        "size": 681
+      },
+      "after": {
+        "hash": "6fa73a96bdda537ecc6e34b36fccdfd79ca7811aae489a1ad30bb56f1ff3b604",
+        "size": 1124
+      },
+      "attributedTo": [
+        {
+          "path": "package.json",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "packages/wowdoc-darwin-arm64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2030ad1242d602d7e9cde6bbceb0cdaad33dac21867f72e5bd18ac316fbfaf3c",
+        "size": 320
+      },
+      "attributedTo": [
+        {
+          "path": "packages/wowdoc-darwin-arm64/package.json",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "packages/wowdoc-darwin-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "b0031115555c0b58cdd5b644658496d39d610fd4d44f1a070791e7aa79c2556e",
+        "size": 314
+      },
+      "attributedTo": [
+        {
+          "path": "packages/wowdoc-darwin-x64/package.json",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "packages/wowdoc-linux-arm64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "339dc46cd09225c6f9f818cbae49a5ebf31ee9bbd5633abd2955c027b53abfe3",
+        "size": 318
+      },
+      "attributedTo": [
+        {
+          "path": "packages/wowdoc-linux-arm64/package.json",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "packages/wowdoc-linux-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "e666366a22afea18fccd80d9158119e2d3c9c105570f045cab7b8692551b5dba",
+        "size": 312
+      },
+      "attributedTo": [
+        {
+          "path": "packages/wowdoc-linux-x64/package.json",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "packages/wowdoc-win32-x64/package.json",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2c09849a57e481c5301ae79c622b5f2a95e9ca7b4545e57f2f8f7eef6de846fd",
+        "size": 314
+      },
+      "attributedTo": [
+        {
+          "path": "packages/wowdoc-win32-x64/package.json",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/check-package.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "b643bf8c9287985c668279275dfe0db555fe945230a91c6d2d71a6692d0bc4e7",
+        "size": 489
+      },
+      "after": {
+        "hash": "265b5af00dcdb7f981678225a85f255e00b03abc2d1edbd9d9df955073e185f1",
+        "size": 1442
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/check-package.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/download.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "64946ac212ac70add054f6d103b5b15e1d053bac3193d1af22283514226a33a2",
+        "size": 13107
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/download.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/download.test.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "88cfc94c670d83a3324ce7752b53bf6b6f7d17d7cf18a2dc70770ef5fb95529a",
+        "size": 6543
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/download.test.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/install.mjs",
+      "kind": "modified",
+      "before": {
+        "hash": "9984357617158d8dae0427bddaca184193859080e98c0fa0f9f6b1c9f1f22016",
+        "size": 3633
+      },
+      "after": {
+        "hash": "d9fe4af5e0af633feee00ae6d004be7cffe31e2c82e99910ea3ab11dd1406bc1",
+        "size": 4559
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/install.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/platform.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "2087816dc47a0b7c25a6c837e34e8f4b85010fd7b3d830491f8bb2da2571dbb7",
+        "size": 1175
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/platform.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "scripts/prepare-platform-packages.mjs",
+      "kind": "added",
+      "before": null,
+      "after": {
+        "hash": "fd1e01a097d48cf2198905bb067a874c7816fb5ec5afd88b00e925de05126cdc",
+        "size": 1685
+      },
+      "attributedTo": [
+        {
+          "path": "scripts/prepare-platform-packages.mjs",
+          "kind": "file"
+        }
+      ]
+    },
+    {
+      "path": "skill/references/commands.md",
+      "kind": "modified",
+      "before": {
+        "hash": "287ff34509071fd327e46c88d37ef2e8a979d4334685334906cae69a8de39e0d",
+        "size": 1974
+      },
+      "after": {
+        "hash": "25ca3ab9366b9cdc76bcc6fb3e325a3f6d690d2af46d8f1a491676abc9c4481d",
+        "size": 2271
+      },
+      "attributedTo": [
+        {
+          "path": "skill/references/commands.md",
+          "kind": "file"
+        }
+      ]
+    }
+  ],
+  "unattributed": [],
+  "unresolvedScopes": [],
+  "noCodeReason": null,
+  "scopeHash": "5b27e9890de8faac10b48fe6204646276d5b6dbe885e7ec777fdf634b7e8e3e1"
+}

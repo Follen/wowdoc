@@ -1,0 +1,19 @@
+{
+  "name": "@follenfang/wowdoc-win32-x64",
+  "version": "0.0.7",
+  "description": "wowdoc native binary for Windows x64",
+  "license": "MIT",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Follen/wowdoc"
+  }
+}

@@ -66,7 +66,7 @@ func dataInitCommand() *cobra.Command {
 		if err = cat.Seed(sources); err != nil {
 			return err
 		}
-		manager := gitstore.Manager{Layout: layout}
+		manager := gitstore.Manager{Layout: layout, Progress: cmd.ErrOrStderr()}
 		ctx, cancel := context.WithTimeout(cmd.Context(), 24*time.Hour)
 		defer cancel()
 		workerBudget := initWorkerBudget(workers)
@@ -147,53 +147,83 @@ func dataInitCommand() *cobra.Command {
 }
 
 func syncInitSources(ctx context.Context, manager gitstore.Manager, sources []initSource, workerBudget int) error {
-	workers := workerBudget
+	selected := make([]catalog.Source, 0, len(sources))
+	for _, source := range sources {
+		selected = append(selected, source.source)
+	}
+	_, failures := syncSourcesConcurrent(ctx, manager, selected, workerBudget)
+	if len(failures) > 0 {
+		e := result.E("source_sync_failed", "one or more source mirrors failed to synchronize", 4)
+		e.Details = map[string]any{"failures": failures, "concurrency": sourceSyncWorkers(workerBudget, len(selected))}
+		e.NextSteps = []string{"rerun wowdoc init to retry failed source mirrors"}
+		return e
+	}
+	return nil
+}
+
+type sourceSyncResult struct {
+	source catalog.Source
+	err    error
+}
+
+func sourceSyncWorkers(requested, sources int) int {
+	workers := requested
+	if workers < 1 {
+		workers = 1
+	}
 	if workers > 3 {
 		workers = 3
 	}
-	if workers > len(sources) {
-		workers = len(sources)
+	if workers > sources {
+		workers = sources
 	}
+	return workers
+}
+
+func syncSourcesConcurrent(ctx context.Context, manager gitstore.Manager, sources []catalog.Source, workerBudget int) ([]catalog.Source, []map[string]any) {
+	return runSourceSyncJobs(ctx, sources, workerBudget, manager.Sync)
+}
+
+func runSourceSyncJobs(ctx context.Context, sources []catalog.Source, workerBudget int, syncSource func(context.Context, catalog.Source) error) ([]catalog.Source, []map[string]any) {
+	workers := sourceSyncWorkers(workerBudget, len(sources))
 	if workers < 1 {
-		return nil
+		return nil, nil
 	}
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	jobs := make(chan catalog.Source)
-	errs := make(chan error, len(sources))
+	results := make(chan sourceSyncResult, len(sources))
 	var wg sync.WaitGroup
 	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for source := range jobs {
-				if err := manager.Sync(ctx, source); err != nil {
-					select {
-					case errs <- err:
-					default:
-					}
-					cancel()
-					return
-				}
+				results <- sourceSyncResult{source: source, err: syncSource(ctx, source)}
 			}
 		}()
 	}
-send:
 	for _, source := range sources {
-		select {
-		case jobs <- source.source:
-		case <-ctx.Done():
-			break send
-		}
+		jobs <- source
 	}
 	close(jobs)
 	wg.Wait()
-	select {
-	case err := <-errs:
-		return err
-	default:
-		return ctx.Err()
+	close(results)
+	var succeeded []catalog.Source
+	var failures []map[string]any
+	for item := range results {
+		if item.err == nil {
+			succeeded = append(succeeded, item.source)
+			continue
+		}
+		code := "internal_error"
+		var appErr *result.Error
+		if result.As(item.err, &appErr) {
+			code = appErr.Code
+		}
+		failures = append(failures, map[string]any{"sourceId": item.source.ID, "code": code, "message": item.err.Error()})
 	}
+	sort.Slice(succeeded, func(i, j int) bool { return succeeded[i].ID < succeeded[j].ID })
+	sort.Slice(failures, func(i, j int) bool { return fmt.Sprint(failures[i]["sourceId"]) < fmt.Sprint(failures[j]["sourceId"]) })
+	return succeeded, failures
 }
 
 func initWorkerBudget(requested int) int {

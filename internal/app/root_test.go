@@ -50,6 +50,33 @@ func TestInitWorkerBudgetIsGloballyBounded(t *testing.T) {
 	}
 }
 
+func TestSourceSyncUsesThreeWorkersAndKeepsIndependentSources(t *testing.T) {
+	sources := []catalog.Source{{ID: "a"}, {ID: "b"}, {ID: "c"}, {ID: "d"}, {ID: "e"}}
+	var active, maximum, calls int32
+	succeeded, failures := runSourceSyncJobs(context.Background(), sources, 8, func(_ context.Context, source catalog.Source) error {
+		atomic.AddInt32(&calls, 1)
+		current := atomic.AddInt32(&active, 1)
+		for {
+			previous := atomic.LoadInt32(&maximum)
+			if current <= previous || atomic.CompareAndSwapInt32(&maximum, previous, current) {
+				break
+			}
+		}
+		time.Sleep(20 * time.Millisecond)
+		atomic.AddInt32(&active, -1)
+		if source.ID == "b" {
+			return errors.New("fixture failure")
+		}
+		return nil
+	})
+	if calls != int32(len(sources)) || maximum != 3 {
+		t.Fatalf("calls=%d maximum=%d", calls, maximum)
+	}
+	if len(succeeded) != 4 || len(failures) != 1 || failures[0]["sourceId"] != "b" {
+		t.Fatalf("succeeded=%#v failures=%#v", succeeded, failures)
+	}
+}
+
 func TestInitJobsRunBranchesInParallelAndRefsSerially(t *testing.T) {
 	jobs := []initJob{
 		{source: catalog.Source{ID: "source"}, product: catalog.Product{ID: "a"}, refs: []initRef{{commit: "a1", requested: "latest"}, {commit: "a2", requested: "tag-a"}}},

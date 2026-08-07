@@ -1,0 +1,19 @@
+{
+  "name": "@follenfang/wowdoc-linux-arm64",
+  "version": "0.0.7",
+  "description": "wowdoc native binary for Linux arm64",
+  "license": "MIT",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "bin/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Follen/wowdoc"
+  }
+}

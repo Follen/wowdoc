@@ -1,0 +1,23 @@
+schema: comet.native.v3
+minimum_runtime_version: 3
+revision: 7
+verification_protocol: legacy-v1
+name: harden-download-pipelines
+language: zh-CN
+phase: archive
+brief: brief.md
+approval: confirmed
+approved_contract_hash: 4ba6e211c7844b18e1a0b7c6573a8f6ce1a0ecb5c6901a302ca6f9c78484cd69
+spec_changes:
+  - capability: wowdoc-cli
+    operation: replace
+    source: specs/wowdoc-cli/spec.md
+    base_hash: c4acc231206bade4b1c7f3049852a1c5fa3878f65f0d65c05ce3fd8d7910fcec
+verification_result: pass
+verification_report: verification.md
+implementation_scope: runtime/evidence/scopes/8b6376ea1577a96b181ab5f3509855963219b0f491991869aa259b7f721339da.json
+verification_evidence: runtime/evidence/verifications/96ad1e7c4a0d7185b9718973feca469fc3f572bd72038603f0dd6bdd802dedfd.json
+partial_allowance: null
+archived: true
+created_at: 2026-08-04
+run_id: 15bcba0d-6e2f-4703-beec-a1166d4ed59f
