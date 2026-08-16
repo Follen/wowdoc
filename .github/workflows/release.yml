@@ -125,16 +125,22 @@ jobs:
       - name: Publish npm package
         shell: bash
         run: |
+          if npm view "@follenfang/wowdoc@${GITHUB_REF_NAME#v}" version >/dev/null 2>&1; then
+            echo "@follenfang/wowdoc@${GITHUB_REF_NAME#v} already published"
+          else
+            npm publish --access public --provenance
+          fi
           for dir in packages/wowdoc-*; do
             name="$(node -p "require('./$dir/package.json').name")"
             version="$(node -p "require('./$dir/package.json').version")"
             if npm view "$name@$version" version >/dev/null 2>&1; then
               echo "$name@$version already published"
+            elif npm publish "./$dir" --access public --provenance; then
+              echo "$name@$version published"
             else
-              npm publish "./$dir" --access public --provenance
+              echo "::warning::$name@$version requires initial npm package provisioning"
             fi
           done
-          npm publish --access public --provenance
 
   publish-npm-retry:
     if: github.event_name == 'workflow_dispatch'
@@ -172,17 +178,19 @@ jobs:
       - name: Publish npm package
         shell: bash
         run: |
-          for dir in packages/wowdoc-*; do
-            name="$(node -p "require('./$dir/package.json').name")"
-            version="$(node -p "require('./$dir/package.json').version")"
-            if npm view "$name@$version" version >/dev/null 2>&1; then
-              echo "$name@$version already published"
-            else
-              npm publish "./$dir" --access public --provenance
-            fi
-          done
           if npm view "@follenfang/wowdoc@${{ inputs.version }}" version >/dev/null 2>&1; then
             echo "@follenfang/wowdoc@${{ inputs.version }} already published"
           else
             npm publish --access public --provenance
           fi
+          for dir in packages/wowdoc-*; do
+            name="$(node -p "require('./$dir/package.json').name")"
+            version="$(node -p "require('./$dir/package.json').version")"
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version already published"
+            elif npm publish "./$dir" --access public --provenance; then
+              echo "$name@$version published"
+            else
+              echo "::warning::$name@$version requires initial npm package provisioning"
+            fi
+          done
