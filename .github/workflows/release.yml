@@ -116,7 +116,7 @@ jobs:
           test "$(find dist -maxdepth 1 -type f | wc -l)" -eq 5
           (cd dist && sha256sum wowdoc-* > SHA256SUMS)
           node scripts/prepare-platform-packages.mjs
-          for dir in packages/wowdoc-*; do npm pack "$dir" --dry-run; done
+          for dir in packages/wowdoc-*; do npm pack "./$dir" --dry-run; done
           npm pack --dry-run
       - name: Create GitHub Release
         env:
@@ -131,7 +131,7 @@ jobs:
             if npm view "$name@$version" version >/dev/null 2>&1; then
               echo "$name@$version already published"
             else
-              npm publish "$dir" --access public --provenance
+              npm publish "./$dir" --access public --provenance
             fi
           done
           npm publish --access public --provenance
@@ -178,7 +178,7 @@ jobs:
             if npm view "$name@$version" version >/dev/null 2>&1; then
               echo "$name@$version already published"
             else
-              npm publish "$dir" --access public --provenance
+              npm publish "./$dir" --access public --provenance
             fi
           done
           if npm view "@follenfang/wowdoc@${{ inputs.version }}" version >/dev/null 2>&1; then
