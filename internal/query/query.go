@@ -244,7 +244,7 @@ func Inspect(layout home.Layout, ctx Context, symbol, path string) (Response, er
 	for rows.Next() {
 		var filePath, hash, role string
 		if rows.Scan(&filePath, &hash, &role) == nil {
-			_, text, e := excerpt(branch.DB, layout, ctx.SnapshotID, filePath, 1, 6)
+			text, e := excerptFromHash(layout, hash, 1, 6)
 			if e == nil {
 				response.Results = append(response.Results, Match{Kind: "file", Name: filepath.Base(filePath), Path: filePath, Line: 1, MatchedBy: "path", Role: role, Score: 100, ScoreParts: map[string]int{"match": 100}, ContentHash: hash, Excerpt: text})
 			}
@@ -389,9 +389,14 @@ func excerpt(db *sql.DB, layout home.Layout, snapshotID, path string, line, cont
 	if err := db.QueryRow(`SELECT c.content_hash FROM snapshot_files sf JOIN content.contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND sf.path=?`, snapshotID, path).Scan(&hash); err != nil {
 		return "", "", err
 	}
+	text, err := excerptFromHash(layout, hash, line, context)
+	return hash, text, err
+}
+
+func excerptFromHash(layout home.Layout, hash string, line, context int) (string, error) {
 	file, err := objectstore.Open(layout, objectstore.Source, hash)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	defer file.Close()
 	start := line - context
@@ -409,7 +414,7 @@ func excerpt(db *sql.DB, layout home.Layout, snapshotID, path string, line, cont
 			break
 		}
 	}
-	return hash, strings.Join(lines, "\n"), scanner.Err()
+	return strings.Join(lines, "\n"), scanner.Err()
 }
 
 func excerptRange(db *sql.DB, layout home.Layout, snapshotID, path string, start, end, maxLines int) (string, string, error) {

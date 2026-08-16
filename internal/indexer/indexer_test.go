@@ -67,6 +67,18 @@ func TestBuildReusesObjectsAndReturnsExactSourceEvidence(t *testing.T) {
 	if !objectstore.Exists(layout, objectstore.Source, got.ContentHash) {
 		t.Fatal("source evidence object is missing")
 	}
+	path := "Interface/AddOns/Blizzard_APIDocumentationGenerated/GeneratedDocumentation.lua"
+	inspected, err := query.Inspect(layout, query.Context{SourceID: "wow-ui-source", ProductID: "retail", RequestedRef: "fixture", Commit: commit, SnapshotID: first.SnapshotID}, "", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(inspected.Results) != 1 {
+		t.Fatalf("inspect results=%d, want 1: %#v", len(inspected.Results), inspected.Results)
+	}
+	inspectedFile := inspected.Results[0]
+	if inspectedFile.Path != path || inspectedFile.ContentHash == "" || !strings.Contains(inspectedFile.Excerpt, "1: APIDocumentation:AddDocumentationTable({") {
+		t.Fatalf("unexpected inspected file: %#v", inspectedFile)
+	}
 }
 
 type failingInput struct{}
