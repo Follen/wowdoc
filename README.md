@@ -117,17 +117,28 @@ wowdoc diff `
 ```powershell
 wowdoc validate `
   --path D:\AddOns\MyAddon `
+  --toc MyAddon_Mainline.toc `
   --source wow-ui-source `
   --product retail `
   --ref latest
 ```
+
+With `--toc`, wowdoc validates only the ordered Lua/XML closure actually loaded by that TOC, including recursive XML `Script` and `Include` references. The JSON result includes every file's load order and sources, exact Tag and immutable Commit evidence, diagnostics, unresolved dynamic references, and static coverage counts. Omit `--toc` to retain the original recursive Lua scan.
+
+Validate several client TOCs together with a matrix file:
+
+```powershell
+wowdoc validate-matrix --config wowdoc.matrix.json
+```
+
+The matrix preserves each target result and merges API/event signatures, XML templates, Mixins, Frame types, TOC Interface evidence, target-only files, diagnostics, and unresolved items. A valid static result means no error was found by the covered checks; it is not a guarantee of perfect in-game behavior.
 
 Every successful reference identifies the source, product, requested ref, matching Tag when available, resolved Commit, repository path, line, excerpt, and content hash.
 
 ## Command map
 
 ```text
-Search      wowdoc query | explore | inspect | diff | validate
+Search      wowdoc query | explore | inspect | diff | validate | validate-matrix
 Sources     wowdoc source list | check | sync
 Indexes     wowdoc index build | refresh | status
 Health      wowdoc doctor

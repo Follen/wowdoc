@@ -18,6 +18,10 @@ var assetRE = regexp.MustCompile(`(?i)["']([^"']+\.(?:blp|tga|png|jpe?g|dds|ttf|
 var generatedNameRE = regexp.MustCompile(`^\s*Name\s*=\s*["']([^"']+)["']`)
 var generatedTypeRE = regexp.MustCompile(`^\s*Type\s*=\s*["']([^"']+)["']`)
 var generatedNamespaceRE = regexp.MustCompile(`^\s*Namespace\s*=\s*["']([^"']+)["']`)
+var generatedSectionRE = regexp.MustCompile(`^\s*(Arguments|Returns|Payload)\s*=\s*(nil|\{)`)
+var generatedFieldNameRE = regexp.MustCompile(`\bName\s*=\s*["']([^"']+)["']`)
+var generatedFieldTypeRE = regexp.MustCompile(`\bType\s*=\s*["']([^"']+)["']`)
+var generatedFieldNilableRE = regexp.MustCompile(`\bNilable\s*=\s*(true|false)`)
 
 func parseLua(path string, data []byte, role string) (any, []store.SymbolFact, []store.EdgeFact, []store.AssetRefFact, error) {
 	clean := bytes.TrimPrefix(data, []byte{0xef, 0xbb, 0xbf})
@@ -260,7 +264,9 @@ func parseGeneratedAPI(path string, lines []string) ([]store.SymbolFact, []store
 			if namespace != "" {
 				qualified = namespace + "." + name
 			}
-			symbols = append(symbols, store.SymbolFact{Name: name, Qualified: qualified, Kind: "api-" + kind, Path: path, Line: nameLine, EndLine: findLuaTableEnd(lines, nameLine), Signature: qualified})
+			endLine := findLuaTableEnd(lines, nameLine)
+			signature := generatedAPISignature(lines, nameLine, endLine, qualified, kind)
+			symbols = append(symbols, store.SymbolFact{Name: name, Qualified: qualified, Kind: "api-" + kind, Path: path, Line: nameLine, EndLine: endLine, Signature: signature})
 			if namespace != "" {
 				edges = append(edges, store.EdgeFact{Source: namespace, Target: qualified, Kind: "contains", Confidence: "exact", Path: path, Line: nameLine})
 			}
@@ -268,6 +274,69 @@ func parseGeneratedAPI(path string, lines []string) ([]store.SymbolFact, []store
 		name = ""
 	}
 	return symbols, edges
+}
+
+type generatedParameter struct {
+	name, valueType string
+	nilable         bool
+}
+
+func generatedAPISignature(lines []string, nameLine, endLine int, qualified, kind string) string {
+	sections := map[string][]generatedParameter{}
+	active := ""
+	depth := 0
+	for line := nameLine; line <= endLine && line <= len(lines); line++ {
+		text := lines[line-1]
+		if active == "" {
+			match := generatedSectionRE.FindStringSubmatch(text)
+			if match == nil {
+				continue
+			}
+			if match[2] == "nil" {
+				sections[match[1]] = []generatedParameter{}
+				continue
+			}
+			active = match[1]
+			depth = strings.Count(text, "{") - strings.Count(text, "}")
+			continue
+		}
+		if name := generatedFieldNameRE.FindStringSubmatch(text); name != nil {
+			if valueType := generatedFieldTypeRE.FindStringSubmatch(text); valueType != nil {
+				nilable := false
+				if value := generatedFieldNilableRE.FindStringSubmatch(text); value != nil {
+					nilable = value[1] == "true"
+				}
+				sections[active] = append(sections[active], generatedParameter{name: name[1], valueType: valueType[1], nilable: nilable})
+			}
+		}
+		depth += strings.Count(text, "{") - strings.Count(text, "}")
+		if depth <= 0 {
+			active = ""
+		}
+	}
+	format := func(parameters []generatedParameter) string {
+		values := make([]string, 0, len(parameters))
+		for _, parameter := range parameters {
+			name := parameter.name
+			if parameter.nilable {
+				name += "?"
+			}
+			values = append(values, name+": "+parameter.valueType)
+		}
+		return strings.Join(values, ", ")
+	}
+	switch kind {
+	case "function", "scriptobject":
+		signature := qualified + "(" + format(sections["Arguments"]) + ")"
+		if returns, ok := sections["Returns"]; ok && len(returns) > 0 {
+			signature += " -> " + format(returns)
+		}
+		return signature
+	case "event":
+		return qualified + "(" + format(sections["Payload"]) + ")"
+	default:
+		return qualified
+	}
 }
 
 func findLuaTableEnd(lines []string, nameLine int) int {

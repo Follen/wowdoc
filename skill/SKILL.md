@@ -9,11 +9,12 @@ Translate the user's wording into explicit `source`, `product`, `ref`, `topic`, 
 
 1. Run `wowdoc source list --source SOURCE --product PRODUCT` when source, product, or available versions are uncertain.
 2. Prefer an exact displayed plugin version. The CLI maps it only to an exact Tag and immutable Commit.
-3. Use one read command: `query` for a focused question, `explore` for a subsystem, `inspect` for a known symbol/path, `diff` for two versions, or `validate` for a local AddOn.
+3. Use one read command: `query` for a focused question, `explore` for a subsystem, `inspect` for a known symbol/path, `diff` for two versions, `validate --toc` for one client AddOn load closure, or `validate-matrix` for multiple client TOCs. Omit `--toc` only for the legacy recursive Lua scan.
 4. If the CLI returns `snapshot_not_ready`, run only the listed `source sync` and `index build|refresh` steps, then retry the original read command.
 5. If an exact plugin version returns `version_not_found`, keep the same source and product, run `source check`, synchronize and refresh if needed, then query `latest`. Mark the answer with `requestedVersion`, `matchedTag=null`, `resolutionMode=latest_fallback`, product branch, resolved Commit, and state that the evidence is from latest rather than the requested version.
 6. Do not apply latest fallback to `ambiguous_version`, `unsupported_build`, `ref_not_found`, or update failures.
 7. Cite `sourceId`, product, Tag when present, resolved Commit, path, line, and the returned excerpt. Treat `dynamic-unresolved` edges as unresolved, not exact.
+8. A successful static validation means the reported checks found no error. Never describe it as a guarantee that the AddOn runs perfectly in game.
 
 The data directory defaults to `~/.wowdoc`. `WOWDOC_HOME` may override it with another writable path for an isolated workspace, another drive, or a server deployment. This changes only wowdoc's source, index, object, lock, and log storage; it does not change the npm installation directory or the Skill directory. Run `wowdoc doctor` to see the resolved data directory.
 

@@ -117,17 +117,28 @@ wowdoc diff `
 ```powershell
 wowdoc validate `
   --path D:\AddOns\MyAddon `
+  --toc MyAddon_Mainline.toc `
   --source wow-ui-source `
   --product retail `
   --ref latest
 ```
+
+传入 `--toc` 后，wowdoc 只验证该 TOC 实际加载的有序 Lua/XML 闭包，并递归处理 XML `Script` 与 `Include`。JSON 会返回文件加载顺序和来源、精确 Tag、不可变 Commit、诊断、动态未决项和静态覆盖计数。不传 `--toc` 时继续使用原有递归 Lua 扫描。
+
+多客户端可以通过矩阵配置一次验证：
+
+```powershell
+wowdoc validate-matrix --config wowdoc.matrix.json
+```
+
+矩阵保留每个目标的完整结果，并归并 API/事件签名、XML 模板、Mixin、Frame 类型、TOC Interface、各端独有文件、诊断和动态未决项。静态结果有效只表示已覆盖检查中未发现 error，不保证插件在游戏内完美运行。
 
 查询成功后会返回 source、product、用户请求的 ref、匹配到的 Tag、实际 Commit、仓库路径、行号、代码片段和内容哈希。
 
 ## 命令一览
 
 ```text
-检索       wowdoc query | explore | inspect | diff | validate
+检索       wowdoc query | explore | inspect | diff | validate | validate-matrix
 源码       wowdoc source list | check | sync
 索引       wowdoc index build | refresh | status
 检查       wowdoc doctor

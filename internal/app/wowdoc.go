@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/follenfang/wowdoc/internal/catalog"
@@ -20,13 +18,12 @@ import (
 	"github.com/follenfang/wowdoc/internal/result"
 	"github.com/follenfang/wowdoc/internal/store"
 	"github.com/spf13/cobra"
-	"github.com/yuin/gopher-lua/parse"
 )
 
 func newWowdoc() *cobra.Command {
 	root := &cobra.Command{Use: "wowdoc", Short: "Versioned WoW UI source intelligence for agents", Version: Version}
 	root.SetVersionTemplate("wowdoc {{.Version}}\n")
-	root.AddCommand(dataInitCommand(), dataUpdateCommand(), dataCleanCommand(), dataUninstallCommand(), doctorCommand(), sourceCommand(), indexCommand(), searchCommand("query"), searchCommand("explore"), inspectCommand(), diffCommand(), validateCommand())
+	root.AddCommand(dataInitCommand(), dataUpdateCommand(), dataCleanCommand(), dataUninstallCommand(), doctorCommand(), sourceCommand(), indexCommand(), searchCommand("query"), searchCommand("explore"), inspectCommand(), diffCommand(), validateCommand(), validateMatrixCommand())
 	return root
 }
 
@@ -349,46 +346,6 @@ func diffCommand() *cobra.Command {
 	cmd.Flags().StringVar(&productID, "product", "", "product id")
 	cmd.Flags().StringVar(&from, "from", "", "from ref")
 	cmd.Flags().StringVar(&to, "to", "", "to ref")
-	return cmd
-}
-
-func validateCommand() *cobra.Command {
-	var path, sourceID, productID, ref string
-	cmd := &cobra.Command{Use: "validate", RunE: func(cmd *cobra.Command, args []string) error {
-		if err := require(path, "path_required", "--path is required"); err != nil {
-			return err
-		}
-		var diagnostics []result.Diagnostic
-		files := 0
-		err := filepath.WalkDir(path, func(p string, e os.DirEntry, walkErr error) error {
-			if walkErr != nil {
-				return walkErr
-			}
-			if e.IsDir() {
-				return nil
-			}
-			ext := strings.ToLower(filepath.Ext(p))
-			if ext == ".lua" {
-				files++
-				data, readErr := os.ReadFile(p)
-				if readErr != nil {
-					return readErr
-				}
-				if _, parseErr := parse.Parse(bytes.NewReader(data), p); parseErr != nil {
-					diagnostics = append(diagnostics, result.Diagnostic{Code: "lua_parse_failed", Message: parseErr.Error(), Path: p})
-				}
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-		return result.Write(cmd.OutOrStdout(), map[string]any{"path": path, "sourceId": sourceID, "product": productID, "ref": ref, "checkedLua": files, "valid": len(diagnostics) == 0, "diagnostics": diagnostics})
-	}}
-	cmd.Flags().StringVar(&path, "path", "", "AddOn directory")
-	cmd.Flags().StringVar(&sourceID, "source", "", "target source id")
-	cmd.Flags().StringVar(&productID, "product", "", "target product id")
-	cmd.Flags().StringVar(&ref, "ref", "latest", "target ref")
 	return cmd
 }
 

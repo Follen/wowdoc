@@ -1,6 +1,6 @@
 {
   "name": "@follenfang/wowdoc",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Auditable WoW UI source intelligence CLI for coding agents",
   "license": "MIT",
   "type": "module",
@@ -21,11 +21,11 @@
     "LICENSE"
   ],
   "optionalDependencies": {
-    "@follenfang/wowdoc-darwin-arm64": "0.0.8",
-    "@follenfang/wowdoc-darwin-x64": "0.0.8",
-    "@follenfang/wowdoc-linux-arm64": "0.0.8",
-    "@follenfang/wowdoc-linux-x64": "0.0.8",
-    "@follenfang/wowdoc-win32-x64": "0.0.8"
+    "@follenfang/wowdoc-darwin-arm64": "0.0.9",
+    "@follenfang/wowdoc-darwin-x64": "0.0.9",
+    "@follenfang/wowdoc-linux-arm64": "0.0.9",
+    "@follenfang/wowdoc-linux-x64": "0.0.9",
+    "@follenfang/wowdoc-win32-x64": "0.0.9"
   },
   "scripts": {
     "postinstall": "node scripts/install.mjs",
