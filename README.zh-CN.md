@@ -71,7 +71,7 @@ npm install -g @follenfang/wowdoc --foreground-scripts --verbose
 
 | 源码 | 产品 / 通道 |
 | --- | --- |
-| 暴雪 UI 源码 | Retail、PTR、PTR2、Beta、Classic、Classic PTR/Beta、Classic Era/PTR、Anniversary、Titan |
+| 暴雪 UI 源码 | Retail、PTR、PTR2、Beta、Classic、Classic PTR/Beta、Classic Era/PTR、Anniversary、Titan、Forever |
 | [ElvUI](https://github.com/tukui-org/ElvUI) | main、PTR |
 | [WeakAuras](https://github.com/WeakAuras/WeakAuras2) | main |
 | [NDui](https://github.com/siweia/NDui) | main、Classic、Era、Anniversary、Titan |

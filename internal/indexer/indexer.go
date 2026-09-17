@@ -140,19 +140,20 @@ type BuildOptions struct {
 	Workers                                        int
 }
 type Stats struct {
-	SnapshotID    string `json:"snapshotId"`
-	Commit        string `json:"resolvedCommit"`
-	Files         int    `json:"files,omitempty"`
-	ParsedLua     int    `json:"parsedLua,omitempty"`
-	ParsedXML     int    `json:"parsedXml,omitempty"`
-	ParsedTOC     int    `json:"parsedToc,omitempty"`
-	Assets        int    `json:"assets,omitempty"`
-	ReusedObjects int    `json:"reusedObjects,omitempty"`
-	ReusedAST     int    `json:"reusedAst,omitempty"`
-	Diagnostics   int    `json:"diagnostics,omitempty"`
-	DurationMS    int64  `json:"durationMs"`
-	DBPath        string `json:"dbPath,omitempty"`
-	ManifestPath  string `json:"manifestPath,omitempty"`
+	SnapshotID     string `json:"snapshotId"`
+	Commit         string `json:"resolvedCommit"`
+	BuildInterface string `json:"buildInterface,omitempty"`
+	Files          int    `json:"files,omitempty"`
+	ParsedLua      int    `json:"parsedLua,omitempty"`
+	ParsedXML      int    `json:"parsedXml,omitempty"`
+	ParsedTOC      int    `json:"parsedToc,omitempty"`
+	Assets         int    `json:"assets,omitempty"`
+	ReusedObjects  int    `json:"reusedObjects,omitempty"`
+	ReusedAST      int    `json:"reusedAst,omitempty"`
+	Diagnostics    int    `json:"diagnostics,omitempty"`
+	DurationMS     int64  `json:"durationMs"`
+	DBPath         string `json:"dbPath,omitempty"`
+	ManifestPath   string `json:"manifestPath,omitempty"`
 }
 type parsed struct {
 	file                    store.FileFact
@@ -187,7 +188,11 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 		return Stats{}, readyErr
 	} else if ready {
 		if _, statErr := os.Stat(manifestPath); statErr == nil {
-			return Stats{SnapshotID: snapshotID, Commit: opts.Commit, Files: summary.Files, ParsedLua: summary.Lua, ParsedXML: summary.XML, ParsedTOC: summary.TOC, Assets: summary.Assets, ReusedObjects: summary.Files, ReusedAST: summary.AST, DurationMS: time.Since(started).Milliseconds(), DBPath: branch.Path, ManifestPath: manifestPath}, nil
+			if stored, _ := branch.SnapshotBuildInterface(snapshotID); stored != "" {
+				return Stats{SnapshotID: snapshotID, Commit: opts.Commit, BuildInterface: stored, Files: summary.Files, ParsedLua: summary.Lua, ParsedXML: summary.XML, ParsedTOC: summary.TOC, Assets: summary.Assets, ReusedObjects: summary.Files, ReusedAST: summary.AST, DurationMS: time.Since(started).Milliseconds(), DBPath: branch.Path, ManifestPath: manifestPath}, nil
+			}
+			// Snapshots built before buildInterface existed fall through to a
+			// rebuild so the build version is backfilled exactly once.
 		}
 	}
 	if opts.Workers <= 0 {
@@ -212,6 +217,7 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	if err != nil {
 		return Stats{}, err
 	}
+	buildInterface := snapshotBuildInterface(ctx, opts, entries)
 	objects := objectstore.New(opts.Layout, snapshotID)
 	defer objects.Abort()
 	jobs := make(chan Entry)
@@ -296,7 +302,7 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	}()
 	go func() { wg.Wait(); close(results) }()
 	var batch store.SnapshotBatch
-	stats := Stats{SnapshotID: snapshotID, Commit: opts.Commit}
+	stats := Stats{SnapshotID: snapshotID, Commit: opts.Commit, BuildInterface: buildInterface}
 	for p := range results {
 		stats.Files++
 		batch.Files = append(batch.Files, p.file)
@@ -333,10 +339,10 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	if err := objects.Publish(); err != nil {
 		return Stats{}, fmt.Errorf("publish object pack: %w", err)
 	}
-	if err := branch.Publish(snapshotID, opts.Commit, opts.RequestedRef, opts.Tag, ParserSchema, IndexSchema, batch); err != nil {
+	if err := branch.Publish(snapshotID, opts.Commit, opts.RequestedRef, opts.Tag, buildInterface, ParserSchema, IndexSchema, batch); err != nil {
 		return Stats{}, fmt.Errorf("publish snapshot: %w", err)
 	}
-	if err := writeManifest(manifestPath, opts, batch); err != nil {
+	if err := writeManifest(manifestPath, opts, batch, buildInterface); err != nil {
 		return Stats{}, err
 	}
 	stats.DBPath = branch.Path
@@ -441,11 +447,11 @@ func parseEntry(objects *objectstore.Store, entry Entry, parseData, rawData []by
 	return p, nil
 }
 
-func writeManifest(path string, opts BuildOptions, b store.SnapshotBatch) error {
+func writeManifest(path string, opts BuildOptions, b store.SnapshotBatch, buildInterface string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	data, err := json.Marshal(map[string]any{"schema": "wowdoc.snapshot.v2", "sourceId": opts.SourceID, "productId": opts.ProductID, "resolvedCommit": opts.Commit, "requestedRef": opts.RequestedRef, "tag": opts.Tag, "parserSchema": ParserSchema, "indexSchema": IndexSchema, "files": b.Files, "assets": b.Assets})
+	data, err := json.Marshal(map[string]any{"schema": "wowdoc.snapshot.v2", "sourceId": opts.SourceID, "productId": opts.ProductID, "resolvedCommit": opts.Commit, "requestedRef": opts.RequestedRef, "tag": opts.Tag, "buildInterface": buildInterface, "parserSchema": ParserSchema, "indexSchema": IndexSchema, "files": b.Files, "assets": b.Assets})
 	if err != nil {
 		return err
 	}

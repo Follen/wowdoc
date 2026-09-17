@@ -27,6 +27,7 @@ func Sources() []Source {
 			{ID: "classic-beta", Branch: "classic_beta", Clients: []string{"classic-beta"}, TagRules: []string{`^(?:2\.5|3\.4|4\.4|5\.5)\.`}}, {ID: "classic-era", Branch: "classic_era", Clients: []string{"classic-era", "era"}, TagRules: []string{`^1\.1[3-9]\.`}},
 			{ID: "classic-era-ptr", Branch: "classic_era_ptr", Clients: []string{"classic-era-ptr"}, TagRules: []string{`^(?:1\.1[3-9]|2\.5)\.`}}, {ID: "anniversary", Branch: "classic_anniversary", Clients: []string{"anniversary"}, TagRules: []string{`^2\.5\.`}},
 			{ID: "titan", Branch: "classic_titan", Clients: []string{"titan"}, TagRules: []string{`^3\.80\.`}},
+			{ID: "forever", Branch: "forever", Clients: []string{"forever"}, TagRules: []string{`^1\.60\.`}},
 		}},
 		{ID: "elvui", Name: "ElvUI", Repository: "https://github.com/tukui-org/ElvUI.git", VersionPrefixes: []string{"v"}, Products: []Product{
 			{ID: "main", Branch: "main"}, {ID: "ptr", Branch: "ptr"},

@@ -117,6 +117,11 @@ func OpenBranch(layout home.Layout, sourceID, productID, parserSchema, indexSche
 		content.Close()
 		return nil, fmt.Errorf("initialize branch schema: %w", err)
 	}
+	if err = ensureBuildInterfaceColumn(db); err != nil {
+		db.Close()
+		content.Close()
+		return nil, fmt.Errorf("migrate branch schema: %w", err)
+	}
 	return &Branch{DB: db, Content: content, Path: path, ContentPath: contentPath, contentLock: contentLock, Layout: layout}, nil
 }
 
@@ -256,6 +261,32 @@ func (b *Branch) ReadySnapshot(snapshotID, parserSchema, indexSchema string) (Sn
 	return summary, true, nil
 }
 
+// ensureBuildInterfaceColumn backfills the build_interface column on branch
+// databases created before Interface versions were derived from version.txt.
+// Fresh databases already declare the column in branchSchema.
+func ensureBuildInterfaceColumn(db *sql.DB) error {
+	var count int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('snapshots') WHERE name='build_interface'`).Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	_, err := db.Exec(`ALTER TABLE snapshots ADD COLUMN build_interface TEXT NOT NULL DEFAULT ''`)
+	return err
+}
+
+// SnapshotBuildInterface returns the Interface version derived from the
+// snapshot's build version.txt (for example "16001"). It returns "" when the
+// snapshot predates buildInterface tracking or carries no usable version.
+func (b *Branch) SnapshotBuildInterface(snapshotID string) (string, error) {
+	var value sql.NullString
+	if err := b.DB.QueryRow(`SELECT build_interface FROM snapshots WHERE id=?`, snapshotID).Scan(&value); err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(value.String), nil
+}
+
 func (b *Branch) LookupOID(oid, language, parserSchema, indexSchema string) (ContentRecord, bool, error) {
 	return b.lookupContent(`JOIN content.blob_aliases ba ON ba.content_id=c.id WHERE ba.git_oid=? AND ba.language=? AND c.parser_schema=? AND c.index_schema=?`, oid, language, parserSchema, indexSchema)
 }
@@ -283,7 +314,7 @@ func (b *Branch) lookupContent(clause string, args ...any) (ContentRecord, bool,
 	return record, true, nil
 }
 
-func (b *Branch) Publish(snapshotID, commit, requestedRef, tag, parserSchema, indexSchema string, batch SnapshotBatch) error {
+func (b *Branch) Publish(snapshotID, commit, requestedRef, tag, buildInterface, parserSchema, indexSchema string, batch SnapshotBatch) error {
 	guard, err := acquireSharedContentLock(b.contentLock)
 	if err != nil {
 		return err
@@ -298,7 +329,7 @@ func (b *Branch) Publish(snapshotID, commit, requestedRef, tag, parserSchema, in
 		return fmt.Errorf("begin branch snapshot transaction: %w", err)
 	}
 	defer tx.Rollback()
-	if _, err = tx.Exec(`INSERT INTO snapshots(id,commit_hash,requested_ref,tag,status,created_at,parser_schema,index_schema) VALUES(?,?,?,?, 'building',datetime('now'),?,?) ON CONFLICT(id) DO UPDATE SET status='building',requested_ref=excluded.requested_ref,tag=excluded.tag,parser_schema=excluded.parser_schema,index_schema=excluded.index_schema`, snapshotID, commit, requestedRef, tag, parserSchema, indexSchema); err != nil {
+	if _, err = tx.Exec(`INSERT INTO snapshots(id,commit_hash,requested_ref,tag,build_interface,status,created_at,parser_schema,index_schema) VALUES(?,?,?,?,?,'building',datetime('now'),?,?) ON CONFLICT(id) DO UPDATE SET status='building',requested_ref=excluded.requested_ref,tag=excluded.tag,build_interface=excluded.build_interface,parser_schema=excluded.parser_schema,index_schema=excluded.index_schema`, snapshotID, commit, requestedRef, tag, buildInterface, parserSchema, indexSchema); err != nil {
 		return err
 	}
 	for _, table := range []string{"snapshot_assets", "snapshot_files"} {
@@ -575,9 +606,9 @@ func acquireSharedContentLock(path string) (*lock.Lock, error) {
 }
 
 const branchSchema = `
-PRAGMA user_version=6;
+PRAGMA user_version=7;
 CREATE TABLE IF NOT EXISTS branch_state(key TEXT PRIMARY KEY,value TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS snapshots(id TEXT PRIMARY KEY,commit_hash TEXT NOT NULL UNIQUE,requested_ref TEXT NOT NULL,tag TEXT,status TEXT NOT NULL,created_at TEXT NOT NULL,published_at TEXT,parser_schema TEXT NOT NULL,index_schema TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS snapshots(id TEXT PRIMARY KEY,commit_hash TEXT NOT NULL UNIQUE,requested_ref TEXT NOT NULL,tag TEXT,build_interface TEXT NOT NULL DEFAULT '',status TEXT NOT NULL,created_at TEXT NOT NULL,published_at TEXT,parser_schema TEXT NOT NULL,index_schema TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS branch_contents(content_id INTEGER PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS snapshot_files(snapshot_id TEXT NOT NULL REFERENCES snapshots(id),path TEXT NOT NULL,content_id INTEGER NOT NULL,role TEXT NOT NULL,PRIMARY KEY(snapshot_id,path));
 CREATE INDEX IF NOT EXISTS snapshot_files_content ON snapshot_files(snapshot_id,content_id);

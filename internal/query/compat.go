@@ -188,7 +188,42 @@ func compatibilityMatches(db *sql.DB, snapshotID, kind, name string) ([]compatib
 	if err = db.QueryRow(categoryQuery, snapshotID).Scan(&known); err != nil {
 		return nil, false, err
 	}
+	if kind == "interface" {
+		// Blizzard source TOCs rarely carry a per-build ## Interface line, so
+		// the snapshot's own build version (derived from version.txt at index
+		// time) is authoritative evidence for the Interface number. TOC
+		// entries remain the primary source when they match.
+		if build := snapshotBuildInterface(db, snapshotID); build != "" {
+			known = true
+			if len(matches) == 0 && interfaceValueMatches(name, build) {
+				matches = []compatibilityMatch{{Path: "version.txt", Line: 1, Signature: build, Detail: "Interface"}}
+			}
+		}
+	}
 	return matches, known, nil
+}
+
+// interfaceValueMatches reports whether a declared TOC Interface value covers
+// the snapshot build. Declarations may list several builds ("50503, 50504").
+func interfaceValueMatches(name, build string) bool {
+	for _, part := range strings.Split(name, ",") {
+		if strings.TrimSpace(part) == build {
+			return true
+		}
+	}
+	return false
+}
+
+// snapshotBuildInterface returns the Interface version stored for a snapshot,
+// or "" when the snapshot predates buildInterface tracking. Query lookups
+// must never fail on this metadata: absence simply keeps the previous
+// TOC-only behavior.
+func snapshotBuildInterface(db *sql.DB, snapshotID string) string {
+	var value sql.NullString
+	if err := db.QueryRow(`SELECT build_interface FROM snapshots WHERE id=?`, snapshotID).Scan(&value); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(value.String)
 }
 
 func normalizeCompatibilityKind(kind string) string {

@@ -71,7 +71,7 @@ branch / Tag / version / Commit
 
 | Source | Products / channels |
 | --- | --- |
-| Blizzard UI source | Retail, PTR, PTR2, Beta, Classic, Classic PTR/Beta, Classic Era/PTR, Anniversary, Titan |
+| Blizzard UI source | Retail, PTR, PTR2, Beta, Classic, Classic PTR/Beta, Classic Era/PTR, Anniversary, Titan, Forever |
 | [ElvUI](https://github.com/tukui-org/ElvUI) | main, PTR |
 | [WeakAuras](https://github.com/WeakAuras/WeakAuras2) | main |
 | [NDui](https://github.com/siweia/NDui) | main, Classic, Era, Anniversary, Titan |

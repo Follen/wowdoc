@@ -115,6 +115,83 @@ func TestLookupCompatibilityFiltersSharedFactsBySnapshotMembership(t *testing.T)
 	}
 }
 
+func TestLookupCompatibilityResolvesInterfaceFromBuildVersion(t *testing.T) {
+	layout, fixture := compatibilityFixture(t)
+	writeCompatibilityFixture(t, fixture, "KnownAPI", "KNOWN_EVENT")
+	if err := os.WriteFile(filepath.Join(fixture, "version.txt"), []byte("1.60.1.69893\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stats, err := indexer.Build(context.Background(), indexer.BuildOptions{
+		Layout: layout, SourceID: "wow-ui-source", ProductID: "forever",
+		Commit: "4444444444444444444444444444444444444444", RequestedRef: "latest",
+		Input: indexer.DirectoryInput{Root: fixture}, Workers: 2,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.BuildInterface != "16001" {
+		t.Fatalf("buildInterface=%q, want 16001", stats.BuildInterface)
+	}
+	ctx := query.Context{SourceID: "wow-ui-source", ProductID: "forever", RequestedRef: "latest", Commit: stats.Commit, SnapshotID: stats.SnapshotID, DBPath: stats.DBPath}
+
+	usage := []query.CompatibilityUsage{{Kind: "interface", Name: "16001", File: "Test.toc", Line: 1, Column: 1}}
+	facts, unresolved, _, err := query.LookupCompatibility(layout, ctx, usage, "16001")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(unresolved) != 0 {
+		t.Fatalf("unresolved=%#v, want empty", unresolved)
+	}
+	if len(facts) != 1 || !facts[0].Exists {
+		t.Fatalf("facts=%#v, want one existing interface fact", facts)
+	}
+	matches, _ := facts[0].Evidence["matches"].([]map[string]any)
+	if len(matches) == 0 || matches[0]["path"] != "version.txt" {
+		t.Fatalf("evidence matches=%#v, want version.txt provenance", facts[0].Evidence["matches"])
+	}
+
+	mismatch := []query.CompatibilityUsage{{Kind: "interface", Name: "99999"}}
+	facts, unresolved, _, err = query.LookupCompatibility(layout, ctx, mismatch, "99999")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(unresolved) != 0 {
+		t.Fatalf("unresolved=%#v, want empty for a provable mismatch", unresolved)
+	}
+	if len(facts) != 1 || facts[0].Exists {
+		t.Fatalf("facts=%#v, want one proven-absent interface fact", facts)
+	}
+}
+
+func TestLookupCompatibilityLeavesInterfaceUnresolvedWithoutBuildVersion(t *testing.T) {
+	layout, fixture := compatibilityFixture(t)
+	writeCompatibilityFixture(t, fixture, "KnownAPI", "KNOWN_EVENT")
+	// Remove the only Interface evidence: no version.txt and no TOC entry.
+	if err := os.WriteFile(filepath.Join(fixture, "Addon.toc"), []byte("Mixins.lua\nTemplates.xml\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stats, err := indexer.Build(context.Background(), indexer.BuildOptions{
+		Layout: layout, SourceID: "wow-ui-source", ProductID: "retail",
+		Commit: "5555555555555555555555555555555555555555", RequestedRef: "fixture",
+		Input: indexer.DirectoryInput{Root: fixture}, Workers: 2,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.BuildInterface != "" {
+		t.Fatalf("buildInterface=%q, want empty without version.txt", stats.BuildInterface)
+	}
+	ctx := query.Context{SourceID: "wow-ui-source", ProductID: "retail", Commit: stats.Commit, SnapshotID: stats.SnapshotID, DBPath: stats.DBPath}
+	usage := []query.CompatibilityUsage{{Kind: "interface", Name: "424242"}}
+	_, unresolved, _, err := query.LookupCompatibility(layout, ctx, usage, "424242")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(unresolved) != 1 {
+		t.Fatalf("unresolved=%#v, want one entry preserving the previous behavior", unresolved)
+	}
+}
+
 func compatibilityFixture(t *testing.T) (home.Layout, string) {
 	t.Helper()
 	t.Setenv("WOWDOC_HOME", t.TempDir())
