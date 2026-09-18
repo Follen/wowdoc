@@ -1,6 +1,6 @@
 {
   "name": "@follenfang/wowdoc-darwin-arm64",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "wowdoc native binary for macOS arm64",
   "license": "MIT",
   "os": [
