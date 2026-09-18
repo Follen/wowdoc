@@ -1,6 +1,9 @@
 package catalog_test
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/follenfang/wowdoc/internal/catalog"
@@ -59,4 +62,71 @@ func TestShippedCatalogResolvesEveryDeclaredName(t *testing.T) {
 			}
 		}
 	}
+}
+
+// The Skill's source catalog is what an Agent reads to pick --product, and it
+// ships inside the npm package. Keep it from drifting away from the real
+// catalog in either direction.
+func TestSkillCatalogStaysInSyncWithCatalog(t *testing.T) {
+	path := filepath.Join("..", "..", "skill", "references", "source-catalog.md")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read skill source catalog: %v", err)
+	}
+	documented := map[string]map[string]bool{}
+	for _, line := range strings.Split(string(data), "\n") {
+		if !strings.HasPrefix(line, "| `") {
+			continue
+		}
+		columns := strings.Split(line, "|")
+		if len(columns) < 4 {
+			continue
+		}
+		source := backticked(columns[1])
+		if len(source) == 0 {
+			t.Errorf("unparsable table row: %s", line)
+			continue
+		}
+		sourceID := source[0]
+		if documented[sourceID] == nil {
+			documented[sourceID] = map[string]bool{}
+		}
+		for _, name := range backticked(columns[2]) {
+			documented[sourceID][name] = true
+		}
+	}
+	if len(documented) == 0 {
+		t.Fatal("parsed no rows from the skill source catalog")
+	}
+	for sourceID, names := range documented {
+		source, ok := catalog.FindSource(sourceID)
+		if !ok {
+			t.Errorf("skill documents unknown source %q", sourceID)
+			continue
+		}
+		for name := range names {
+			if _, ok := catalog.FindProduct(source, name); !ok {
+				t.Errorf("skill documents %s/%s, which the catalog does not declare", sourceID, name)
+			}
+		}
+	}
+	for _, source := range catalog.Sources() {
+		for _, product := range source.Products {
+			if !documented[source.ID][product.ID] {
+				t.Errorf("catalog declares %s/%s, which the skill does not document", source.ID, product.ID)
+			}
+		}
+	}
+}
+
+// backticked extracts every `value` on a table row.
+func backticked(value string) []string {
+	quoted := []string{}
+	parts := strings.Split(value, "`")
+	for i := 1; i < len(parts); i += 2 {
+		if name := strings.TrimSpace(parts[i]); name != "" {
+			quoted = append(quoted, name)
+		}
+	}
+	return quoted
 }

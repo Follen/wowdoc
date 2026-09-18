@@ -12,6 +12,8 @@
 | `ndui` | `main`, `classic`, `era`, `anniversary`, `titan` | `master`, `Classic`, `Era`, `Anniversary`, `Titan` | Tags are filtered by product branch reachability and product-line rule |
 | `ellesmereui` | `main` | `main` | Retail-oriented suite; version input maps to `v` Tag |
 
+A `--product` value may be the product id, its Git branch, or a declared client alias, and every command resolves all three identically. Only `classic-era` declares an extra short alias (`era`); for every other product use the product id or the branch shown above.
+
 The version truth is `Tag -> Commit -> source snapshot`. Release attachments and packaged externals can differ from Tag source; describe evidence as Tag source, not an installed package reconstruction.
 
-Interface evidence for `validate` comes from the snapshot's build `version.txt` (e.g. `1.60.1` → `16001`) plus indexed TOC entries. A `toc_interface_mismatch` against a rebuilt snapshot means the declared Interface is genuinely absent from that build.
+Interface evidence for `validate` comes from the game source's build `version.txt` (e.g. `1.60.1` → `16001`) plus indexed TOC entries. AddOn sources ship their own release versions, which are never read as game build evidence, so their Interface facts rest on TOC entries alone. A `toc_interface_mismatch` against a rebuilt snapshot means the declared Interface is genuinely absent from that build.
