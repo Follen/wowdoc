@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/follenfang/wowdoc/internal/catalog"
@@ -127,6 +128,23 @@ func sourceCommand() *cobra.Command {
 	return root
 }
 
+// productKnown reports whether any selected source declares the requested
+// product. It runs before mirror synchronization so an unknown product, or an
+// alias that no command agrees on, fails fast instead of after a full fetch.
+func productKnown(sources []catalog.Source, productID string) bool {
+	if strings.TrimSpace(productID) == "" {
+		return true
+	}
+	for _, source := range sources {
+		for _, product := range source.Products {
+			if product.Matches(productID) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func syncSources(parent context.Context, cmd *cobra.Command, sourceID, productID string) error {
 	layout, err := home.Resolve()
 	if err != nil {
@@ -152,14 +170,14 @@ func syncSources(parent context.Context, cmd *cobra.Command, sourceID, productID
 			selected = append(selected, source)
 		}
 	}
-	if len(selected) == 0 {
+	if len(selected) == 0 || !productKnown(selected, productID) {
 		return result.E("source_not_found", "no source/product matched", 2)
 	}
 	succeeded, failures := syncSourcesConcurrent(ctx, manager, selected, 3)
 	var synced []map[string]any
 	for _, source := range succeeded {
 		for _, product := range source.Products {
-			if productID != "" && product.ID != productID && product.Branch != productID {
+			if !product.Matches(productID) {
 				continue
 			}
 			head, e := manager.Head(ctx, source.ID, product.Branch)

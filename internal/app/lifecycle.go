@@ -78,7 +78,7 @@ func dataInitCommand() *cobra.Command {
 			}
 			var products []catalog.Product
 			for _, product := range source.Products {
-				if productID == "" || product.ID == productID || product.Branch == productID {
+				if product.Matches(productID) {
 					products = append(products, product)
 				}
 			}

@@ -62,18 +62,38 @@ func FindSource(id string) (Source, bool) {
 	return Source{}, false
 }
 
+// Matches reports whether id names this product, by declared id, Git branch, or
+// client alias. Every command MUST resolve --product through this predicate, so
+// an alias such as "era" for "classic-era" is never accepted by one command and
+// rejected by another. An empty id matches every product, which lets callers
+// treat an omitted filter as "all products".
+func (p Product) Matches(id string) bool {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return true
+	}
+	if strings.EqualFold(p.ID, id) || strings.EqualFold(p.Branch, id) {
+		return true
+	}
+	for _, client := range p.Clients {
+		if strings.EqualFold(strings.TrimSpace(client), id) {
+			return true
+		}
+	}
+	return false
+}
+
 func FindProduct(source Source, id string) (Product, bool) {
-	if id == "" && len(source.Products) == 1 {
-		return source.Products[0], true
+	// An omitted id is only unambiguous for a single-product source.
+	if strings.TrimSpace(id) == "" {
+		if len(source.Products) == 1 {
+			return source.Products[0], true
+		}
+		return Product{}, false
 	}
 	for _, product := range source.Products {
-		if strings.EqualFold(product.ID, id) || strings.EqualFold(product.Branch, id) {
+		if product.Matches(id) {
 			return product, true
-		}
-		for _, client := range product.Clients {
-			if strings.EqualFold(client, id) {
-				return product, true
-			}
 		}
 	}
 	return Product{}, false
