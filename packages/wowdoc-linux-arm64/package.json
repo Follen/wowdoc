@@ -1,6 +1,6 @@
 {
   "name": "@follenfang/wowdoc-linux-arm64",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "wowdoc native binary for Linux arm64",
   "license": "MIT",
   "os": [
