@@ -34,6 +34,10 @@ func TestOpenBranchMigratesBuildInterfaceColumn(t *testing.T) {
 		legacy.Close()
 		t.Fatal(err)
 	}
+	if _, err = legacy.Exec(`INSERT INTO snapshots(id,commit_hash,requested_ref,status,created_at,parser_schema,index_schema) VALUES('legacy','old','latest','ready',datetime('now'),?,?)`, schema.Parser, schema.Index); err != nil {
+		legacy.Close()
+		t.Fatal(err)
+	}
 	if err = legacy.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -43,6 +47,17 @@ func TestOpenBranchMigratesBuildInterfaceColumn(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer branch.Close()
+	value, checked, err := branch.SnapshotBuildInterfaceState("legacy")
+	if err != nil || checked || value != "" {
+		t.Fatalf("legacy state=(%q, %v, %v), want empty and unchecked", value, checked, err)
+	}
+	if err = branch.Publish("legacy", "old", "latest", "", "", schema.Parser, schema.Index, store.SnapshotBatch{}); err != nil {
+		t.Fatal(err)
+	}
+	value, checked, err = branch.SnapshotBuildInterfaceState("legacy")
+	if err != nil || !checked || value != "" {
+		t.Fatalf("published empty state=(%q, %v, %v), want empty and checked", value, checked, err)
+	}
 	var columns int
 	if err = branch.DB.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('snapshots') WHERE name='build_interface'`).Scan(&columns); err != nil {
 		t.Fatal(err)

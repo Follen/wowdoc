@@ -42,6 +42,17 @@ func Sources() []Source {
 	}
 }
 
+// GameSourceID is the official Blizzard UI source. Only its version.txt
+// carries a game build version, so Interface evidence may be derived from it.
+const GameSourceID = "wow-ui-source"
+
+// IsGameSource reports whether a source id names the official game UI source.
+// AddOn sources ship their own release versions, which must never be read as
+// game build evidence.
+func IsGameSource(id string) bool {
+	return strings.EqualFold(strings.TrimSpace(id), GameSourceID)
+}
+
 func FindSource(id string) (Source, bool) {
 	for _, source := range Sources() {
 		if strings.EqualFold(source.ID, id) || strings.EqualFold(source.Name, id) {

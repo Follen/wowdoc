@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/follenfang/wowdoc/internal/catalog"
 	"github.com/follenfang/wowdoc/internal/home"
 )
 
@@ -117,7 +118,7 @@ func LookupCompatibility(layout home.Layout, ctx Context, usages []Compatibility
 
 func lookupCompatibilityUsage(db *sql.DB, ctx Context, usage CompatibilityUsage, kind string) (CompatibilityFact, bool, error) {
 	name := strings.TrimSpace(usage.Name)
-	matches, categoryKnown, err := compatibilityMatches(db, ctx.SnapshotID, kind, name)
+	matches, categoryKnown, err := compatibilityMatches(db, ctx.SnapshotID, kind, name, catalog.IsGameSource(ctx.SourceID))
 	if err != nil {
 		return CompatibilityFact{}, false, err
 	}
@@ -136,7 +137,7 @@ func lookupCompatibilityUsage(db *sql.DB, ctx Context, usage CompatibilityUsage,
 	return CompatibilityFact{Kind: kind, Name: name, Exists: len(matches) > 0, Signature: signature, Evidence: evidence}, true, nil
 }
 
-func compatibilityMatches(db *sql.DB, snapshotID, kind, name string) ([]compatibilityMatch, bool, error) {
+func compatibilityMatches(db *sql.DB, snapshotID, kind, name string, gameSource bool) ([]compatibilityMatch, bool, error) {
 	var query string
 	var args []any
 	var categoryQuery string
@@ -188,7 +189,8 @@ func compatibilityMatches(db *sql.DB, snapshotID, kind, name string) ([]compatib
 	if err = db.QueryRow(categoryQuery, snapshotID).Scan(&known); err != nil {
 		return nil, false, err
 	}
-	if kind == "interface" {
+	if kind == "interface" && gameSource {
+		// Ignore legacy AddOn build metadata even before it is rebuilt.
 		// Blizzard source TOCs rarely carry a per-build ## Interface line, so
 		// the snapshot's own build version (derived from version.txt at index
 		// time) is authoritative evidence for the Interface number. TOC

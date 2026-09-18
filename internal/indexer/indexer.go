@@ -188,11 +188,13 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 		return Stats{}, readyErr
 	} else if ready {
 		if _, statErr := os.Stat(manifestPath); statErr == nil {
-			if stored, _ := branch.SnapshotBuildInterface(snapshotID); stored != "" {
+			if stored, checked, err := branch.SnapshotBuildInterfaceState(snapshotID); err != nil {
+				return Stats{}, err
+			} else if checked {
 				return Stats{SnapshotID: snapshotID, Commit: opts.Commit, BuildInterface: stored, Files: summary.Files, ParsedLua: summary.Lua, ParsedXML: summary.XML, ParsedTOC: summary.TOC, Assets: summary.Assets, ReusedObjects: summary.Files, ReusedAST: summary.AST, DurationMS: time.Since(started).Milliseconds(), DBPath: branch.Path, ManifestPath: manifestPath}, nil
 			}
-			// Snapshots built before buildInterface existed fall through to a
-			// rebuild so the build version is backfilled exactly once.
+			// Legacy snapshots fall through once to check build evidence.
+			// Publish records completion even if no usable version exists.
 		}
 	}
 	if opts.Workers <= 0 {
@@ -217,7 +219,10 @@ func Build(ctx context.Context, opts BuildOptions) (Stats, error) {
 	if err != nil {
 		return Stats{}, err
 	}
-	buildInterface := snapshotBuildInterface(ctx, opts, entries)
+	buildInterface, err := snapshotBuildInterface(ctx, opts, entries)
+	if err != nil {
+		return Stats{}, err
+	}
 	objects := objectstore.New(opts.Layout, snapshotID)
 	defer objects.Abort()
 	jobs := make(chan Entry)

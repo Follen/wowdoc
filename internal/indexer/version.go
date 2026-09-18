@@ -2,8 +2,11 @@ package indexer
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/follenfang/wowdoc/internal/catalog"
 )
 
 // BuildInterfaceFromVersion derives a game Interface version (for example
@@ -50,18 +53,24 @@ func leadingInt(s string) (int, bool) {
 }
 
 // snapshotBuildInterface reads the root version.txt of the indexed source and
-// derives its Interface version. It returns "" when the source carries no
-// usable build version; callers must keep the previous behavior in that case.
-func snapshotBuildInterface(ctx context.Context, opts BuildOptions, entries []Entry) string {
+// derives its Interface version. It returns "" when the source legitimately
+// carries no usable build version, and an error when a version.txt exists but
+// cannot be read: caching that failure as "no version" would permanently deny
+// the snapshot its Interface evidence.
+func snapshotBuildInterface(ctx context.Context, opts BuildOptions, entries []Entry) (string, error) {
+	// AddOn release versions are not game build evidence.
+	if !catalog.IsGameSource(opts.SourceID) {
+		return "", nil
+	}
 	for _, entry := range entries {
 		if strings.Contains(entry.Path, "/") || !strings.EqualFold(entry.Path, "version.txt") {
 			continue
 		}
 		data, err := opts.Input.Read(ctx, entry)
 		if err != nil {
-			return ""
+			return "", fmt.Errorf("read source version.txt: %w", err)
 		}
-		return BuildInterfaceFromVersion(data)
+		return BuildInterfaceFromVersion(data), nil
 	}
-	return ""
+	return "", nil
 }
