@@ -65,108 +65,6 @@ func openBranch(layout home.Layout, ctx Context) (*store.Branch, error) {
 	return branch, err
 }
 
-func Search(layout home.Layout, ctx Context, text, topic string, limit int) (Response, error) {
-	if limit <= 0 {
-		limit = 10
-	}
-	branch, err := openBranch(layout, ctx)
-	if err != nil {
-		return Response{}, err
-	}
-	defer branch.Close()
-	if err = ensureReady(branch.DB, ctx.SnapshotID); err != nil {
-		return Response{}, err
-	}
-	type candidate struct {
-		kind, name, path, matched, role, confidence string
-		line, endLine, score                        int
-	}
-	var candidates []candidate
-	rows, err := branch.DB.Query(`SELECT s.kind,qualified.value,sf.path,s.line,s.end_line,'exact_symbol',sf.role,100 AS rank FROM content.symbols s JOIN content.strings name ON name.id=s.name_id JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND (qualified.value=? OR name.value=?) UNION ALL SELECT d.kind,name.value,sf.path,d.line,0,'exact_fact',sf.role,90 AS rank FROM content.search_docs d JOIN content.strings name ON name.id=d.name_id JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND name.value=? UNION ALL SELECT s.kind,qualified.value,sf.path,s.line,s.end_line,'symbol_prefix',sf.role,80 AS rank FROM content.symbols s JOIN content.strings name ON name.id=s.name_id JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND (qualified.value LIKE ? OR name.value LIKE ?) ORDER BY rank DESC,3,4,1,2 LIMIT ?`, ctx.SnapshotID, text, text, ctx.SnapshotID, text, ctx.SnapshotID, text+"%", text+"%", limit*3)
-	if err != nil {
-		return Response{}, err
-	}
-	for rows.Next() {
-		var c candidate
-		if err = rows.Scan(&c.kind, &c.name, &c.path, &c.line, &c.endLine, &c.matched, &c.role, &c.score); err != nil {
-			rows.Close()
-			return Response{}, err
-		}
-		candidates = append(candidates, c)
-	}
-	rows.Close()
-	if len(candidates) < limit {
-		rows, err = branch.DB.Query(`SELECT d.kind,name.value,sf.path,d.line,0,'fts5',sf.role,CAST(70-min(20,abs(bm25(search_fts))) AS INTEGER) FROM search_fts JOIN content.search_docs d ON d.id=search_fts.rowid JOIN content.strings name ON name.id=d.name_id JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND search_fts MATCH ? ORDER BY bm25(search_fts),CASE sf.role WHEN 'project' THEN 0 WHEN 'official-generated-api' THEN 0 WHEN 'vendor' THEN 2 ELSE 1 END,sf.path,d.line LIMIT ?`, ctx.SnapshotID, ftsQuery(text), limit*3)
-		if err != nil {
-			like := "%" + text + "%"
-			rows, err = branch.DB.Query(`SELECT d.kind,name.value,sf.path,d.line,0,'name_fallback',sf.role,60 FROM content.search_docs d JOIN content.strings name ON name.id=d.name_id JOIN snapshot_files sf ON sf.content_id=d.content_id WHERE sf.snapshot_id=? AND (d.required_role='' OR d.required_role=sf.role) AND name.value LIKE ? ORDER BY sf.path,d.line LIMIT ?`, ctx.SnapshotID, like, limit*3)
-			if err != nil {
-				return Response{}, err
-			}
-		}
-		for rows.Next() {
-			var c candidate
-			if err = rows.Scan(&c.kind, &c.name, &c.path, &c.line, &c.endLine, &c.matched, &c.role, &c.score); err != nil {
-				rows.Close()
-				return Response{}, err
-			}
-			candidates = append(candidates, c)
-		}
-		rows.Close()
-	}
-	seen := map[string]bool{}
-	var matches []Match
-	for _, c := range candidates {
-		if c.kind == "source" && c.line == 0 {
-			resolvedLine, resolveErr := sourceMatchLine(branch.DB, layout, ctx.SnapshotID, c.path, text)
-			if resolveErr != nil {
-				continue
-			}
-			c.line = resolvedLine
-		}
-		key := fmt.Sprintf("%s:%d:%s", c.path, c.line, c.kind)
-		if seen[key] {
-			continue
-		}
-		seen[key] = true
-		var hash, excerptText string
-		var e error
-		if c.matched == "exact_symbol" && c.endLine >= c.line {
-			hash, excerptText, e = excerptRange(branch.DB, layout, ctx.SnapshotID, c.path, c.line, c.endLine, 80)
-		} else {
-			hash, excerptText, e = excerpt(branch.DB, layout, ctx.SnapshotID, c.path, c.line, 3)
-		}
-		if e != nil {
-			continue
-		}
-		score := c.score - rolePenalty(c.role)
-		matches = append(matches, Match{Kind: c.kind, Name: c.name, Path: c.path, Line: c.line, MatchedBy: c.matched, Role: c.role, Confidence: c.confidence, Score: score, ScoreParts: map[string]int{"match": c.score, "rolePenalty": -rolePenalty(c.role)}, ContentHash: hash, Excerpt: excerptText})
-		if len(matches) >= limit {
-			break
-		}
-	}
-	var tag any = ctx.MatchedTag
-	if ctx.MatchedTag == "" {
-		tag = nil
-	}
-	response := Response{SourceID: ctx.SourceID, Product: ctx.ProductID, RequestedRef: ctx.RequestedRef, MatchedTag: tag, ResolvedCommit: ctx.Commit, SnapshotID: ctx.SnapshotID, Results: matches}
-	relationRows, relationErr := branch.DB.Query(`SELECT source.value,target.value,e.kind,e.confidence,sf.path,e.line FROM content.edges e JOIN content.strings source ON source.id=e.source_id JOIN content.strings target ON target.id=e.target_id JOIN snapshot_files sf ON sf.content_id=e.content_id WHERE sf.snapshot_id=? AND (e.required_role='' OR e.required_role=sf.role) AND (source.value=? OR target.value=? OR source.value LIKE ? OR target.value LIKE ?) ORDER BY CASE e.confidence WHEN 'exact' THEN 0 WHEN 'inferred' THEN 1 ELSE 2 END,sf.path,e.line LIMIT 50`, ctx.SnapshotID, text, text, "%"+text+"%", "%"+text+"%")
-	if relationErr == nil {
-		defer relationRows.Close()
-		for relationRows.Next() {
-			var relation Relation
-			if relationRows.Scan(&relation.Source, &relation.Target, &relation.Kind, &relation.Confidence, &relation.Path, &relation.Line) == nil {
-				relation.Source = strings.ReplaceAll(relation.Source, "{path}", relation.Path)
-				response.Relations = append(response.Relations, relation)
-			}
-		}
-	}
-	if len(matches) == 0 {
-		response.Suggestions = []string{"use explore with a shorter symbol or path prefix", "check source list for the selected product and ref"}
-	}
-	return response, nil
-}
-
 func sourceMatchLine(db *sql.DB, layout home.Layout, snapshotID, path, text string) (int, error) {
 	var hash string
 	if err := db.QueryRow(`SELECT c.content_hash FROM snapshot_files sf JOIN content.contents c ON c.id=sf.content_id WHERE sf.snapshot_id=? AND sf.path=?`, snapshotID, path).Scan(&hash); err != nil {
@@ -382,7 +280,7 @@ func ftsQuery(text string) string {
 	for i, part := range parts {
 		parts[i] = `"` + strings.ReplaceAll(part, `"`, `""`) + `"`
 	}
-	return strings.Join(parts, " OR ")
+	return strings.Join(parts, " AND ")
 }
 func excerpt(db *sql.DB, layout home.Layout, snapshotID, path string, line, context int) (string, string, error) {
 	var hash string

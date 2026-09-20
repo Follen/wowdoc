@@ -73,6 +73,7 @@ func LookupCompatibility(layout home.Layout, ctx Context, usages []Compatibility
 	}
 
 	interfaceSeen := false
+	resolver := compatibilityResolver{db: branch.DB, ctx: ctx, cache: map[string]compatibilityResolution{}}
 	for _, usage := range usages {
 		candidate := strings.EqualFold(strings.TrimSpace(usage.Kind), "api-candidate")
 		kind := normalizeCompatibilityKind(usage.Kind)
@@ -87,7 +88,7 @@ func LookupCompatibility(layout home.Layout, ctx Context, usages []Compatibility
 			unresolved = append(unresolved, unresolvedUsage(ctx, usage, "dynamic or empty reference cannot be resolved statically"))
 			continue
 		}
-		fact, resolved, lookupErr := lookupCompatibilityUsage(branch.DB, ctx, usage, kind)
+		fact, resolved, lookupErr := resolver.lookup(usage, kind)
 		if lookupErr != nil {
 			return nil, nil, nil, lookupErr
 		}
@@ -103,7 +104,7 @@ func LookupCompatibility(layout home.Layout, ctx Context, usages []Compatibility
 	}
 	if value := strings.TrimSpace(interfaceValue); value != "" && !interfaceSeen {
 		usage := CompatibilityUsage{Kind: "interface", Name: value, Expression: value}
-		fact, resolved, lookupErr := lookupCompatibilityUsage(branch.DB, ctx, usage, "interface")
+		fact, resolved, lookupErr := resolver.lookup(usage, "interface")
 		if lookupErr != nil {
 			return nil, nil, nil, lookupErr
 		}
@@ -116,17 +117,40 @@ func LookupCompatibility(layout home.Layout, ctx Context, usages []Compatibility
 	return facts, unresolved, diagnostics, nil
 }
 
-func lookupCompatibilityUsage(db *sql.DB, ctx Context, usage CompatibilityUsage, kind string) (CompatibilityFact, bool, error) {
+type compatibilityResolution struct {
+	matches []compatibilityMatch
+	known   bool
+}
+
+// Cache snapshot facts, never caller evidence: each location retains its own
+// file and line even when thousands of calls share the same target.
+type compatibilityResolver struct {
+	db    *sql.DB
+	ctx   Context
+	cache map[string]compatibilityResolution
+}
+
+func (r *compatibilityResolver) lookup(usage CompatibilityUsage, kind string) (CompatibilityFact, bool, error) {
 	name := strings.TrimSpace(usage.Name)
-	matches, categoryKnown, err := compatibilityMatches(db, ctx.SnapshotID, kind, name, catalog.IsGameSource(ctx.SourceID))
-	if err != nil {
-		return CompatibilityFact{}, false, err
+	key := kind + "\x00" + name
+	resolution, cached := r.cache[key]
+	if !cached {
+		matches, known, err := compatibilityMatches(r.db, r.ctx.SnapshotID, kind, name, catalog.IsGameSource(r.ctx.SourceID))
+		if err != nil {
+			return CompatibilityFact{}, false, err
+		}
+		resolution = compatibilityResolution{matches: matches, known: known}
+		r.cache[key] = resolution
 	}
+	matches, categoryKnown := resolution.matches, resolution.known
 	if len(matches) == 0 && (!categoryKnown || kind == "mixin" || kind == "frame-type") {
 		return CompatibilityFact{}, false, nil
 	}
-	evidence := compatibilityBaseEvidence(ctx, usage)
-	evidence["matches"] = compatibilityMatchEvidence(matches)
+	evidence := compatibilityBaseEvidence(r.ctx, usage)
+	evidence["matchCount"] = len(matches)
+	const evidenceLimit = 5
+	evidence["matchesTruncated"] = len(matches) > evidenceLimit
+	evidence["matches"] = compatibilityMatchEvidence(matches[:min(len(matches), evidenceLimit)])
 	if len(matches) == 0 {
 		evidence["categoryPresent"] = true
 	}
@@ -143,29 +167,29 @@ func compatibilityMatches(db *sql.DB, snapshotID, kind, name string, gameSource 
 	var categoryQuery string
 	switch kind {
 	case "api":
-		query = `SELECT sf.path,s.line,sf.role,signature.value,s.kind FROM content.symbols s JOIN content.strings name ON name.id=s.name_id JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN content.strings signature ON signature.id=s.signature_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND s.kind IN ('api-function','api-scriptobject') AND (qualified.value=? OR name.value=?) ORDER BY sf.path,s.line,s.kind`
-		args = []any{snapshotID, name, name}
+		query = compatibilitySymbolSQL("s.kind IN ('api-function','api-scriptobject')")
+		args = []any{snapshotID, name, snapshotID, name}
 		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.symbols s JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND s.kind IN ('api-function','api-scriptobject'))`
 	case "event":
-		query = `SELECT sf.path,s.line,sf.role,signature.value,s.kind FROM content.symbols s JOIN content.strings name ON name.id=s.name_id JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN content.strings signature ON signature.id=s.signature_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND s.kind='api-event' AND (qualified.value=? OR name.value=?) ORDER BY sf.path,s.line`
-		args = []any{snapshotID, name, name}
+		query = compatibilitySymbolSQL("s.kind='api-event'")
+		args = []any{snapshotID, name, snapshotID, name}
 		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.symbols s JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND s.kind='api-event')`
 	case "mixin":
 		query = `SELECT sf.path,s.line,sf.role,signature.value,s.kind FROM content.symbols s JOIN content.strings qualified ON qualified.id=s.qualified_id JOIN content.strings signature ON signature.id=s.signature_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND s.kind='mixin' AND qualified.value=? ORDER BY sf.path,s.line`
 		args = []any{snapshotID, name}
 		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.symbols s JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND s.kind='mixin')`
 	case "template":
-		query = `SELECT sf.path,x.line,sf.role,kind.value,attributes.value FROM content.xml_nodes x JOIN content.strings node_name ON node_name.id=x.name_id JOIN content.strings kind ON kind.id=x.kind_id JOIN content.strings attributes ON attributes.id=x.attributes_id JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role) AND node_name.value=? ORDER BY sf.path,x.line`
+		query = `SELECT sf.path,x.line,sf.role,kind.value,attributes.value FROM content.xml_nodes x JOIN content.strings node_name ON node_name.id=x.name_id JOIN content.strings kind ON kind.id=x.kind_id JOIN content.strings attributes ON attributes.id=x.attributes_id CROSS JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role) AND node_name.value=? ORDER BY sf.path,x.line`
 		args = []any{snapshotID, name}
-		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.xml_nodes x JOIN content.strings node_name ON node_name.id=x.name_id JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role) AND node_name.value<>'')`
+		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.xml_nodes x JOIN content.strings node_name ON node_name.id=x.name_id CROSS JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role) AND node_name.value<>'')`
 	case "frame-type":
-		query = `SELECT sf.path,x.line,sf.role,kind.value,attributes.value FROM content.xml_nodes x JOIN content.strings kind ON kind.id=x.kind_id JOIN content.strings attributes ON attributes.id=x.attributes_id JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role) AND kind.value=? ORDER BY sf.path,x.line`
+		query = `SELECT sf.path,x.line,sf.role,kind.value,attributes.value FROM content.xml_nodes x JOIN content.strings kind ON kind.id=x.kind_id JOIN content.strings attributes ON attributes.id=x.attributes_id CROSS JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role) AND kind.value=? ORDER BY sf.path,x.line`
 		args = []any{snapshotID, name}
-		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.xml_nodes x JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role))`
+		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.xml_nodes x CROSS JOIN snapshot_files sf ON sf.content_id=x.content_id WHERE sf.snapshot_id=? AND (x.required_role='' OR x.required_role=sf.role))`
 	case "interface":
-		query = `SELECT sf.path,t.line,sf.role,t.value,t.key FROM content.toc_entries t JOIN snapshot_files sf ON sf.content_id=t.content_id WHERE sf.snapshot_id=? AND (t.required_role='' OR t.required_role=sf.role) AND lower(t.key) LIKE 'interface%' AND t.value=? ORDER BY sf.path,t.line`
+		query = `SELECT sf.path,t.line,sf.role,t.value,t.key FROM content.toc_entries t CROSS JOIN snapshot_files sf ON sf.content_id=t.content_id WHERE sf.snapshot_id=? AND (t.required_role='' OR t.required_role=sf.role) AND lower(t.key) LIKE 'interface%' AND t.value=? ORDER BY sf.path,t.line`
 		args = []any{snapshotID, name}
-		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.toc_entries t JOIN snapshot_files sf ON sf.content_id=t.content_id WHERE sf.snapshot_id=? AND (t.required_role='' OR t.required_role=sf.role) AND lower(t.key) LIKE 'interface%')`
+		categoryQuery = `SELECT EXISTS(SELECT 1 FROM content.toc_entries t CROSS JOIN snapshot_files sf ON sf.content_id=t.content_id WHERE sf.snapshot_id=? AND (t.required_role='' OR t.required_role=sf.role) AND lower(t.key) LIKE 'interface%')`
 	default:
 		return nil, false, fmt.Errorf("unsupported compatibility kind %q", kind)
 	}
@@ -282,4 +306,11 @@ func compatibilityMatchEvidence(matches []compatibilityMatch) []map[string]any {
 		values = append(values, map[string]any{"path": match.Path, "line": match.Line, "role": match.Role, "signature": match.Signature, "detail": match.Detail})
 	}
 	return values
+}
+
+// Split the two exact names so SQLite can use both existing compound indexes.
+// Joining strings first and filtering their values with OR scans all symbols.
+func compatibilitySymbolSQL(kindPredicate string) string {
+	base := `SELECT sf.path,s.line,sf.role,signature.value,s.kind FROM content.symbols s JOIN content.strings signature ON signature.id=s.signature_id JOIN snapshot_files sf ON sf.content_id=s.content_id WHERE sf.snapshot_id=? AND (s.required_role='' OR s.required_role=sf.role) AND ` + kindPredicate
+	return base + ` AND s.qualified_id=(SELECT id FROM content.strings WHERE value=?) UNION ` + base + ` AND s.name_id=(SELECT id FROM content.strings WHERE value=?) ORDER BY 1,2,5`
 }

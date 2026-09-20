@@ -192,7 +192,7 @@ func TestLookupCompatibilityLeavesInterfaceUnresolvedWithoutBuildVersion(t *test
 	}
 }
 
-func compatibilityFixture(t *testing.T) (home.Layout, string) {
+func compatibilityFixture(t testing.TB) (home.Layout, string) {
 	t.Helper()
 	t.Setenv("WOWDOC_HOME", t.TempDir())
 	layout, err := home.Resolve()
@@ -205,7 +205,7 @@ func compatibilityFixture(t *testing.T) (home.Layout, string) {
 	return layout, t.TempDir()
 }
 
-func writeCompatibilityFixture(t *testing.T, root, apiName, eventName string) {
+func writeCompatibilityFixture(t testing.TB, root, apiName, eventName string) {
 	t.Helper()
 	generatedDir := filepath.Join(root, "Interface", "AddOns", "Blizzard_APIDocumentationGenerated")
 	if err := os.MkdirAll(generatedDir, 0o755); err != nil {

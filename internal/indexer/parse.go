@@ -16,6 +16,7 @@ import (
 
 var assetRE = regexp.MustCompile(`(?i)["']([^"']+\.(?:blp|tga|png|jpe?g|dds|ttf|otf|mp3|ogg|wav|m2|wmo))["']`)
 var generatedNameRE = regexp.MustCompile(`^\s*Name\s*=\s*["']([^"']+)["']`)
+var generatedLiteralNameRE = regexp.MustCompile(`^\s*LiteralName\s*=\s*["']([^"']+)["']`)
 var generatedTypeRE = regexp.MustCompile(`^\s*Type\s*=\s*["']([^"']+)["']`)
 var generatedNamespaceRE = regexp.MustCompile(`^\s*Namespace\s*=\s*["']([^"']+)["']`)
 var generatedSectionRE = regexp.MustCompile(`^\s*(Arguments|Returns|Payload)\s*=\s*(nil|\{)`)
@@ -265,8 +266,20 @@ func parseGeneratedAPI(path string, lines []string) ([]store.SymbolFact, []store
 				qualified = namespace + "." + name
 			}
 			endLine := findLuaTableEnd(lines, nameLine)
-			signature := generatedAPISignature(lines, nameLine, endLine, qualified, kind)
+			indexedName, signatureName := name, qualified
+			if kind == "event" {
+				for _, eventLine := range lines[nameLine-1 : endLine] {
+					if literal := generatedLiteralNameRE.FindStringSubmatch(eventLine); literal != nil {
+						indexedName, signatureName = literal[1], literal[1]
+						break
+					}
+				}
+			}
+			signature := generatedAPISignature(lines, nameLine, endLine, signatureName, kind)
 			symbols = append(symbols, store.SymbolFact{Name: name, Qualified: qualified, Kind: "api-" + kind, Path: path, Line: nameLine, EndLine: endLine, Signature: signature})
+			if indexedName != name {
+				symbols = append(symbols, store.SymbolFact{Name: indexedName, Qualified: indexedName, Kind: "api-event", Path: path, Line: nameLine, EndLine: endLine, Signature: signature})
+			}
 			if namespace != "" {
 				edges = append(edges, store.EdgeFact{Source: namespace, Target: qualified, Kind: "contains", Confidence: "exact", Path: path, Line: nameLine})
 			}

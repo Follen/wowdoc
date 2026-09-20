@@ -310,7 +310,11 @@ func searchCommand(name string) *cobra.Command {
 			return err
 		}
 		defer sel.cat.Close()
-		value, err := query.Search(sel.layout, sel.ctx, text, topic, limit)
+		search := query.Search
+		if name == "explore" {
+			search = query.Explore
+		}
+		value, err := search(sel.layout, sel.ctx, text, topic, limit)
 		return writeResult(cmd, value, err)
 	}}
 	cmd.Flags().StringVar(&sourceID, "source", "", "source id")

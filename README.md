@@ -214,3 +214,19 @@ Tags follow `vMAJOR.MINOR.PATCH`. GitHub Actions tests Windows, Linux, and macOS
 ## License
 
 [MIT](LICENSE)
+
+## Search precision and index upgrade (v0.0.14)
+
+`query` and symbol `inspect` return the strongest available tier: exact definitions/facts, then prefixes only if there are no exact hits, then full text only if neither exists. Multiword full-text queries require all words in the indexed document. `explore` includes weaker tiers and matches any word for discovery. `%` and `_` are literal search characters, not SQL wildcards.
+
+`--topic api` filters generated API definitions; `lua`, `xml`, and `toc` filter source file types; `asset` searches indexed asset paths. Filtering and role ranking happen before the result limit. Duplicate evidence for the same definition is folded together; distinct definitions on one line are preserved. Both result and relation lists are individually bounded by `--limit`; query relations use exact names, while explore also finds substring relations. Invalid topics return `invalid_topic`.
+
+TOC validation caches repeated snapshot lookups, preserves every usage location, and returns at most five representative source matches per fact, with `matchCount` and `matchesTruncated` indicating omitted citations. This affects evidence size, not the validation coverage or verdict.
+
+The parser now indexes runtime event `LiteralName` values (for example `PLAYER_LOGIN`) as well as documentation aliases. Existing indexes need one refresh per source/product/ref used with the new parser:
+
+```powershell
+wowdoc index refresh --source wow-ui-source --product retail --ref 12.1.0
+```
+
+No repository resynchronization is needed when that commit is already local. Other snapshots are refreshed when needed; old parser indexes are not silently reused.

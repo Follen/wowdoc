@@ -214,3 +214,19 @@ go run ./cmd/wowdoc --help
 ## License
 
 [MIT](LICENSE)
+
+## v0.0.14 查询与索引升级
+
+`query` 和符号 `inspect` 依次查找精确定义、前缀、全文，已有更强命中时不再填充弱结果。多词全文查询要求所有词出现在索引文档中。`explore` 保留跨层级、任意词匹配的发现能力。`%`、`_` 按普通字符处理。
+
+`--topic api` 只返回生成的 API 定义；`lua`、`xml`、`toc` 按文件类型过滤；`asset` 查找已索引资源路径。主题过滤和角色排序在限制条数之前执行，同一定义的重复证据合并，保留同一行上的不同定义。结果与关系列表分别受 `--limit` 限制；默认关系按完整名称匹配，`explore` 允许子串关系。错误主题返回 `invalid_topic`。
+
+TOC 校验复用快照查询，保留每个调用位置。每项事实最多附带五个代表性出处，使用 `matchCount`、`matchesTruncated` 明示总数和省略情况，不改变检查覆盖范围或结论。
+
+事件解析新增游戏实际使用的 `LiteralName`（例如 `PLAYER_LOGIN`），并保留文档名称别名。升级后，对需要使用的 source/product/ref 刷新一次索引：
+
+```powershell
+wowdoc index refresh --source wow-ui-source --product retail --ref 12.1.0
+```
+
+提交已在本地时无需重新同步仓库。其他快照按需刷新，旧解析器索引不会被静默复用。
